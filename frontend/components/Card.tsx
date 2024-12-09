@@ -4,9 +4,10 @@ interface CardProps {
     id: string
     content: string
     index: number
+    onClick: () => void
 }
 
-export default function Card({ id, content, index }: CardProps) {
+export default function Card({ id, content, index, onClick }: CardProps) {
     return (
         <Draggable draggableId={id} index={index}>
             {(provided) => (
@@ -14,7 +15,8 @@ export default function Card({ id, content, index }: CardProps) {
                     ref={provided.innerRef}
                     {...provided.draggableProps}
                     {...provided.dragHandleProps}
-                    className="bg-white p-2 rounded shadow"
+                    className="bg-white p-2 rounded shadow cursor-pointer"
+                    onClick={onClick}
                 >
                     {content}
                 </div>
