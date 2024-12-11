@@ -1,7 +1,5 @@
-from flask_pymongo import PyMongo
 from werkzeug.security import generate_password_hash, check_password_hash
-
-mongo = PyMongo()
+from utils.db import mongo
 
 class User:
     @staticmethod
