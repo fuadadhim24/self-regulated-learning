@@ -5,12 +5,13 @@ import { getBoard, updateBoard } from '@/utils/api'
 import List from './List'
 import TaskDetails from './TaskDetails'
 
-interface Card {
+export interface Card {
     id: string
     content: string
     description?: string
     difficulty: 'easy' | 'medium' | 'hard'
 }
+
 
 interface ListType {
     id: string
@@ -21,6 +22,7 @@ interface ListType {
 export default function Board() {
     const [lists, setLists] = useState<ListType[]>([])
     const [selectedCard, setSelectedCard] = useState<{ listId: string, card: Card } | null>(null)
+    const [boardId, setBoardId] = useState<string | null>(null)
     const router = useRouter()
 
     useEffect(() => {
@@ -39,6 +41,7 @@ export default function Board() {
         if (response.ok) {
             const data = await response.json()
             setLists(data.lists)
+            setBoardId(data.id)
         } else {
             router.push('/login')
         }
@@ -48,24 +51,47 @@ export default function Board() {
         const { source, destination } = result
         if (!destination) return
 
-        const sourceList = lists.find((list) => list.id === source.droppableId)
-        const destList = lists.find((list) => list.id === destination.droppableId)
+        const sourceListIndex = lists.findIndex((list) => list.id === source.droppableId)
+        const destListIndex = lists.findIndex((list) => list.id === destination.droppableId)
 
-        if (!sourceList || !destList) return
+        if (sourceListIndex < 0 || destListIndex < 0) return
 
-        const newLists = [...lists]
+        const sourceList = { ...lists[sourceListIndex] }
+        const destList = { ...lists[destListIndex] }
+
         const [movedCard] = sourceList.cards.splice(source.index, 1)
-        destList.cards.splice(destination.index, 0, movedCard)
 
-        setLists(newLists)
+        if (sourceList.id === destList.id) {
+            // Moving within the same list
+            sourceList.cards.splice(destination.index, 0, movedCard)
+            const updatedLists = [...lists]
+            updatedLists[sourceListIndex] = sourceList
+            setLists(updatedLists)
+        } else {
+            // Moving to a different list
+            destList.cards.splice(destination.index, 0, movedCard)
+            const updatedLists = [...lists]
+            updatedLists[sourceListIndex] = sourceList
+            updatedLists[destListIndex] = destList
+            setLists(updatedLists)
+        }
 
+        // Save the updated board to the backend
         const token = localStorage.getItem('token')
-        if (token) {
-            await updateBoard(token, newLists)
+        if (token && boardId) {
+            try {
+                const response = await updateBoard(token, boardId, lists)
+                if (!response.ok) {
+                    console.error('Failed to update board:', await response.text())
+                }
+            } catch (error) {
+                console.error('Error updating board:', error)
+            }
         }
     }
 
-    const addCard = (listId: string) => {
+
+    const addCard = async (listId: string) => {
         const content = prompt('Enter card content:')
         const difficulty = prompt('Enter difficulty (easy, medium, hard):') as 'easy' | 'medium' | 'hard'
 
@@ -77,6 +103,18 @@ export default function Board() {
         )
 
         setLists(newLists)
+
+        const token = localStorage.getItem('token')
+        if (token && boardId) {
+            try {
+                const response = await updateBoard(token, boardId, newLists)
+                if (!response.ok) {
+                    console.error('Failed to update board:', await response.text())
+                }
+            } catch (error) {
+                console.error('Error updating board:', error)
+            }
+        }
     }
 
     const updateCardDescription = (cardId: string, newDescription: string) => {
@@ -117,3 +155,4 @@ export default function Board() {
         </div>
     )
 }
+

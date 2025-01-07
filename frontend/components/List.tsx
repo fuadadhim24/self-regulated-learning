@@ -1,12 +1,5 @@
-import { Droppable } from 'react-beautiful-dnd'
-import Card from './Card'
-
-interface Card {
-    id: string
-    content: string
-    description?: string
-    difficulty: 'easy' | 'medium' | 'hard'
-}
+import { Droppable, Draggable } from 'react-beautiful-dnd'
+import { Card } from './Board'
 
 interface ListProps {
     id: string
@@ -16,7 +9,20 @@ interface ListProps {
     onCardClick: (listId: string, card: Card) => void
 }
 
-export default function List({ id, title, cards, onAddCard, onCardClick }: ListProps) {
+const List = ({ id, title, cards, onAddCard, onCardClick }: ListProps) => {
+    const getCardColor = (difficulty: 'easy' | 'medium' | 'hard') => {
+        switch (difficulty) {
+            case 'easy':
+                return 'bg-green-300' // Green for easy
+            case 'medium':
+                return 'bg-yellow-300' // Yellow for medium
+            case 'hard':
+                return 'bg-red-300' // Red for hard
+            default:
+                return 'bg-gray-300' // Default fallback
+        }
+    }
+
     return (
         <div className="bg-gray-200 p-4 rounded-lg w-72">
             <h2 className="text-lg font-semibold mb-4">{title}</h2>
@@ -28,13 +34,22 @@ export default function List({ id, title, cards, onAddCard, onCardClick }: ListP
                         className="space-y-2"
                     >
                         {cards.map((card, index) => (
-                            <Card
-                                key={card.id}
-                                id={card.id}
-                                content={card.content}
-                                index={index}
-                                onClick={() => onCardClick(id, card)}
-                            />
+                            <Draggable key={card.id} draggableId={card.id} index={index}>
+                                {(provided) => (
+                                    <div
+                                        ref={provided.innerRef}
+                                        {...provided.draggableProps}
+                                        {...provided.dragHandleProps}
+                                        className="bg-white p-2 rounded shadow cursor-pointer"
+                                        onClick={() => onCardClick(id, card)}
+                                    >
+                                        <div className="flex justify-between items-center">
+                                            <span>{card.content}</span>
+                                            <div className={`w-3 h-3 rounded-full ${getCardColor(card.difficulty)}`} />
+                                        </div>
+                                    </div>
+                                )}
+                            </Draggable>
                         ))}
                         {provided.placeholder}
                     </div>
@@ -49,3 +64,5 @@ export default function List({ id, title, cards, onAddCard, onCardClick }: ListP
         </div>
     )
 }
+
+export default List
