@@ -127,6 +127,28 @@ export default function Board() {
         setLists(newLists)
     }
 
+    const updateCardDifficulty = async (cardId: string, newDifficulty: 'easy' | 'medium' | 'hard') => {
+        const newLists = lists.map((list) => ({
+            ...list,
+            cards: list.cards.map((card) =>
+                card.id === cardId ? { ...card, difficulty: newDifficulty } : card
+            ),
+        }))
+        setLists(newLists)
+
+        const token = localStorage.getItem('token')
+        if (token && boardId) {
+            try {
+                const response = await updateBoard(token, boardId, newLists)
+                if (!response.ok) {
+                    console.error('Failed to update board:', await response.text())
+                }
+            } catch (error) {
+                console.error('Error updating board:', error)
+            }
+        }
+    }
+
     return (
         <div className="min-h-screen bg-blue-100 p-8">
             <h1 className="text-3xl font-bold mb-8 text-center">Trello Clone Board</h1>
@@ -150,6 +172,7 @@ export default function Board() {
                     card={selectedCard.card}
                     onClose={() => setSelectedCard(null)}
                     onUpdateDescription={updateCardDescription}
+                    onUpdateDifficulty={updateCardDifficulty}
                 />
             )}
         </div>
