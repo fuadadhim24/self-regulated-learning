@@ -18,6 +18,23 @@ export async function login(username: string, password: string) {
     return response
 }
 
+export async function searchUserById(token: string, userId: string) {
+    const response = await fetch(`${API_URL}/user/${userId}`, {
+        method: 'GET',
+        headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error(`Error fetching user: ${response.status} ${response.statusText}`);
+    }
+
+    return response.json(); // Assuming the backend returns JSON
+}
+
+
 export async function getBoard(token: string) {
     const response = await fetch(`${API_URL}/board`, {
         headers: { Authorization: `Bearer ${token}` },

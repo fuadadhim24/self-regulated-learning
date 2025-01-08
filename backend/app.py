@@ -10,6 +10,9 @@ import os
 app = Flask(__name__)
 CORS(app)
 
+# Allow requests from frontend (allow credentials for cookies)
+CORS(app, origins=["http://localhost:3000"], methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"], supports_credentials=True)
+
 # Load configuration
 app.config.from_object("config.Config")
 

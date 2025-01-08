@@ -1,5 +1,5 @@
 from flask import jsonify, request
-from bson import ObjectId
+from bson.objectid import ObjectId
 from utils.db import mongo
 from models.user_model import User
 from werkzeug.security import generate_password_hash
@@ -48,8 +48,12 @@ def delete_user(user_id):
 
 # Get user by ID (helper for JWT identity)
 def get_user_by_id(user_id):
-    user = mongo.db.users.find_one({"_id": ObjectId(user_id)}, {"password": 0})  # Exclude password
+    user = User.find_user_by_id(user_id)
+    
     if not user:
+        print("User not found")
         return jsonify({"message": "User not found"}), 404
+
+    print(f"User found: {user}")
     user["_id"] = str(user["_id"])  # Convert ObjectId to string
     return jsonify(user), 200
