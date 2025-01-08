@@ -117,7 +117,7 @@ export default function Board() {
         }
     }
 
-    const updateCardDescription = (cardId: string, newDescription: string) => {
+    const updateCardDescription = async (cardId: string, newDescription: string) => {
         const newLists = lists.map((list) => ({
             ...list,
             cards: list.cards.map((card) =>
@@ -125,6 +125,18 @@ export default function Board() {
             ),
         }))
         setLists(newLists)
+
+        const token = localStorage.getItem('token')
+        if (token && boardId) {
+            try {
+                const response = await updateBoard(token, boardId, newLists)
+                if (!response.ok) {
+                    console.error('Failed to update board:', await response.text())
+                }
+            } catch (error) {
+                console.error('Error updating board:', error)
+            }
+        }
     }
 
     const updateCardDifficulty = async (cardId: string, newDifficulty: 'easy' | 'medium' | 'hard') => {
