@@ -1,3 +1,5 @@
+import { use } from "react"
+
 const API_URL = 'http://localhost:5000'
 
 export async function register(firstName: string, lastName: string, email: string, username: string, password: string) {
@@ -16,6 +18,17 @@ export async function login(username: string, password: string) {
         body: JSON.stringify({ username, password }),
     })
     return response
+}
+
+export async function searchUserByUsername(token: string, username: string) {
+    const response = await fetch(`${API_URL}/${username}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    return response;
 }
 
 export async function searchUserById(token: string, userId: string) {
@@ -102,4 +115,11 @@ export async function searchBoards(token: string, query: string) {
         headers: { Authorization: `Bearer ${token}` },
     })
     return response
+}
+
+export async function getProgressReport(token: string) {
+    const response = await fetch(`${API_URL}/progress-report`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    return response;
 }

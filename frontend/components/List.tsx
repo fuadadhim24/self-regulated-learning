@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Droppable, Draggable } from 'react-beautiful-dnd'
 import { Card } from './Board'
 
@@ -5,11 +6,17 @@ interface ListProps {
     id: string
     title: string
     cards: Card[]
-    onAddCard: (listId: string) => void
+    isAddingCard: boolean
+    onAddCard: (listId: string, content: string, difficulty: 'easy' | 'medium' | 'hard') => void
+    onCancelAddCard: (listId: string) => void
     onCardClick: (listId: string, card: Card) => void
 }
 
 const List = ({ id, title, cards, onAddCard, onCardClick }: ListProps) => {
+    const [isAddingCard, setIsAddingCard] = useState(false)
+    const [newCardContent, setNewCardContent] = useState('')
+    const [newCardDifficulty, setNewCardDifficulty] = useState<'easy' | 'medium' | 'hard'>('easy')
+
     const getCardColor = (difficulty: 'easy' | 'medium' | 'hard') => {
         switch (difficulty) {
             case 'easy':
@@ -21,6 +28,21 @@ const List = ({ id, title, cards, onAddCard, onCardClick }: ListProps) => {
             default:
                 return 'bg-gray-300' // Default fallback
         }
+    }
+
+    const handleAddCard = () => {
+        if (newCardContent.trim()) {
+            onAddCard(id, newCardContent, newCardDifficulty) // Add card
+            setNewCardContent('') // Clear input field
+            setNewCardDifficulty('easy') // Reset difficulty dropdown
+            setIsAddingCard(false) // Hide the form and show the "Add Card" button again
+        }
+    }
+
+    const handleCancelAddCard = () => {
+        setNewCardContent('') // Clear input field
+        setNewCardDifficulty('easy') // Reset difficulty dropdown
+        setIsAddingCard(false) // Hide the form and show the "Add Card" button again
     }
 
     return (
@@ -52,15 +74,53 @@ const List = ({ id, title, cards, onAddCard, onCardClick }: ListProps) => {
                             </Draggable>
                         ))}
                         {provided.placeholder}
+
+                        {isAddingCard && (
+                            <div className="p-2">
+                                <input
+                                    type="text"
+                                    placeholder="Enter task name"
+                                    value={newCardContent}
+                                    onChange={(e) => setNewCardContent(e.target.value)}
+                                    className="w-full p-2 rounded border border-gray-300"
+                                />
+                                <select
+                                    value={newCardDifficulty}
+                                    onChange={(e) => setNewCardDifficulty(e.target.value as 'easy' | 'medium' | 'hard')}
+                                    className="w-full p-2 rounded border border-gray-300 mt-2"
+                                >
+                                    <option value="easy">Easy</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="hard">Hard</option>
+                                </select>
+                                <div className="mt-2 flex space-x-2">
+                                    <button
+                                        onClick={handleAddCard} // Call the add card function
+                                        className="bg-blue-500 text-white p-2 rounded"
+                                    >
+                                        Add Card
+                                    </button>
+                                    <button
+                                        onClick={handleCancelAddCard} // Cancel and return to "Add Card" button
+                                        className="bg-gray-500 text-white p-2 rounded"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
                     </div>
                 )}
             </Droppable>
-            <button
-                onClick={() => onAddCard(id)}
-                className="mt-4 w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
-            >
-                Add Card
-            </button>
+            {!isAddingCard && (
+                <button
+                    onClick={() => setIsAddingCard(true)}
+                    className="mt-4 w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
+                >
+                    Add Card
+                </button>
+            )}
         </div>
     )
 }

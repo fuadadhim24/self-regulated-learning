@@ -12,17 +12,18 @@ export interface Card {
     difficulty: 'easy' | 'medium' | 'hard'
 }
 
-
 interface ListType {
     id: string
     title: string
     cards: Card[]
+    isAddingCard: boolean
 }
 
 export default function Board() {
     const [lists, setLists] = useState<ListType[]>([])
     const [selectedCard, setSelectedCard] = useState<{ listId: string, card: Card } | null>(null)
     const [boardId, setBoardId] = useState<string | null>(null)
+    const [boardName, setBoardName] = useState<string>('')
     const router = useRouter()
 
     useEffect(() => {
@@ -42,6 +43,7 @@ export default function Board() {
             const data = await response.json()
             setLists(data.lists)
             setBoardId(data.id)
+            setBoardName(data.name)
         } else {
             router.push('/login')
         }
@@ -90,16 +92,10 @@ export default function Board() {
         }
     }
 
-
-    const addCard = async (listId: string) => {
-        const content = prompt('Enter card content:')
-        const difficulty = prompt('Enter difficulty (easy, medium, hard):') as 'easy' | 'medium' | 'hard'
-
-        if (!content || !difficulty) return
-
+    const addCard = async (listId: string, content: string, difficulty: 'easy' | 'medium' | 'hard') => {
         const newCard: Card = { id: Date.now().toString(), content, difficulty }
         const newLists = lists.map((list) =>
-            list.id === listId ? { ...list, cards: [...list.cards, newCard] } : list
+            list.id === listId ? { ...list, cards: [...list.cards, newCard], isAddingCard: false } : list
         )
 
         setLists(newLists)
@@ -115,6 +111,21 @@ export default function Board() {
                 console.error('Error updating board:', error)
             }
         }
+    }
+
+    const toggleAddCard = (listId: string) => {
+        const newLists = lists.map((list) =>
+            list.id === listId ? { ...list, isAddingCard: !list.isAddingCard } : list
+        )
+        setLists(newLists)
+    }
+
+    const cancelAddCard = (listId: string) => {
+        const newLists = lists.map((list) =>
+            list.id === listId ? { ...list, isAddingCard: false } : list
+        )
+
+        setLists(newLists)
     }
 
     const updateCardDescription = async (cardId: string, newDescription: string) => {
@@ -161,9 +172,39 @@ export default function Board() {
         }
     }
 
+    const updateCardName = async (cardId: string, newName: string) => {
+        const newLists = lists.map((list) => ({
+            ...list,
+            cards: list.cards.map((card) =>
+                card.id === cardId ? { ...card, content: newName } : card
+            ),
+        }))
+        setLists(newLists)
+
+        const token = localStorage.getItem('token')
+        if (token && boardId) {
+            try {
+                const response = await updateBoard(token, boardId, newLists)
+                if (!response.ok) {
+                    console.error('Failed to update board:', await response.text())
+                }
+            } catch (error) {
+                console.error('Error updating board:', error)
+            }
+        }
+    }
+
     return (
         <div className="min-h-screen bg-blue-100 p-8">
-            <h1 className="text-3xl font-bold mb-8 text-center">Trello Clone Board</h1>
+            <h1 className="text-3xl font-bold mb-8 text-center">{boardName || 'Loading Board...'}</h1>
+
+            <button
+                className="bg-blue-500 text-white px-4 py-2 rounded mb-4"
+                onClick={() => router.push('/dashboard')}
+            >
+                Go to Dashboard
+            </button>
+
             <DragDropContext onDragEnd={onDragEnd}>
                 <div className="flex space-x-4">
                     {lists.map((list) => (
@@ -172,7 +213,9 @@ export default function Board() {
                             id={list.id}
                             title={list.title}
                             cards={list.cards}
+                            isAddingCard={list.isAddingCard}
                             onAddCard={addCard}
+                            onCancelAddCard={cancelAddCard}
                             onCardClick={(listId, card) => setSelectedCard({ listId, card })}
                         />
                     ))}
@@ -185,9 +228,9 @@ export default function Board() {
                     onClose={() => setSelectedCard(null)}
                     onUpdateDescription={updateCardDescription}
                     onUpdateDifficulty={updateCardDifficulty}
+                    onUpdateTaskName={updateCardName}
                 />
             )}
         </div>
     )
 }
-

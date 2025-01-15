@@ -11,13 +11,16 @@ interface TaskDetailsProps {
     onClose: () => void
     onUpdateDescription: (cardId: string, newDescription: string) => void
     onUpdateDifficulty: (cardId: string, newDifficulty: 'easy' | 'medium' | 'hard') => void
+    onUpdateTaskName: (cardId: string, newName: string) => void // Add this to handle task name updates
 }
 
-export default function TaskDetails({ listName, card, onClose, onUpdateDescription, onUpdateDifficulty }: TaskDetailsProps) {
+export default function TaskDetails({ listName, card, onClose, onUpdateDescription, onUpdateDifficulty, onUpdateTaskName }: TaskDetailsProps) {
     const [description, setDescription] = useState(card.description || '')
     const [difficulty, setDifficulty] = useState(card.difficulty)
     const [showDropdown, setShowDropdown] = useState(false)
     const [isEditing, setIsEditing] = useState(false) // Track if the description is being edited
+    const [isEditingName, setIsEditingName] = useState(false) // Track if the task name is being edited
+    const [taskName, setTaskName] = useState(card.content) // State for the task name
 
     const handleUpdateDescription = () => {
         onUpdateDescription(card.id, description)
@@ -35,6 +38,11 @@ export default function TaskDetails({ listName, card, onClose, onUpdateDescripti
         setShowDropdown(false)
     }
 
+    const handleUpdateTaskName = () => {
+        onUpdateTaskName(card.id, taskName) // Update task name
+        setIsEditingName(false) // Stop editing after saving
+    }
+
     const getColorForDifficulty = (difficulty: string) => {
         switch (difficulty) {
             case 'easy': return 'bg-green-500'
@@ -49,6 +57,36 @@ export default function TaskDetails({ listName, card, onClose, onUpdateDescripti
             <div className="bg-white rounded-lg p-8 w-96">
                 <h2 className="text-xl font-bold mb-4">Task Details</h2>
                 <p className="mb-2"><strong>In list:</strong> {listName}</p>
+
+                {/* Task Name Section */}
+                <div className="mb-4">
+                    {!isEditingName ? (
+                        <div className="flex justify-between items-center">
+                            <span className="text-lg font-semibold">{taskName}</span>
+                            <button
+                                onClick={() => setIsEditingName(true)}
+                                className="text-blue-500 hover:underline"
+                            >
+                                Edit
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="flex justify-between items-center">
+                            <input
+                                type="text"
+                                value={taskName}
+                                onChange={(e) => setTaskName(e.target.value)}
+                                className="border border-gray-300 p-2 rounded w-full"
+                            />
+                            <button
+                                onClick={handleUpdateTaskName}
+                                className="text-blue-500 hover:underline ml-2"
+                            >
+                                Save
+                            </button>
+                        </div>
+                    )}
+                </div>
 
                 {/* Difficulty Section */}
                 <div className="mb-4">
@@ -78,23 +116,18 @@ export default function TaskDetails({ listName, card, onClose, onUpdateDescripti
                 <div className="flex justify-between items-center mb-4">
                     <p className="text-gray-700 font-semibold">Description:</p>
                     {!isEditing ? (
-                        // Display the description as plain text with the Edit button on the right
                         <button
                             onClick={() => setIsEditing(true)}
                             className="text-blue-500 hover:underline"
                         >
                             Edit
                         </button>
-                    ) : (
-                        <></>
-                    )}
+                    ) : null}
                 </div>
 
                 {!isEditing ? (
-                    // Plain text description with border
                     <p className="mb-4 p-4 border border-gray-300 rounded">{description}</p>
                 ) : (
-                    // Textarea for editing the description with border
                     <>
                         <textarea
                             value={description}
