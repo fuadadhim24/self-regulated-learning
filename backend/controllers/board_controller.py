@@ -101,3 +101,39 @@ def update_card():
     result, status_code = Board.update_card(user_id, card_id, description, difficulty)
     return jsonify(result), status_code
 
+@jwt_required()
+def get_progress_report():
+    user_id = get_jwt_identity()
+
+    # Fetch the user's board
+    board = Board.find_board_by_user_id(user_id)
+    if not board:
+        return jsonify({"message": "Board not found"}), 404
+
+    # Initialize progress report
+    total_cards = 0
+    report = {}
+    done_cards = 0
+
+    for list_item in board.get("lists", []):
+        list_id = list_item.get("id")
+        list_title = list_item.get("title")
+        cards = list_item.get("cards", [])
+
+        # Add count for this list
+        report[list_title] = len(cards)
+        total_cards += len(cards)
+
+        # Check if this list is "Done"
+        if "done" in list_title.lower():
+            done_cards += len(cards)
+
+    # Calculate progress percentage
+    progress_percentage = (done_cards / total_cards * 100) if total_cards > 0 else 0
+
+    return jsonify({
+        "total_cards": total_cards,
+        "done_cards": done_cards,
+        "progress_percentage": progress_percentage,
+        "list_report": report
+    }), 200

@@ -9,9 +9,10 @@ class Board:
             "user_id": user_id,
             "name": "My First Board",
             "lists": [
-                {"id": "list1", "title": "To Do", "cards": []},
-                {"id": "list2", "title": "In Progress", "cards": []},
-                {"id": "list3", "title": "Done", "cards": []}
+                {"id": "list1", "title": "Planning (To Do)", "cards": []},
+                {"id": "list2", "title": "Monitoring (In Progress)", "cards": []},
+                {"id": "list3", "title": "Controlling (Review)", "cards": []},
+                {"id": "list4", "title": "Reflection (Done)", "cards": []}
             ],
             "starred": False
         }
@@ -27,9 +28,10 @@ class Board:
             "user_id": ObjectId(user_id),
             "name": name,
             "lists": [
-                {"id": "list1", "title": "To Do", "cards": []},
-                {"id": "list2", "title": "In Progress", "cards": []},
-                {"id": "list3", "title": "Done", "cards": []}
+                {"id": "list1", "title": "Planning (To Do)", "cards": []},
+                {"id": "list2", "title": "Monitoring (In Progress)", "cards": []},
+                {"id": "list3", "title": "Controlling (Review)", "cards": []},
+                {"id": "list4", "title": "Reflection (Done)", "cards": []}
             ],
             "starred": False
         }

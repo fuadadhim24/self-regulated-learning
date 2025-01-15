@@ -1,6 +1,7 @@
 from flask import jsonify, request
 from utils.db import mongo
 from models.user_model import User
+from models.board_model import Board
 from flask_jwt_extended import create_access_token
 from werkzeug.security import check_password_hash
 
@@ -24,17 +25,11 @@ def register():
     
     user_id = User.create_user(first_name, last_name, email, username, password)
 
-    # Create initial board for the user
-    initial_board = {
-        "user_id": user_id,
-        "name": "Default Board",
-        "lists": [
-            {"id": "list1", "title": "To Do", "cards": []},
-            {"id": "list2", "title": "In Progress", "cards": []},
-            {"id": "list3", "title": "Done", "cards": []}
-        ]
-    }
-    mongo.db.boards.insert_one(initial_board)
+    try:
+        Board.create_initial_board(user_id)
+    except Exception as e:
+        print("Error creating default board:", e)
+        return jsonify({"message": "User registered, but failed to create default board"}), 500
 
     return jsonify({"message": "User registered successfully"}), 201
 
