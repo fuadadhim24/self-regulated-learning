@@ -6,12 +6,16 @@ from routes.auth_routes import auth_bp
 from routes.board_routes import board_bp
 from routes.user_routes import user_bp
 import os
+from utils.db import init_db
 
 app = Flask(__name__)
 CORS(app)
 
 # Allow requests from frontend (allow credentials for cookies)
 CORS(app, origins=["http://localhost:3000"], methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"], supports_credentials=True)
+# MongoDB configuration
+app.config["MONGO_URI"] = "mongodb://localhost:27017/srl_db"
+init_db(app)
 
 # Load configuration
 app.config.from_object("config.Config")
@@ -42,6 +46,8 @@ def list_routes():
         print(f"{rule.endpoint}: {rule.rule} [{methods}]")
 
 if __name__ == "__main__":
+    list_routes()
+
     list_routes()
 
     app.run(debug=True)
