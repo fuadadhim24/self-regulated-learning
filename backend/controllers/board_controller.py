@@ -1,6 +1,6 @@
 from flask import jsonify, request
 from models.board_model import Board
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity, verify_jwt_in_request
 
 @jwt_required()
 def get_board():
@@ -61,32 +61,6 @@ def create_board():
     }), 201
 
 @jwt_required()
-def star_board():
-    user_id = get_jwt_identity()
-    board_id = request.json.get("boardId")
-    starred = request.json.get("starred")
-    
-    if board_id is None or starred is None:
-        return jsonify({"message": "Missing board ID or starred status"}), 400
-    
-    result = Board.update_star_status(board_id, user_id, starred)
-    
-    if not result:
-        return jsonify({"message": "Board not found or not modified"}), 404
-    
-    return jsonify({"message": "Board starred status updated successfully"}), 200
-
-@jwt_required()
-def get_starred_boards():
-    user_id = get_jwt_identity()
-    starred_boards = Board.find_starred_boards(user_id)
-    
-    return jsonify([
-        {"id": str(board["_id"]), "name": board["name"]}
-        for board in starred_boards
-    ]), 200
-
-@jwt_required()
 def search_boards():
     user_id = get_jwt_identity()
     query = request.args.get("q", "")
@@ -100,44 +74,6 @@ def search_boards():
         {"id": str(board["_id"]), "name": board["name"]}
         for board in boards
     ]), 200
-
-@jwt_required()
-def star_board():
-    verify_jwt_in_request()
-    user_id = get_jwt_identity()
-    board_id = request.json.get("board_id")
-
-    if not board_id:
-        return jsonify({"message": "Missing board ID"}), 400
-
-    result = Board.star_board(board_id, user_id)
-
-    if result.modified_count == 0:
-        return jsonify({"message": "Board not found or already starred"}), 404
-
-    return jsonify({"message": "Board starred successfully"}), 200
-
-def unstar_board():
-    verify_jwt_in_request()
-    user_id = get_jwt_identity()
-    board_id = request.json.get("board_id")
-
-    if not board_id:
-        return jsonify({"message": "Missing board ID"}), 400
-
-    result = Board.unstar_board(board_id, user_id)
-
-    if result.modified_count == 0:
-        return jsonify({"message": "Board not found or already unstarred"}), 404
-
-    return jsonify({"message": "Board unstarred successfully"}), 200
-
-def get_starred_boards():
-    verify_jwt_in_request()
-    user_id = get_jwt_identity()
-    boards = Board.get_starred_boards(user_id)
-
-    return jsonify({"starred_boards": boards}), 200
 
 def update_card():
     verify_jwt_in_request()

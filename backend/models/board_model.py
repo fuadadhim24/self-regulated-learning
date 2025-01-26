@@ -45,21 +45,6 @@ class Board:
             {"$set": {"lists": lists}}
         )
         return result
-    
-    @staticmethod
-    def update_star_status(board_id, user_id, starred):
-        result = mongo.db.boards.update_one(
-            {"_id": ObjectId(board_id), "user_id": ObjectId(user_id)},
-            {"$set": {"starred": starred}}
-        )
-        return result.modified_count > 0
-
-    @staticmethod
-    def find_starred_boards(user_id):
-        return list(mongo.db.boards.find(
-            {"user_id": ObjectId(user_id), "starred": True},
-            {"_id": 1, "name": 1}
-        ))
 
     @staticmethod
     def search_boards(user_id, query):

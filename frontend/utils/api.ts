@@ -91,25 +91,6 @@ export async function createBoard(token: string, name: string) {
     return response
 }
 
-export async function starBoard(token: string, boardId: string, starred: boolean) {
-    const response = await fetch(`${API_URL}/star-board`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ boardId, starred }),
-    })
-    return response
-}
-
-export async function getStarredBoards(token: string) {
-    const response = await fetch(`${API_URL}/starred-boards`, {
-        headers: { Authorization: `Bearer ${token}` },
-    })
-    return response
-}
-
 export async function searchBoards(token: string, query: string) {
     const response = await fetch(`${API_URL}/search-boards?q=${encodeURIComponent(query)}`, {
         headers: { Authorization: `Bearer ${token}` },
