@@ -13,8 +13,7 @@ class Board:
                 {"id": "list2", "title": "Monitoring (In Progress)", "cards": []},
                 {"id": "list3", "title": "Controlling (Review)", "cards": []},
                 {"id": "list4", "title": "Reflection (Done)", "cards": []}
-            ],
-            "starred": False
+            ]
         }
         mongo.db.boards.insert_one(initial_board)
 

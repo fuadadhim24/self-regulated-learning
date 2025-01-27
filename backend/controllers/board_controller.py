@@ -17,17 +17,6 @@ def get_board():
         "lists": board["lists"]
     }), 200
 
-def create_board():
-    verify_jwt_in_request()
-    user_id = get_jwt_identity()
-    name = request.json.get("name")
-
-    if not name:
-        return jsonify({"message": "Missing board name"}), 400
-
-    board_id = Board.create_board(user_id, name)
-    return jsonify({"message": "Board created successfully", "board_id": board_id}), 201
-
 @jwt_required()
 def update_board():
     verify_jwt_in_request()
@@ -44,21 +33,6 @@ def update_board():
         return jsonify({"message": "Board not found or not modified"}), 404
 
     return jsonify({"message": "Board updated successfully"}), 200
-
-@jwt_required()
-def create_board():
-    user_id = get_jwt_identity()
-    name = request.json.get("name")
-    
-    if not name:
-        return jsonify({"message": "Missing board name"}), 400
-    
-    board_id = Board.create_board(user_id, name)
-    
-    return jsonify({
-        "message": "Board created successfully",
-        "boardId": str(board_id)
-    }), 201
 
 @jwt_required()
 def search_boards():
