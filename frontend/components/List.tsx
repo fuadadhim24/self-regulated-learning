@@ -1,48 +1,89 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Droppable, Draggable } from 'react-beautiful-dnd'
 import { Card } from './Board'
+import { getCourses } from '../utils/api'
 
 interface ListProps {
     id: string
     title: string
     cards: Card[]
     isAddingCard: boolean
-    onAddCard: (listId: string, content: string, difficulty: 'easy' | 'medium' | 'hard') => void
+    onAddCard: (listId: string, courseCode: string, courseName: string, material: string, difficulty: 'easy' | 'medium' | 'hard') => void
     onCancelAddCard: (listId: string) => void
     onCardClick: (listId: string, card: Card) => void
 }
 
 const List = ({ id, title, cards, onAddCard, onCardClick }: ListProps) => {
     const [isAddingCard, setIsAddingCard] = useState(false)
-    const [newCardContent, setNewCardContent] = useState('')
-    const [newCardDifficulty, setNewCardDifficulty] = useState<'easy' | 'medium' | 'hard'>('easy')
+    const [courseCode, setCourseCode] = useState('')
+    const [courseName, setCourseName] = useState('')
+    const [material, setMaterial] = useState('')
+    const [courses, setCourses] = useState<{ course_code: string, course_name: string, materials: string[] }[]>([])
+    const [courseCodes, setCourseCodes] = useState<string[]>([])
+    const [materials, setMaterials] = useState<string[]>([])
 
-    const getCardColor = (difficulty: 'easy' | 'medium' | 'hard') => {
-        switch (difficulty) {
-            case 'easy':
-                return 'bg-green-300' // Green for easy
-            case 'medium':
-                return 'bg-yellow-300' // Yellow for medium
-            case 'hard':
-                return 'bg-red-300' // Red for hard
-            default:
-                return 'bg-gray-300' // Default fallback
+    // Fetch courses when the component mounts
+    useEffect(() => {
+        const fetchData = async () => {
+            const token = localStorage.getItem('token')
+            if (token) {
+                const response = await getCourses(token)
+                if (response.ok) {
+                    const data = await response.json()
+                    setCourses(data) // Set available courses
+                }
+            }
+        }
+
+        fetchData()
+    }, [])
+
+    // Handle course selection
+    const handleCourseChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        const selectedCourseName = event.target.value
+        setCourseName(selectedCourseName)
+        setMaterial('') // Reset material when course is selected
+
+        const selectedCourse = courses.find(course => course.course_name === selectedCourseName)
+        if (selectedCourse) {
+            setCourseCode(selectedCourse.course_code) // Automatically select course code for the chosen course
+            setMaterials(selectedCourse.materials) // Update materials based on the selected course
         }
     }
 
+    // Handle course code selection
+    const handleCourseCodeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        const selectedCourseCode = event.target.value
+        setCourseCode(selectedCourseCode)
+        setMaterial('') // Reset material when course code is selected
+
+        const selectedCourse = courses.find(course => course.course_code === selectedCourseCode)
+        if (selectedCourse) {
+            setCourseName(selectedCourse.course_name) // Automatically select course name for the chosen course code
+            setMaterials(selectedCourse.materials) // Update materials based on the selected course code
+        }
+    }
+
+    // Handle material selection
+    const handleMaterialChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        setMaterial(event.target.value)
+    }
+
     const handleAddCard = () => {
-        if (newCardContent.trim()) {
-            onAddCard(id, newCardContent, newCardDifficulty) // Add card
-            setNewCardContent('') // Clear input field
-            setNewCardDifficulty('easy') // Reset difficulty dropdown
-            setIsAddingCard(false) // Hide the form and show the "Add Card" button again
+        if (courseCode && courseName && material) {
+            onAddCard(id, courseCode, courseName, material, 'easy') // Always pass 'easy' as difficulty
+            setCourseCode('')
+            setCourseName('')
+            setMaterial('')
+            setIsAddingCard(false)
         }
     }
 
     const handleCancelAddCard = () => {
-        setNewCardContent('') // Clear input field
-        setNewCardDifficulty('easy') // Reset difficulty dropdown
-        setIsAddingCard(false) // Hide the form and show the "Add Card" button again
+        setCourseCode('')
+        setCourseName('')
+        setMaterial('')
+        setIsAddingCard(false)
     }
 
     return (
@@ -67,7 +108,6 @@ const List = ({ id, title, cards, onAddCard, onCardClick }: ListProps) => {
                                     >
                                         <div className="flex justify-between items-center">
                                             <span>{card.content}</span>
-                                            <div className={`w-3 h-3 rounded-full ${getCardColor(card.difficulty)}`} />
                                         </div>
                                     </div>
                                 )}
@@ -77,31 +117,58 @@ const List = ({ id, title, cards, onAddCard, onCardClick }: ListProps) => {
 
                         {isAddingCard && (
                             <div className="p-2">
-                                <input
-                                    type="text"
-                                    placeholder="Enter task name"
-                                    value={newCardContent}
-                                    onChange={(e) => setNewCardContent(e.target.value)}
-                                    className="w-full p-2 rounded border border-gray-300"
-                                />
+                                {/* Course Dropdown */}
                                 <select
-                                    value={newCardDifficulty}
-                                    onChange={(e) => setNewCardDifficulty(e.target.value as 'easy' | 'medium' | 'hard')}
+                                    value={courseName}
+                                    onChange={handleCourseChange}
+                                    className="w-full p-2 rounded border border-gray-300"
+                                >
+                                    <option value="">Select Course</option>
+                                    {courses.map(course => (
+                                        <option key={course.course_code} value={course.course_name}>
+                                            {course.course_name}
+                                        </option>
+                                    ))}
+                                </select>
+
+                                {/* Course Code Dropdown */}
+                                <select
+                                    value={courseCode}
+                                    onChange={handleCourseCodeChange}
                                     className="w-full p-2 rounded border border-gray-300 mt-2"
                                 >
-                                    <option value="easy">Easy</option>
-                                    <option value="medium">Medium</option>
-                                    <option value="hard">Hard</option>
+                                    <option value="">Select Course Code</option>
+                                    {courses.map(course => (
+                                        <option key={course.course_code} value={course.course_code}>
+                                            {course.course_code}
+                                        </option>
+                                    ))}
                                 </select>
+
+                                {/* Material Dropdown */}
+                                <select
+                                    value={material}
+                                    onChange={handleMaterialChange}
+                                    className="w-full p-2 rounded border border-gray-300 mt-2"
+                                    disabled={!courseCode && !courseName} // Disable if neither course nor course code is selected
+                                >
+                                    <option value="">Select Material</option>
+                                    {materials.map(mat => (
+                                        <option key={mat} value={mat}>
+                                            {mat}
+                                        </option>
+                                    ))}
+                                </select>
+
                                 <div className="mt-2 flex space-x-2">
                                     <button
-                                        onClick={handleAddCard} // Call the add card function
+                                        onClick={handleAddCard}
                                         className="bg-blue-500 text-white p-2 rounded"
                                     >
                                         Add Card
                                     </button>
                                     <button
-                                        onClick={handleCancelAddCard} // Cancel and return to "Add Card" button
+                                        onClick={handleCancelAddCard}
                                         className="bg-gray-500 text-white p-2 rounded"
                                     >
                                         Cancel
@@ -109,7 +176,6 @@ const List = ({ id, title, cards, onAddCard, onCardClick }: ListProps) => {
                                 </div>
                             </div>
                         )}
-
                     </div>
                 )}
             </Droppable>

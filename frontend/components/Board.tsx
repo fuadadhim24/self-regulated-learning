@@ -92,33 +92,39 @@ export default function Board() {
         }
     }
 
-    const addCard = async (listId: string, content: string, difficulty: 'easy' | 'medium' | 'hard') => {
-        const newCard: Card = { id: Date.now().toString(), content, difficulty }
+    const addCard = async (
+        listId: string,
+        courseCode: string,
+        courseName: string,
+        material: string,
+        difficulty: 'easy' | 'medium' | 'hard'
+    ) => {
+        const newCard: Card = {
+            id: Date.now().toString(),
+            content: `${courseCode} - ${courseName} - ${material}`, // Adjust based on how you want to display the content
+            difficulty,
+        };
+
         const newLists = lists.map((list) =>
-            list.id === listId ? { ...list, cards: [...list.cards, newCard], isAddingCard: false } : list
-        )
+            list.id === listId
+                ? { ...list, cards: [...list.cards, newCard], isAddingCard: false }
+                : list
+        );
 
-        setLists(newLists)
+        setLists(newLists);
 
-        const token = localStorage.getItem('token')
+        const token = localStorage.getItem('token');
         if (token && boardId) {
             try {
-                const response = await updateBoard(token, boardId, newLists)
+                const response = await updateBoard(token, boardId, newLists);
                 if (!response.ok) {
-                    console.error('Failed to update board:', await response.text())
+                    console.error('Failed to update board:', await response.text());
                 }
             } catch (error) {
-                console.error('Error updating board:', error)
+                console.error('Error updating board:', error);
             }
         }
-    }
-
-    const toggleAddCard = (listId: string) => {
-        const newLists = lists.map((list) =>
-            list.id === listId ? { ...list, isAddingCard: !list.isAddingCard } : list
-        )
-        setLists(newLists)
-    }
+    };
 
     const cancelAddCard = (listId: string) => {
         const newLists = lists.map((list) =>

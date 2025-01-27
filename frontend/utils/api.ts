@@ -104,3 +104,10 @@ export async function getProgressReport(token: string) {
     });
     return response;
 }
+
+export async function getCourses(token: string) {
+    const response = await fetch(`${API_URL}/courses`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    return response;
+}
