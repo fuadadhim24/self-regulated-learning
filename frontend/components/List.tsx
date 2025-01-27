@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Droppable, Draggable } from 'react-beautiful-dnd'
-import { Card } from './Board'
+import { Card } from './Board/Board'
 import { getCourses } from '../utils/api'
 
 interface ListProps {
