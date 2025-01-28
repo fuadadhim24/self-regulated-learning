@@ -38,8 +38,8 @@ export default function BoardContent({
     ) => {
         const newCard: Card = {
             id: `${courseCode}-${courseName}-${material}`,
-            content: `${courseCode} - ${courseName}`,
-            description: material,
+            content: `${courseCode} - ${courseName} - ${material}`,
+            description: "",
             difficulty,
         };
 
