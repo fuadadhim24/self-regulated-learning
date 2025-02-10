@@ -3,6 +3,7 @@ import { DragDropContext, DropResult } from 'react-beautiful-dnd';
 import { updateBoard } from '@/utils/api';
 import List from '../List';
 import TaskDetails from '../TaskDetails';
+import Chatbot from './Chatbot';
 
 interface Card {
     id: string;
@@ -135,25 +136,30 @@ export default function BoardContent({
 
     return (
         <DragDropContext onDragEnd={onDragEnd}>
-            <div className="flex space-x-4">
-                {lists.map((list) => (
-                    <List
-                        key={list.id}
-                        id={list.id}
-                        title={list.title}
-                        cards={list.cards}
-                        isAddingCard={list.isAddingCard}
-                        onAddCard={onAddCard}
-                        onCardClick={(listId, card) => setSelectedCard({ listId, card })}
-                        onCancelAddCard={() => {
-                            const updatedLists = lists.map((l) =>
-                                l.id === list.id ? { ...l, isAddingCard: false } : l
-                            );
-                            setLists(updatedLists);
-                        }}
-                    />
-                ))}
+            <div className='flex h-full'>
+                <div className="flex space-x-4 flex-grow">
+                    {lists.map((list) => (
+                        <List
+                            key={list.id}
+                            id={list.id}
+                            title={list.title}
+                            cards={list.cards}
+                            isAddingCard={list.isAddingCard}
+                            onAddCard={onAddCard}
+                            onCardClick={(listId, card) => setSelectedCard({ listId, card })}
+                            onCancelAddCard={() => {
+                                const updatedLists = lists.map((l) =>
+                                    l.id === list.id ? { ...l, isAddingCard: false } : l
+                                );
+                                setLists(updatedLists);
+                            }}
+                        />
+                    ))}
+                </div>
+
+                <Chatbot />
             </div>
+
             {selectedCard && (
                 <TaskDetails
                     listName={lists.find((list) => list.id === selectedCard.listId)?.title || ''}
