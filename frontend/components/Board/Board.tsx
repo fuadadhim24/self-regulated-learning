@@ -6,7 +6,8 @@ import BoardContent from './BoardContent';
 
 export interface Card {
     id: string;
-    content: string;
+    title: string;
+    sub_title: string;
     description?: string;
     difficulty: 'easy' | 'medium' | 'hard';
 }

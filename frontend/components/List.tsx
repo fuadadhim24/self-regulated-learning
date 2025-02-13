@@ -103,11 +103,21 @@ const List = ({ id, title, cards, onAddCard, onCardClick }: ListProps) => {
                                         ref={provided.innerRef}
                                         {...provided.draggableProps}
                                         {...provided.dragHandleProps}
-                                        className="bg-white p-2 rounded shadow cursor-pointer"
+                                        className="bg-white p-3 rounded shadow cursor-pointer"
                                         onClick={() => onCardClick(id, card)}
                                     >
-                                        <div className="flex justify-between items-center">
-                                            <span>{card.content}</span>
+                                        <div>
+                                            {/* Card Title */}
+                                            <div className="text-blue-600 font-bold text-lg">
+                                                {card.title}
+                                            </div>
+
+                                            {/* Card Subtitle */}
+                                            {card.sub_title && (
+                                                <div className="text-gray-500 text-sm mt-1">
+                                                    {card.sub_title}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 )}
@@ -150,7 +160,7 @@ const List = ({ id, title, cards, onAddCard, onCardClick }: ListProps) => {
                                     value={material}
                                     onChange={handleMaterialChange}
                                     className="w-full p-2 rounded border border-gray-300 mt-2"
-                                    disabled={!courseCode && !courseName} // Disable if neither course nor course code is selected
+                                    disabled={!courseCode && !courseName}
                                 >
                                     <option value="">Select Material</option>
                                     {materials.map(mat => (
@@ -179,6 +189,7 @@ const List = ({ id, title, cards, onAddCard, onCardClick }: ListProps) => {
                     </div>
                 )}
             </Droppable>
+
             {!isAddingCard && (
                 <button
                     onClick={() => setIsAddingCard(true)}

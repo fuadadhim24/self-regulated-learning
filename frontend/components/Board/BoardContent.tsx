@@ -7,7 +7,8 @@ import Chatbot from './Chatbot';
 
 interface Card {
     id: string;
-    content: string;
+    title: string;
+    sub_title: string;
     description?: string;
     difficulty: 'easy' | 'medium' | 'hard';
 }
@@ -39,7 +40,8 @@ export default function BoardContent({
     ) => {
         const newCard: Card = {
             id: `${courseCode}-${courseName}-${material}`,
-            content: `${courseCode} - ${courseName} - ${material}`,
+            title: courseName,
+            sub_title: `${courseCode} - ${material}`,
             description: "",
             difficulty,
         };
@@ -104,7 +106,45 @@ export default function BoardContent({
         }
     };
 
-    const updateCardDescription = (cardId: string, newDescription: string) => {
+    const updateCardTitle = async (cardId: string, newTitle: string) => {
+        const card = lists.flatMap(list => list.cards).find(card => card.id === cardId);
+        if (card && card.title === newTitle) return; // Skip if no change
+        const updatedLists = lists.map((list) => ({
+            ...list,
+            cards: list.cards.map((card) =>
+                card.id === cardId ? { ...card, title: newTitle } : card
+            ),
+        }));
+        setLists(updatedLists);
+
+        if (boardId) {
+            const token = localStorage.getItem('token');
+            if (token) {
+                try {
+                    await updateBoard(token, boardId, updatedLists);
+                    console.log('Updated board:', updatedLists);
+                } catch (error) {
+                    console.error('Error updating board:', error);
+                }
+            }
+        }
+    };
+
+    const updateCardSubTitle = async (cardId: string, newSubTitle: string) => {
+        const card = lists.flatMap(list => list.cards).find(card => card.id === cardId);
+        if (card && card.sub_title === newSubTitle) return; // Skip if no change
+        const updatedLists = lists.map((list) => ({
+            ...list,
+            cards: list.cards.map((card) =>
+                card.id === cardId ? { ...card, sub_title: newSubTitle } : card
+            ),
+        }));
+        setLists(updatedLists);
+    };
+
+    const updateCardDescription = async (cardId: string, newDescription: string) => {
+        const card = lists.flatMap(list => list.cards).find(card => card.id === cardId);
+        if (card && card.description === newDescription) return; // Skip if no change
         const updatedLists = lists.map((list) => ({
             ...list,
             cards: list.cards.map((card) =>
@@ -112,9 +152,21 @@ export default function BoardContent({
             ),
         }));
         setLists(updatedLists);
+
+        if (boardId) {
+            const token = localStorage.getItem('token');
+            if (token) {
+                try {
+                    await updateBoard(token, boardId, updatedLists);
+                    console.log('Updated board:', updatedLists);
+                } catch (error) {
+                    console.error('Error updating board:', error);
+                }
+            }
+        }
     };
 
-    const updateCardDifficulty = (cardId: string, newDifficulty: 'easy' | 'medium' | 'hard') => {
+    const updateCardDifficulty = async (cardId: string, newDifficulty: 'easy' | 'medium' | 'hard') => {
         const updatedLists = lists.map((list) => ({
             ...list,
             cards: list.cards.map((card) =>
@@ -122,16 +174,18 @@ export default function BoardContent({
             ),
         }));
         setLists(updatedLists);
-    };
 
-    const updateCardName = (cardId: string, newName: string) => {
-        const updatedLists = lists.map((list) => ({
-            ...list,
-            cards: list.cards.map((card) =>
-                card.id === cardId ? { ...card, content: newName } : card
-            ),
-        }));
-        setLists(updatedLists);
+        if (boardId) {
+            const token = localStorage.getItem('token');
+            if (token) {
+                try {
+                    await updateBoard(token, boardId, updatedLists);
+                    console.log('Updated board:', updatedLists);
+                } catch (error) {
+                    console.error('Error updating board:', error);
+                }
+            }
+        }
     };
 
     return (
@@ -165,9 +219,10 @@ export default function BoardContent({
                     listName={lists.find((list) => list.id === selectedCard.listId)?.title || ''}
                     card={selectedCard.card}
                     onClose={() => setSelectedCard(null)}
+                    onUpdateTitle={updateCardTitle}
+                    onUpdateSubTitle={updateCardSubTitle}
                     onUpdateDescription={updateCardDescription}
                     onUpdateDifficulty={updateCardDifficulty}
-                    onUpdateTaskName={updateCardName}
                 />
             )}
         </DragDropContext>
