@@ -53,13 +53,15 @@ def update_card():
     verify_jwt_in_request()
     user_id = get_jwt_identity()
     card_id = request.json.get("card_id")
+    title = request.json.get("title")
+    sub_title = request.json.get("sub_title")
     description = request.json.get("description")
     difficulty = request.json.get("difficulty")
 
     if not card_id:
         return jsonify({"message": "Missing card ID"}), 400
 
-    result, status_code = Board.update_card(user_id, card_id, description, difficulty)
+    result, status_code = Board.update_card(user_id, card_id, title, sub_title, description, difficulty)
     return jsonify(result), status_code
 
 @jwt_required()
