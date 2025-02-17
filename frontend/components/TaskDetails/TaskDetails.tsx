@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import TaskInfo from './TaskDetails/TaskInfo';
-import StartStopToggle from './TaskDetails/StartStopToggle';
-import DifficultyDropdown from './TaskDetails/DifficultyDropdown';
-import Checklist from './TaskDetails/Checklist';
+import TaskInfo from './TaskInfo';
+import StartStopToggle from './StartStopToggle';
+import DifficultyDropdown from './DifficultyDropdown';
+import Checklist from './Checklist';
 
 interface TaskDetailsProps {
     listName: string;

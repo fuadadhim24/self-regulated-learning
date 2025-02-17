@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { DragDropContext, DropResult } from 'react-beautiful-dnd';
 import { updateBoard } from '@/utils/api';
 import List from '../List';
-import TaskDetails from '../TaskDetails';
-import Chatbot from './Chatbot';
+import TaskDetails from '../TaskDetails/TaskDetails';
 
 interface Card {
     id: string;
@@ -210,8 +209,6 @@ export default function BoardContent({
                         />
                     ))}
                 </div>
-
-                <Chatbot />
             </div>
 
             {selectedCard && (
