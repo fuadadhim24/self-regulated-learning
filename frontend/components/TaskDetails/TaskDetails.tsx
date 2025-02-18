@@ -6,6 +6,7 @@ import StartStopToggle from "./StartStopToggle"
 import DifficultyDropdown from "./DifficultyDropdown"
 import PriorityDropdown from "./PriorityDropdown"
 import Checklist from "./Checklist"
+import LearningStrategiesDropdown from "./LearningStrategiesDropdown"
 
 interface TaskDetailsProps {
     listName: string
@@ -16,6 +17,7 @@ interface TaskDetailsProps {
         description?: string
         difficulty: "easy" | "medium" | "hard"
         priority: "low" | "medium" | "high"
+        learning_strategy: string
     }
     onClose: () => void
     onUpdateTitle: (cardId: string, newTitle: string) => void
@@ -23,6 +25,7 @@ interface TaskDetailsProps {
     onUpdateDescription: (cardId: string, newDescription: string) => void
     onUpdateDifficulty: (cardId: string, newDifficulty: "easy" | "medium" | "hard") => void
     onUpdatePriority: (cardId: string, newPriority: "low" | "medium" | "high") => void
+    onUpdateLearningStrategy: (cardId: string, newLearningStrategy: string) => void
 }
 
 export default function TaskDetails({
@@ -33,10 +36,12 @@ export default function TaskDetails({
     onUpdateDescription,
     onUpdateDifficulty,
     onUpdatePriority,
+    onUpdateLearningStrategy,
 }: TaskDetailsProps) {
     const [isToggleOn, setIsToggleOn] = useState(false)
     const [difficulty, setDifficulty] = useState(card.difficulty)
     const [priority, setPriority] = useState(card.priority)
+    const [learningStrategy, setLearningStrategy] = useState("Learning Strategy 1") // Default value
 
     const handleToggle = () => {
         setIsToggleOn(!isToggleOn)
@@ -50,6 +55,11 @@ export default function TaskDetails({
     const handlePriorityChange = (newPriority: "low" | "medium" | "high") => {
         setPriority(newPriority)
         onUpdatePriority(card.id, newPriority)
+    }
+
+    const handleLearningStrategyChange = (newLearningStrategy: string) => {
+        setLearningStrategy(newLearningStrategy)
+        onUpdateLearningStrategy(card.id, newLearningStrategy)
     }
 
     return (
@@ -71,6 +81,7 @@ export default function TaskDetails({
                     <div className="w-1/2">
                         <PriorityDropdown priority={priority} onChange={handlePriorityChange} />
                         <DifficultyDropdown difficulty={difficulty} onChange={handleDifficultyChange} />
+                        <LearningStrategiesDropdown strategy={learningStrategy} onChange={handleLearningStrategyChange} />
                     </div>
                 </div>
 
@@ -84,4 +95,3 @@ export default function TaskDetails({
         </div>
     )
 }
-

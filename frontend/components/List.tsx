@@ -17,6 +17,7 @@ interface ListProps {
         description?: string
         difficulty: "easy" | "medium" | "hard"
         priority: "low" | "medium" | "high"
+        learning_strategy: string
     }>
     isAddingCard: boolean
     onAddCard: (
@@ -36,6 +37,7 @@ interface ListProps {
             description?: string
             difficulty: "easy" | "medium" | "hard"
             priority: "low" | "medium" | "high"
+            learning_strategy: string
         },
     ) => void
 }
