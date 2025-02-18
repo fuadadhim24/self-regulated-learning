@@ -6,6 +6,7 @@ export interface Card {
     difficulty: "easy" | "medium" | "hard";
     priority: "low" | "medium" | "high";
     learning_strategy: string;
+    archived?: boolean;
 }
 
 export interface ListType {

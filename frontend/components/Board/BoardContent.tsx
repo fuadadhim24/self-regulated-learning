@@ -4,7 +4,7 @@ import { DragDropContext, type DropResult } from "react-beautiful-dnd";
 import { ListType, Card } from "@/types";
 import List from "../List";
 import TaskDetails from "../TaskDetails/TaskDetails";
-import { addCard, updateCard, moveCard } from "@/utils/boardService";
+import { addCard, updateCard, moveCard, archiveCard } from "@/utils/boardService";
 
 export default function BoardContent({
     lists,
@@ -32,7 +32,7 @@ export default function BoardContent({
                             key={list.id}
                             id={list.id}
                             title={list.title}
-                            cards={list.cards}
+                            cards={list.cards.filter(card => !card.archived)} // Hide archived tasks
                             isAddingCard={list.isAddingCard}
                             onAddCard={(listId, courseCode, courseName, material, difficulty) =>
                                 addCard(lists, setLists, listId, courseCode, courseName, material, difficulty, boardId)
@@ -58,6 +58,7 @@ export default function BoardContent({
                     onUpdateDifficulty={(id, value) => updateCard(lists, setLists, boardId, id, "difficulty", value)}
                     onUpdatePriority={(id, value) => updateCard(lists, setLists, boardId, id, "priority", value)}
                     onUpdateLearningStrategy={(id, value) => updateCard(lists, setLists, boardId, id, "learning_strategy", value)}
+                    onArchive={(cardId) => archiveCard(lists, setLists, boardId, cardId)}
                 />
             )}
         </DragDropContext>

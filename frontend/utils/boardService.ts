@@ -123,3 +123,20 @@ export async function fetchBoardData(
         router.push("/login");
     }
 }
+
+export function archiveCard(
+    lists: ListType[],
+    setLists: React.Dispatch<React.SetStateAction<ListType[]>>,
+    boardId: string | null,
+    cardId: string
+) {
+    const updatedLists = lists.map((list) => ({
+        ...list,
+        cards: list.cards.map((card) =>
+            card.id === cardId ? { ...card, archived: true } : card
+        ),
+    }));
+
+    setLists(updatedLists);
+    updateBoardState(boardId, updatedLists);
+}

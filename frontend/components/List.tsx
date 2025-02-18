@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useEffect, useState } from "react"
 import { Droppable, Draggable } from "react-beautiful-dnd"
 import Card from "./Card"
@@ -47,11 +46,8 @@ const List = ({ id, title, cards, onAddCard, onCardClick }: ListProps) => {
     const [courseCode, setCourseCode] = useState("")
     const [courseName, setCourseName] = useState("")
     const [material, setMaterial] = useState("")
-    const [courses, setCourses] = useState<{ course_code: string; course_name: string; materials: string[] }[]>([])
-    const [courseCodes, setCourseCodes] = useState<string[]>([])
-    const [materials, setMaterials] = useState<string[]>([])
+    const [courses, setCourses] = useState<{ course_code: string; course_name: string }[]>([])
 
-    // Fetch courses when the component mounts
     useEffect(() => {
         const fetchData = async () => {
             const token = localStorage.getItem("token")
@@ -59,7 +55,7 @@ const List = ({ id, title, cards, onAddCard, onCardClick }: ListProps) => {
                 const response = await getCourses(token)
                 if (response.ok) {
                     const data = await response.json()
-                    setCourses(data) // Set available courses
+                    setCourses(data) // Store courses
                 }
             }
         }
@@ -67,40 +63,29 @@ const List = ({ id, title, cards, onAddCard, onCardClick }: ListProps) => {
         fetchData()
     }, [])
 
-    // Handle course selection
     const handleCourseChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedCourseName = event.target.value
         setCourseName(selectedCourseName)
-        setMaterial("") // Reset material when course is selected
 
         const selectedCourse = courses.find((course) => course.course_name === selectedCourseName)
         if (selectedCourse) {
-            setCourseCode(selectedCourse.course_code) // Automatically select course code for the chosen course
-            setMaterials(selectedCourse.materials) // Update materials based on the selected course
+            setCourseCode(selectedCourse.course_code) // Auto-select course code
         }
     }
 
-    // Handle course code selection
     const handleCourseCodeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedCourseCode = event.target.value
         setCourseCode(selectedCourseCode)
-        setMaterial("") // Reset material when course code is selected
 
         const selectedCourse = courses.find((course) => course.course_code === selectedCourseCode)
         if (selectedCourse) {
-            setCourseName(selectedCourse.course_name) // Automatically select course name for the chosen course code
-            setMaterials(selectedCourse.materials) // Update materials based on the selected course code
+            setCourseName(selectedCourse.course_name) // Auto-select course name
         }
     }
 
-    // Handle material selection
-    const handleMaterialChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        setMaterial(event.target.value)
-    }
-
     const handleAddCard = () => {
-        if (courseCode && courseName && material) {
-            onAddCard(id, courseCode, courseName, material, "easy") // Always pass 'easy' as difficulty
+        if (courseCode && courseName && material.trim()) {
+            onAddCard(id, courseCode, courseName, material, "easy")
             setCourseCode("")
             setCourseName("")
             setMaterial("")
@@ -121,10 +106,6 @@ const List = ({ id, title, cards, onAddCard, onCardClick }: ListProps) => {
             <Droppable droppableId={id}>
                 {(provided) => (
                     <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-2 min-h-[100px]">
-                        {cards.length === 0 && !isAddingCard && (
-                            <div className="h-20 opacity-0 pointer-events-none">{/* Invisible placeholder to keep height */}</div>
-                        )}
-
                         {cards.map((card, index) => (
                             <Draggable key={card.id} draggableId={card.id} index={index}>
                                 {(provided) => (
@@ -173,19 +154,13 @@ const List = ({ id, title, cards, onAddCard, onCardClick }: ListProps) => {
                                     ))}
                                 </select>
 
-                                <select
+                                <input
+                                    type="text"
                                     value={material}
-                                    onChange={handleMaterialChange}
+                                    onChange={(e) => setMaterial(e.target.value)}
+                                    placeholder="Enter Material"
                                     className="w-full p-2 rounded border border-gray-300 mt-2"
-                                    disabled={!courseCode && !courseName}
-                                >
-                                    <option value="">Select Material</option>
-                                    {materials.map((mat) => (
-                                        <option key={mat} value={mat}>
-                                            {mat}
-                                        </option>
-                                    ))}
-                                </select>
+                                />
 
                                 <div className="mt-2 flex space-x-2">
                                     <button onClick={handleAddCard} className="bg-blue-500 text-white p-2 rounded">
@@ -214,4 +189,3 @@ const List = ({ id, title, cards, onAddCard, onCardClick }: ListProps) => {
 }
 
 export default List
-

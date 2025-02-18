@@ -26,6 +26,7 @@ interface TaskDetailsProps {
     onUpdateDifficulty: (cardId: string, newDifficulty: "easy" | "medium" | "hard") => void
     onUpdatePriority: (cardId: string, newPriority: "low" | "medium" | "high") => void
     onUpdateLearningStrategy: (cardId: string, newLearningStrategy: string) => void
+    onArchive: (cardId: string) => void
 }
 
 export default function TaskDetails({
@@ -37,11 +38,12 @@ export default function TaskDetails({
     onUpdateDifficulty,
     onUpdatePriority,
     onUpdateLearningStrategy,
+    onArchive,
 }: TaskDetailsProps) {
     const [isToggleOn, setIsToggleOn] = useState(false)
     const [difficulty, setDifficulty] = useState(card.difficulty)
     const [priority, setPriority] = useState(card.priority)
-    const [learningStrategy, setLearningStrategy] = useState("Learning Strategy 1") // Default value
+    const [learningStrategy, setLearningStrategy] = useState("Learning Strategy 1")
 
     const handleToggle = () => {
         setIsToggleOn(!isToggleOn)
@@ -85,12 +87,21 @@ export default function TaskDetails({
                     </div>
                 </div>
 
-                <button
-                    onClick={onClose}
-                    className="mt-4 block w-full bg-gray-300 text-gray-800 py-3 rounded hover:bg-gray-400"
-                >
-                    Close
-                </button>
+                <div className="flex justify-between mt-4">
+                    <button
+                        onClick={onClose}
+                        className="w-[48%] bg-gray-300 text-gray-800 py-3 rounded hover:bg-gray-400"
+                    >
+                        Close
+                    </button>
+
+                    <button
+                        onClick={() => onArchive(card.id)}
+                        className="w-[48%] bg-red-500 text-white py-3 rounded hover:bg-red-600"
+                    >
+                        Archive
+                    </button>
+                </div>
             </div>
         </div>
     )
