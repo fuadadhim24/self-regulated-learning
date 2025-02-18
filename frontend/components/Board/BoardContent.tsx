@@ -190,7 +190,7 @@ export default function BoardContent({
     return (
         <DragDropContext onDragEnd={onDragEnd}>
             <div className='flex h-full'>
-                <div className="flex space-x-4 flex-grow">
+                <div className="flex flex-grow gap-4 overflow-x-auto px-4">
                     {lists.map((list) => (
                         <List
                             key={list.id}

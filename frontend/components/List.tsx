@@ -87,15 +87,22 @@ const List = ({ id, title, cards, onAddCard, onCardClick }: ListProps) => {
     }
 
     return (
-        <div className="bg-gray-200 p-4 rounded-lg w-72">
+        <div className="bg-gray-200 p-4 rounded-lg flex-1 min-w-[250px] max-w-[400px]">
             <h2 className="text-lg font-semibold mb-4">{title}</h2>
             <Droppable droppableId={id}>
                 {(provided) => (
                     <div
                         {...provided.droppableProps}
                         ref={provided.innerRef}
-                        className="space-y-2"
+                        className="space-y-2 min-h-[100px]" // Ensures the column is always at least 100px tall
                     >
+                        {/* If no cards, add an empty div to maintain the droppable area */}
+                        {cards.length === 0 && !isAddingCard && (
+                            <div className="h-20 opacity-0 pointer-events-none">
+                                {/* Invisible placeholder to keep height */}
+                            </div>
+                        )}
+
                         {cards.map((card, index) => (
                             <Draggable key={card.id} draggableId={card.id} index={index}>
                                 {(provided) => (
@@ -125,6 +132,7 @@ const List = ({ id, title, cards, onAddCard, onCardClick }: ListProps) => {
                         ))}
                         {provided.placeholder}
 
+                        {/* Ensure the add card form always shows */}
                         {isAddingCard && (
                             <div className="p-2">
                                 {/* Course Dropdown */}
@@ -190,6 +198,7 @@ const List = ({ id, title, cards, onAddCard, onCardClick }: ListProps) => {
                 )}
             </Droppable>
 
+            {/* Add Card Button */}
             {!isAddingCard && (
                 <button
                     onClick={() => setIsAddingCard(true)}
@@ -198,6 +207,7 @@ const List = ({ id, title, cards, onAddCard, onCardClick }: ListProps) => {
                     Add Card
                 </button>
             )}
+
         </div>
     )
 }
