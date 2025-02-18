@@ -1,23 +1,28 @@
-import { useState } from 'react';
-import TaskInfo from './TaskInfo';
-import StartStopToggle from './StartStopToggle';
-import DifficultyDropdown from './DifficultyDropdown';
-import Checklist from './Checklist';
+"use client"
+
+import { useState } from "react"
+import TaskInfo from "./TaskInfo"
+import StartStopToggle from "./StartStopToggle"
+import DifficultyDropdown from "./DifficultyDropdown"
+import PriorityDropdown from "./PriorityDropdown"
+import Checklist from "./Checklist"
 
 interface TaskDetailsProps {
-    listName: string;
+    listName: string
     card: {
-        id: string;
-        title: string;
-        sub_title: string;
-        description?: string;
-        difficulty: 'easy' | 'medium' | 'hard';
-    };
-    onClose: () => void;
-    onUpdateTitle: (cardId: string, newTitle: string) => void;
-    onUpdateSubTitle: (cardId: string, newSubTitle: string) => void;
-    onUpdateDescription: (cardId: string, newDescription: string) => void;
-    onUpdateDifficulty: (cardId: string, newDifficulty: 'easy' | 'medium' | 'hard') => void;
+        id: string
+        title: string
+        sub_title: string
+        description?: string
+        difficulty: "easy" | "medium" | "hard"
+        priority: "low" | "medium" | "high"
+    }
+    onClose: () => void
+    onUpdateTitle: (cardId: string, newTitle: string) => void
+    onUpdateSubTitle: (cardId: string, newSubTitle: string) => void
+    onUpdateDescription: (cardId: string, newDescription: string) => void
+    onUpdateDifficulty: (cardId: string, newDifficulty: "easy" | "medium" | "hard") => void
+    onUpdatePriority: (cardId: string, newPriority: "low" | "medium" | "high") => void
 }
 
 export default function TaskDetails({
@@ -27,18 +32,25 @@ export default function TaskDetails({
     onUpdateSubTitle,
     onUpdateDescription,
     onUpdateDifficulty,
+    onUpdatePriority,
 }: TaskDetailsProps) {
-    const [isToggleOn, setIsToggleOn] = useState(false);
-    const [difficulty, setDifficulty] = useState(card.difficulty);
+    const [isToggleOn, setIsToggleOn] = useState(false)
+    const [difficulty, setDifficulty] = useState(card.difficulty)
+    const [priority, setPriority] = useState(card.priority)
 
     const handleToggle = () => {
-        setIsToggleOn(!isToggleOn);
-    };
+        setIsToggleOn(!isToggleOn)
+    }
 
-    const handleDifficultyChange = (newDifficulty: 'easy' | 'medium' | 'hard') => {
-        setDifficulty(newDifficulty);
-        onUpdateDifficulty(card.id, newDifficulty);
-    };
+    const handleDifficultyChange = (newDifficulty: "easy" | "medium" | "hard") => {
+        setDifficulty(newDifficulty)
+        onUpdateDifficulty(card.id, newDifficulty)
+    }
+
+    const handlePriorityChange = (newPriority: "low" | "medium" | "high") => {
+        setPriority(newPriority)
+        onUpdatePriority(card.id, newPriority)
+    }
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
@@ -57,6 +69,7 @@ export default function TaskDetails({
                     </div>
 
                     <div className="w-1/2">
+                        <PriorityDropdown priority={priority} onChange={handlePriorityChange} />
                         <DifficultyDropdown difficulty={difficulty} onChange={handleDifficultyChange} />
                     </div>
                 </div>
@@ -69,5 +82,6 @@ export default function TaskDetails({
                 </button>
             </div>
         </div>
-    );
+    )
 }
+

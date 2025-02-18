@@ -2,12 +2,12 @@
 
 import { useState, useRef, useEffect } from "react"
 
-interface DifficultyDropdownProps {
-    difficulty: "easy" | "medium" | "hard"
-    onChange: (newDifficulty: "easy" | "medium" | "hard") => void
+interface PriorityDropdownProps {
+    priority: "low" | "medium" | "high"
+    onChange: (newPriority: "low" | "medium" | "high") => void
 }
 
-export default function DifficultyDropdown({ difficulty, onChange }: DifficultyDropdownProps) {
+export default function PriorityDropdown({ priority, onChange }: PriorityDropdownProps) {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false)
     const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -24,31 +24,31 @@ export default function DifficultyDropdown({ difficulty, onChange }: DifficultyD
         }
     }, [])
 
-    const getColorForDifficulty = (level: string) => {
+    const getColorForPriority = (level: string) => {
         switch (level) {
-            case "easy":
-                return "bg-green-500"
+            case "low":
+                return "bg-green-300"
             case "medium":
-                return "bg-yellow-500"
-            case "hard":
-                return "bg-red-500"
+                return "bg-yellow-300"
+            case "high":
+                return "bg-red-300"
             default:
-                return "bg-gray-500"
+                return "bg-gray-300"
         }
     }
 
     return (
         <div className="relative mb-4 w-full max-w-xs" ref={dropdownRef}>
-            <label className="block text-gray-700 font-semibold mb-2">Difficulty</label>
+            <label className="block text-gray-700 font-semibold mb-2">Priority</label>
             <div className="relative">
                 <button
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                     className="w-full flex items-center justify-between p-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white border border-gray-300 hover:bg-gray-50 transition-colors duration-200"
                     aria-haspopup="true"
                     aria-expanded={isDropdownOpen}
-                    aria-label={`Current difficulty: ${difficulty}`}
+                    aria-label={`Current priority: ${priority}`}
                 >
-                    <div className={`flex-grow h-8 rounded-md ${getColorForDifficulty(difficulty)}`} aria-hidden="true"></div>
+                    <div className={`flex-grow h-8 rounded-md ${getColorForPriority(priority)}`} aria-hidden="true"></div>
                     <svg
                         className="h-5 w-5 text-gray-400 ml-2 flex-shrink-0"
                         xmlns="http://www.w3.org/2000/svg"
@@ -66,17 +66,17 @@ export default function DifficultyDropdown({ difficulty, onChange }: DifficultyD
 
                 {isDropdownOpen && (
                     <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg overflow-hidden">
-                        {["easy", "medium", "hard"].map((level) => (
+                        {["low", "medium", "high"].map((level) => (
                             <button
                                 key={level}
                                 className="flex items-center w-full p-2 text-sm hover:bg-gray-100 transition-colors duration-200"
                                 onClick={() => {
-                                    onChange(level as "easy" | "medium" | "hard")
+                                    onChange(level as "low" | "medium" | "high")
                                     setIsDropdownOpen(false)
                                 }}
-                                aria-label={`Set difficulty to ${level}`}
+                                aria-label={`Set priority to ${level}`}
                             >
-                                <div className={`flex-grow h-8 rounded-md ${getColorForDifficulty(level)}`} aria-hidden="true"></div>
+                                <div className={`flex-grow h-8 rounded-md ${getColorForPriority(level)}`} aria-hidden="true"></div>
                             </button>
                         ))}
                     </div>

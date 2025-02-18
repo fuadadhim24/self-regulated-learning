@@ -10,6 +10,7 @@ export interface Card {
     sub_title: string;
     description?: string;
     difficulty: 'easy' | 'medium' | 'hard';
+    priority: 'low' | 'medium' | 'high';
 }
 
 interface ListType {
