@@ -41,8 +41,8 @@ export default function BoardContent({
     ) => {
         const newCard: Card = {
             id: `${courseCode}-${courseName}-${material}`,
-            title: courseName,
-            sub_title: `${courseCode} - ${material}`,
+            title: `${courseName} [${courseCode}]`,
+            sub_title: material,
             description: "",
             difficulty,
             priority: "medium", // Default priority
