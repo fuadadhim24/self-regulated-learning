@@ -7,6 +7,8 @@ import DifficultyDropdown from "./DifficultyDropdown"
 import PriorityDropdown from "./PriorityDropdown"
 import Checklist from "./Checklist"
 import LearningStrategiesDropdown from "./LearningStrategiesDropdown"
+import StarRating from "./StarRating"
+import TaskNotes from "./TaskNotes"
 import { Checklists } from "@/types"
 
 interface TaskDetailsProps {
@@ -20,6 +22,8 @@ interface TaskDetailsProps {
         priority: "low" | "medium" | "high"
         learning_strategy: string
         checklists?: Checklists[]
+        rating?: number
+        notes?: string
     }
     onClose: () => void
     onUpdateTitle: (cardId: string, newTitle: string) => void
@@ -28,11 +32,14 @@ interface TaskDetailsProps {
     onUpdateDifficulty: (cardId: string, newDifficulty: "easy" | "medium" | "hard") => void
     onUpdatePriority: (cardId: string, newPriority: "low" | "medium" | "high") => void
     onUpdateLearningStrategy: (cardId: string, newLearningStrategy: string) => void
-    onUpdateChecklists: (cardId: string, updatedChecklists: Checklists[]) => void;
+    onUpdateChecklists: (cardId: string, updatedChecklists: Checklists[]) => void
+    onUpdateRating: (cardId: string, newRating: number) => void
+    onUpdateNotes: (cardId: string, newNotes: string) => void
     onArchive: (cardId: string) => void
 }
 
 export default function TaskDetails({
+    listName,
     card,
     onClose,
     onUpdateTitle,
@@ -42,6 +49,8 @@ export default function TaskDetails({
     onUpdatePriority,
     onUpdateLearningStrategy,
     onUpdateChecklists,
+    onUpdateRating,
+    onUpdateNotes,
     onArchive,
 }: TaskDetailsProps) {
     const [isToggleOn, setIsToggleOn] = useState(false)
@@ -49,6 +58,9 @@ export default function TaskDetails({
     const [priority, setPriority] = useState(card.priority)
     const [learningStrategy, setLearningStrategy] = useState("Learning Strategy 1")
     const [checklists, setChecklists] = useState<Checklists[]>(card.checklists ?? [])
+    const [rating, setRating] = useState(card.rating ?? 0)
+    const [notes, setNotes] = useState(card.notes ?? "")
+    const isRatingEnabled = listName === "Reflection (Done)";
 
     const handleToggle = () => {
         setIsToggleOn(!isToggleOn)
@@ -74,6 +86,16 @@ export default function TaskDetails({
         onUpdateChecklists(card.id, updatedChecklists)
     }
 
+    const handleRatingChange = (newRating: number) => {
+        setRating(newRating)
+        onUpdateRating(card.id, newRating)
+    }
+
+    const handleUpdateNotes = (cardId: string, newNotes: string) => {
+        setNotes(newNotes)
+        onUpdateNotes(cardId, newNotes)
+    }
+
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
             <div className="bg-white rounded-lg p-8 w-[600px]">
@@ -92,12 +114,18 @@ export default function TaskDetails({
                             checklists={checklists}
                             onUpdateChecklists={(handleUpdateChecklists)}
                         />
+                        <TaskNotes cardId={card.id} notes={notes} onUpdateNotes={handleUpdateNotes} />
                     </div>
 
                     <div className="w-1/2">
                         <PriorityDropdown priority={priority} onChange={handlePriorityChange} />
                         <DifficultyDropdown difficulty={difficulty} onChange={handleDifficultyChange} />
                         <LearningStrategiesDropdown strategy={learningStrategy} onChange={handleLearningStrategyChange} />
+
+                        <div className="mt-4">
+                            <h3 className="font-semibold">Rate Your Learning:</h3>
+                            <StarRating rating={rating} onRate={handleRatingChange} isDisabled={!isRatingEnabled} />
+                        </div>
                     </div>
                 </div>
 

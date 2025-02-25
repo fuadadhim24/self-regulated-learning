@@ -19,6 +19,8 @@ export interface Card {
     learning_strategy: string;
     archived?: boolean;
     checklists?: Checklists[];
+    rating?: number;
+    notes?: string;
 }
 
 export interface ListType {
