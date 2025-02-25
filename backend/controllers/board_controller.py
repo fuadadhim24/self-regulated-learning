@@ -83,13 +83,16 @@ def get_progress_report():
         list_title = list_item.get("title")
         cards = list_item.get("cards", [])
 
-        # Add count for this list
-        report[list_title] = len(cards)
-        total_cards += len(cards)
+        # Filter out archived cards
+        active_cards = [card for card in cards if not card.get("archived", False)]
+
+        # Add count for this list (excluding archived cards)
+        report[list_title] = len(active_cards)
+        total_cards += len(active_cards)
 
         # Check if this list is "Done"
         if "done" in list_title.lower():
-            done_cards += len(cards)
+            done_cards += len(active_cards)
 
     # Calculate progress percentage
     progress_percentage = (done_cards / total_cards * 100) if total_cards > 0 else 0

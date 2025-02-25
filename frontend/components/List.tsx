@@ -107,22 +107,16 @@ const List = ({ id, title, cards, onAddCard, onCardClick }: ListProps) => {
                 {(provided) => (
                     <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-2 min-h-[100px]">
                         {cards.map((card, index) => (
-                            <Draggable key={card.id} draggableId={card.id} index={index}>
-                                {(provided) => (
-                                    <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
-                                        <Card
-                                            key={card.id}
-                                            id={card.id}
-                                            title={card.title}
-                                            subTitle={card.sub_title}
-                                            difficulty={card.difficulty}
-                                            priority={card.priority}
-                                            index={index}
-                                            onClick={() => onCardClick(id, card)}
-                                        />
-                                    </div>
-                                )}
-                            </Draggable>
+                            <Card
+                                key={card.id}
+                                id={card.id}
+                                title={card.title}
+                                subTitle={card.sub_title}
+                                difficulty={card.difficulty}
+                                priority={card.priority}
+                                index={index}
+                                onClick={() => onCardClick(id, card)}
+                            />
                         ))}
                         {provided.placeholder}
 

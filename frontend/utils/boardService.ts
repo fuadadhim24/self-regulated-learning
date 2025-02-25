@@ -76,10 +76,12 @@ export function moveCard(
 
     if (sourceListIndex < 0 || destListIndex < 0) return;
 
-    const sourceList = { ...lists[sourceListIndex] };
-    const destList = { ...lists[destListIndex] };
+    const sourceList = { ...lists[sourceListIndex], cards: [...lists[sourceListIndex].cards] };
+    const destList = { ...lists[destListIndex], cards: [...lists[destListIndex].cards] };
 
-    const [movedCard] = sourceList.cards.splice(sourceIndex, 1);
+    const movedCard = sourceList.cards[sourceIndex];
+    if (!movedCard) return; // Exit early if no card is found
+    sourceList.cards.splice(sourceIndex, 1);
 
     if (sourceList.id === destList.id) {
         sourceList.cards.splice(destinationIndex, 0, movedCard);

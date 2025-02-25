@@ -26,12 +26,14 @@ export default function Card({ id, title, subTitle, difficulty, priority, index,
 
     return (
         <Draggable draggableId={id} index={index}>
-            {(provided) => (
+            {(provided, snapshot) => (
                 <div
                     ref={provided.innerRef}
                     {...provided.draggableProps}
                     {...provided.dragHandleProps}
-                    className="bg-white p-3 rounded shadow cursor-pointer border border-gray-200 hover:shadow-md transition"
+                    className={`bg-white p-3 rounded shadow cursor-pointer border border-gray-200 hover:shadow-md transition 
+                    ${snapshot.isDragging ? "shadow-lg scale-105" : ""} // Add visual feedback
+                `}
                     onClick={onClick}
                 >
                     <div className="flex mb-2 space-x-2">

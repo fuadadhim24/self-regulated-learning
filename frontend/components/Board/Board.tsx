@@ -24,7 +24,6 @@ export default function Board() {
         <div className="min-h-screen bg-blue-100 p-8">
             <BoardHeader
                 boardName={boardName}
-                onBack={() => router.push("/dashboard")}
                 onShowArchived={() => setIsArchivedModalOpen(true)} // Open modal
             />
             <BoardContent lists={lists} setLists={setLists} boardId={boardId} />
