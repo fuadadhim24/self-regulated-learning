@@ -8,10 +8,9 @@ export async function updateBoardState(boardId: string | null, lists: ListType[]
     if (!token) return;
 
     try {
-        const response = await updateBoard(token, boardId, lists);
-        if (!response.ok) {
-            console.error("Failed to update board:", await response.text());
-        }
+        const data = await updateBoard(token, boardId, lists);
+        console.log("Board updated:", data);
+
     } catch (error) {
         console.error("Error updating board:", error);
     }

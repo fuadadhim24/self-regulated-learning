@@ -7,6 +7,7 @@ import DifficultyDropdown from "./DifficultyDropdown"
 import PriorityDropdown from "./PriorityDropdown"
 import Checklist from "./Checklist"
 import LearningStrategiesDropdown from "./LearningStrategiesDropdown"
+import { Checklists } from "@/types"
 
 interface TaskDetailsProps {
     listName: string
@@ -18,6 +19,7 @@ interface TaskDetailsProps {
         difficulty: "easy" | "medium" | "hard"
         priority: "low" | "medium" | "high"
         learning_strategy: string
+        checklists?: Checklists[]
     }
     onClose: () => void
     onUpdateTitle: (cardId: string, newTitle: string) => void
@@ -26,6 +28,7 @@ interface TaskDetailsProps {
     onUpdateDifficulty: (cardId: string, newDifficulty: "easy" | "medium" | "hard") => void
     onUpdatePriority: (cardId: string, newPriority: "low" | "medium" | "high") => void
     onUpdateLearningStrategy: (cardId: string, newLearningStrategy: string) => void
+    onUpdateChecklists: (cardId: string, updatedChecklists: Checklists[]) => void;
     onArchive: (cardId: string) => void
 }
 
@@ -38,12 +41,14 @@ export default function TaskDetails({
     onUpdateDifficulty,
     onUpdatePriority,
     onUpdateLearningStrategy,
+    onUpdateChecklists,
     onArchive,
 }: TaskDetailsProps) {
     const [isToggleOn, setIsToggleOn] = useState(false)
     const [difficulty, setDifficulty] = useState(card.difficulty)
     const [priority, setPriority] = useState(card.priority)
     const [learningStrategy, setLearningStrategy] = useState("Learning Strategy 1")
+    const [checklists, setChecklists] = useState<Checklists[]>(card.checklists ?? [])
 
     const handleToggle = () => {
         setIsToggleOn(!isToggleOn)
@@ -64,6 +69,11 @@ export default function TaskDetails({
         onUpdateLearningStrategy(card.id, newLearningStrategy)
     }
 
+    const handleUpdateChecklists = (updatedChecklists: Checklists[]) => {
+        setChecklists(updatedChecklists)
+        onUpdateChecklists(card.id, updatedChecklists)
+    }
+
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
             <div className="bg-white rounded-lg p-8 w-[600px]">
@@ -77,7 +87,11 @@ export default function TaskDetails({
                 <div className="flex justify-between gap-4">
                     <div className="w-1/2">
                         <StartStopToggle isToggleOn={isToggleOn} onToggle={handleToggle} />
-                        <Checklist cardId={card.id} />
+                        <Checklist
+                            cardId={card.id}
+                            checklists={checklists}
+                            onUpdateChecklists={(handleUpdateChecklists)}
+                        />
                     </div>
 
                     <div className="w-1/2">

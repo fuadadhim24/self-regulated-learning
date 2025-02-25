@@ -1,60 +1,79 @@
-import { useState } from 'react';
-
-interface ChecklistItem {
-    id: string;
-    text: string;
-    completed: boolean;
-}
+import { useState, useEffect } from "react";
+import { Checklists, ChecklistItem } from "@/types";
 
 interface ChecklistProps {
     cardId: string;
+    checklists?: Checklists[];
+    onUpdateChecklists: (updatedChecklists: Checklists[]) => void;
 }
 
-export default function Checklist({ cardId }: ChecklistProps) {
-    const [checklists, setChecklists] = useState<{ id: string; title: string; items: ChecklistItem[] }[]>([]);
+export default function Checklist({ cardId, checklists = [], onUpdateChecklists }: ChecklistProps) {
+    const [localChecklists, setLocalChecklists] = useState<Checklists[]>(checklists);
     const [showForm, setShowForm] = useState(false);
-    const [newTitle, setNewTitle] = useState('');
+    const [newTitle, setNewTitle] = useState("");
+    const [newItemText, setNewItemText] = useState<{ [key: string]: string }>({}); // Track input per checklist
+
+    useEffect(() => {
+        setLocalChecklists(checklists);
+    }, [checklists]);
 
     const handleAddChecklist = () => {
-        if (newTitle.trim() === '') return;
+        if (newTitle.trim() === "") return;
 
-        const newChecklist = {
-            id: `${Date.now()}`, // simple unique ID
+        const newChecklist: Checklists = {
+            id: `${Date.now()}`,
             title: newTitle,
             items: [],
         };
 
-        setChecklists((prev) => [...prev, newChecklist]);
-        setNewTitle('');
+        const updatedChecklists = [...localChecklists, newChecklist];
+        setLocalChecklists(updatedChecklists);
+        onUpdateChecklists(updatedChecklists);
+
+        setNewTitle("");
         setShowForm(false);
     };
 
     const handleDeleteChecklist = (checklistId: string) => {
-        setChecklists((prev) => prev.filter((list) => list.id !== checklistId));
+        const updatedChecklists = localChecklists.filter((list) => list.id !== checklistId);
+        setLocalChecklists(updatedChecklists);
+        onUpdateChecklists(updatedChecklists);
     };
 
     const handleAddItem = (checklistId: string) => {
-        const newItem = { id: `${Date.now()}`, text: 'New Item', completed: false };
-        setChecklists((prev) =>
-            prev.map((list) =>
-                list.id === checklistId ? { ...list, items: [...list.items, newItem] } : list
-            )
+        if (!newItemText[checklistId] || newItemText[checklistId].trim() === "") return;
+
+        const newItem: ChecklistItem = {
+            id: `${Date.now()}`,
+            text: newItemText[checklistId],
+            completed: false,
+        };
+
+        const updatedChecklists = localChecklists.map((list) =>
+            list.id === checklistId ? { ...list, items: [...list.items, newItem] } : list
         );
+
+        setLocalChecklists(updatedChecklists);
+        onUpdateChecklists(updatedChecklists);
+
+        // Clear input after adding item
+        setNewItemText((prev) => ({ ...prev, [checklistId]: "" }));
     };
 
     const handleToggleItem = (checklistId: string, itemId: string) => {
-        setChecklists((prev) =>
-            prev.map((list) =>
-                list.id === checklistId
-                    ? {
-                        ...list,
-                        items: list.items.map((item) =>
-                            item.id === itemId ? { ...item, completed: !item.completed } : item
-                        ),
-                    }
-                    : list
-            )
+        const updatedChecklists = localChecklists.map((list) =>
+            list.id === checklistId
+                ? {
+                    ...list,
+                    items: list.items.map((item) =>
+                        item.id === itemId ? { ...item, completed: !item.completed } : item
+                    ),
+                }
+                : list
         );
+
+        setLocalChecklists(updatedChecklists);
+        onUpdateChecklists(updatedChecklists);
     };
 
     const calculateProgress = (items: ChecklistItem[]) => {
@@ -92,7 +111,7 @@ export default function Checklist({ cardId }: ChecklistProps) {
                 </div>
             )}
 
-            {checklists.map((list) => (
+            {localChecklists.map((list) => (
                 <div key={list.id} className="mt-4 p-3 border rounded shadow-sm">
                     <div className="flex justify-between items-center mb-2">
                         <h3 className="font-semibold">{list.title}</h3>
@@ -122,19 +141,29 @@ export default function Checklist({ cardId }: ChecklistProps) {
                                     onChange={() => handleToggleItem(list.id, item.id)}
                                     className="mr-2"
                                 />
-                                <span className={item.completed ? 'line-through text-gray-500' : ''}>
+                                <span className={item.completed ? "line-through text-gray-500" : ""}>
                                     {item.text}
                                 </span>
                             </li>
                         ))}
                     </ul>
 
-                    <button
-                        onClick={() => handleAddItem(list.id)}
-                        className="w-full mt-2 bg-gray-500 text-white py-1 rounded hover:bg-gray-600"
-                    >
-                        Add Item
-                    </button>
+                    {/* Add Item Input */}
+                    <div className="mt-2 flex">
+                        <input
+                            type="text"
+                            value={newItemText[list.id] || ""}
+                            onChange={(e) => setNewItemText({ ...newItemText, [list.id]: e.target.value })}
+                            placeholder="New Item Name"
+                            className="border p-2 flex-grow rounded"
+                        />
+                        <button
+                            onClick={() => handleAddItem(list.id)}
+                            className="ml-2 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                        >
+                            Add
+                        </button>
+                    </div>
                 </div>
             ))}
         </div>

@@ -58,6 +58,7 @@ export default function BoardContent({
                     onUpdateDifficulty={(id, value) => updateCard(lists, setLists, boardId, id, "difficulty", value)}
                     onUpdatePriority={(id, value) => updateCard(lists, setLists, boardId, id, "priority", value)}
                     onUpdateLearningStrategy={(id, value) => updateCard(lists, setLists, boardId, id, "learning_strategy", value)}
+                    onUpdateChecklists={(id, value) => updateCard(lists, setLists, boardId, id, "checklists", value)}
                     onArchive={(cardId) => archiveCard(lists, setLists, boardId, cardId)}
                 />
             )}

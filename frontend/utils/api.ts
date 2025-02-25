@@ -72,7 +72,7 @@ export async function updateBoard(token: string, boardId: string, lists: any[]) 
         const responseData = await response.json();
         console.log("Response data:", responseData);
 
-        return response;
+        return responseData;
     } catch (error) {
         console.error("Error updating board:", error);
         throw error; // Re-throw error for further handling
