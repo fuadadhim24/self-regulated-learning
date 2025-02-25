@@ -61,6 +61,7 @@ export default function TaskDetails({
     const [rating, setRating] = useState(card.rating ?? 0)
     const [notes, setNotes] = useState(card.notes ?? "")
     const isRatingEnabled = listName === "Reflection (Done)";
+    const isNotesEnabled = listName === "Reflection (Done)";
 
     const handleToggle = () => {
         setIsToggleOn(!isToggleOn)
@@ -114,7 +115,7 @@ export default function TaskDetails({
                             checklists={checklists}
                             onUpdateChecklists={(handleUpdateChecklists)}
                         />
-                        <TaskNotes cardId={card.id} notes={notes} onUpdateNotes={handleUpdateNotes} />
+                        <TaskNotes cardId={card.id} notes={notes} onUpdateNotes={handleUpdateNotes} isDisabled={!isNotesEnabled} />
                     </div>
 
                     <div className="w-1/2">
