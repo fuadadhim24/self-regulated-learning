@@ -61,7 +61,10 @@ export default function BoardContent({
                     onUpdateChecklists={(id, value) => updateCard(lists, setLists, boardId, id, "checklists", value)}
                     onUpdateRating={(id, value) => updateCard(lists, setLists, boardId, id, "rating", value)}
                     onUpdateNotes={(id, value) => updateCard(lists, setLists, boardId, id, "notes", value)}
-                    onArchive={(cardId) => archiveCard(lists, setLists, boardId, cardId)}
+                    onArchive={(cardId) => {
+                        archiveCard(lists, setLists, boardId, cardId);
+                        setSelectedCard(null);
+                    }}
                     onDelete={(cardId) => deleteCard(lists, setLists, boardId, cardId)}
                 />
             )}
