@@ -24,7 +24,14 @@ export default function LearningStrategiesDropdown({ strategy, onChange }: Learn
         }
     }, [])
 
-    const learningStrategies = ["Learning Strategy 1", "Learning Strategy 2", "Learning Strategy 3"]
+    const learningStrategies = [
+        "Rehearsal Strategies - Pengulangan Materi",
+        "Elaboration Strategies - Membuat Ringkasan dengan Kata Sendiri",
+        "Organization Strategies - Membuat Mind Map dan Outline",
+        "Metacognitive Strategies - Evaluasi Hasil Belajar & Atur Strategi Belajar",
+        "Time Management Strategies - Teknik Pomodoro",
+        "Help-seeking Strategies - Belajar dengan AI & Platform Online",
+    ]
 
     return (
         <div className="relative mb-4 w-full max-w-xs" ref={dropdownRef}>

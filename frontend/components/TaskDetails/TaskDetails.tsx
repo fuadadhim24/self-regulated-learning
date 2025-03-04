@@ -56,7 +56,7 @@ export default function TaskDetails({
     const [isToggleOn, setIsToggleOn] = useState(false)
     const [difficulty, setDifficulty] = useState(card.difficulty)
     const [priority, setPriority] = useState(card.priority)
-    const [learningStrategy, setLearningStrategy] = useState("Learning Strategy 1")
+    const [learningStrategy, setLearningStrategy] = useState(card.learning_strategy ?? "Learning Strategies")
     const [checklists, setChecklists] = useState<Checklists[]>(card.checklists ?? [])
     const [rating, setRating] = useState(card.rating ?? 0)
     const [notes, setNotes] = useState(card.notes ?? "")
