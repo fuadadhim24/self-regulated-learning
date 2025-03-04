@@ -9,6 +9,7 @@ import Checklist from "./Checklist"
 import LearningStrategiesDropdown from "./LearningStrategiesDropdown"
 import StarRating from "./StarRating"
 import TaskNotes from "./TaskNotes"
+import FileUpload from "./FileUpload"
 import { Checklists } from "@/types"
 
 interface TaskDetailsProps {
@@ -117,6 +118,9 @@ export default function TaskDetails({
                             checklists={checklists}
                             onUpdateChecklists={handleUpdateChecklists}
                         />
+
+                        <FileUpload />
+
                         <TaskNotes
                             cardId={card.id}
                             notes={notes}
