@@ -5,14 +5,15 @@ from bson.objectid import ObjectId
 
 class User:
     @staticmethod
-    def create_user(first_name, last_name, email, username, password):
+    def create_user(first_name, last_name, email, username, password, role="user"):
         hashed_password = generate_password_hash(password)
         user_data = {
             "first_name": first_name,
             "last_name": last_name,
             "email": email,
             "username": username,
-            "password": hashed_password
+            "password": hashed_password,
+            "role": role
         }
         user_id = mongo.db.users.insert_one(user_data).inserted_id
         return user_id

@@ -10,16 +10,20 @@ export default function Login() {
     const router = useRouter()
 
     const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-        const response = await login(username, password)
+        e.preventDefault();
+        const response = await login(username, password);
         if (response.ok) {
-            const { token } = await response.json()
-            localStorage.setItem('token', token)
-            router.push('/board')
+            const data = await response.json(); // data should contain { token, role }
+            localStorage.setItem("token", data.token);
+            if (data.role === "admin") {
+                router.push("/admin");
+            } else {
+                router.push("/board");
+            }
         } else {
-            alert('Login failed')
+            alert("Login failed");
         }
-    }
+    };
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-100">

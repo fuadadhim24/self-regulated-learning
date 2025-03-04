@@ -39,16 +39,16 @@ def login():
         username = request.json.get("username")
         password = request.json.get("password")
 
-        # Debugging statement
-        print("MongoDB instance:", mongo)
-        print("MongoDB database:", mongo.db)
-
         user = User.find_user_by_username(username)
         if not user or not User.validate_password(user, password):
             return jsonify({"message": "Invalid username or password"}), 401
 
         access_token = create_access_token(identity=str(user["_id"]))
-        return jsonify({"token": access_token}), 200
+        
+        # Ensure role is included in response
+        user_role = user.get("role", "user")  # Default role is "user" if not set
+
+        return jsonify({"token": access_token, "role": user_role}), 200
     except Exception as e:
         print("Error during login:", str(e))
         return jsonify({"message": "An error occurred", "error": str(e)}), 500
