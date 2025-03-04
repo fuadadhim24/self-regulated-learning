@@ -141,3 +141,22 @@ export function archiveCard(
     setLists(updatedLists);
     updateBoardState(boardId, updatedLists);
 }
+
+export function deleteCard(
+    lists: ListType[],
+    setLists: React.Dispatch<React.SetStateAction<ListType[]>>,
+    boardId: string | null,
+    cardId: string
+) {
+    const updatedLists = lists.map((list) => ({
+        ...list,
+        cards: list.cards.map((card) =>
+            card.id === cardId ? { ...card, deleted: true } : card
+        ),
+    }));
+
+    console.log("Updated Lists after delete:", updatedLists); // Debugging log
+
+    setLists(updatedLists);
+    updateBoardState(boardId, updatedLists);
+}

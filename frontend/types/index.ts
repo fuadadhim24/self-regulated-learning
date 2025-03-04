@@ -18,6 +18,7 @@ export interface Card {
     priority: "low" | "medium" | "high";
     learning_strategy: string;
     archived?: boolean;
+    deleted?: boolean;
     checklists?: Checklists[];
     rating?: number;
     notes?: string;

@@ -18,7 +18,7 @@ interface TaskDetailsProps {
         title: string
         sub_title: string
         description?: string
-        difficulty: "easy" | "medium" | "hard"
+        difficulty: "easy" | "medium" | "hard" | "expert"
         priority: "low" | "medium" | "high" | "critical"
         learning_strategy: string
         checklists?: Checklists[]
@@ -29,13 +29,14 @@ interface TaskDetailsProps {
     onUpdateTitle: (cardId: string, newTitle: string) => void
     onUpdateSubTitle: (cardId: string, newSubTitle: string) => void
     onUpdateDescription: (cardId: string, newDescription: string) => void
-    onUpdateDifficulty: (cardId: string, newDifficulty: "easy" | "medium" | "hard") => void
+    onUpdateDifficulty: (cardId: string, newDifficulty: "easy" | "medium" | "hard" | "expert") => void
     onUpdatePriority: (cardId: string, newPriority: "low" | "medium" | "high" | "critical") => void
     onUpdateLearningStrategy: (cardId: string, newLearningStrategy: string) => void
     onUpdateChecklists: (cardId: string, updatedChecklists: Checklists[]) => void
     onUpdateRating: (cardId: string, newRating: number) => void
     onUpdateNotes: (cardId: string, newNotes: string) => void
     onArchive: (cardId: string) => void
+    onDelete: (cardId: string) => void
 }
 
 export default function TaskDetails({
@@ -52,6 +53,7 @@ export default function TaskDetails({
     onUpdateRating,
     onUpdateNotes,
     onArchive,
+    onDelete
 }: TaskDetailsProps) {
     const [isToggleOn, setIsToggleOn] = useState(false)
     const [difficulty, setDifficulty] = useState(card.difficulty)
@@ -67,7 +69,7 @@ export default function TaskDetails({
         setIsToggleOn(!isToggleOn)
     }
 
-    const handleDifficultyChange = (newDifficulty: "easy" | "medium" | "hard") => {
+    const handleDifficultyChange = (newDifficulty: "easy" | "medium" | "hard" | "expert") => {
         setDifficulty(newDifficulty)
         onUpdateDifficulty(card.id, newDifficulty)
     }
@@ -113,9 +115,14 @@ export default function TaskDetails({
                         <Checklist
                             cardId={card.id}
                             checklists={checklists}
-                            onUpdateChecklists={(handleUpdateChecklists)}
+                            onUpdateChecklists={handleUpdateChecklists}
                         />
-                        <TaskNotes cardId={card.id} notes={notes} onUpdateNotes={handleUpdateNotes} isDisabled={!isNotesEnabled} />
+                        <TaskNotes
+                            cardId={card.id}
+                            notes={notes}
+                            onUpdateNotes={handleUpdateNotes}
+                            isDisabled={!isNotesEnabled}
+                        />
                     </div>
 
                     <div className="w-1/2">
@@ -130,22 +137,35 @@ export default function TaskDetails({
                     </div>
                 </div>
 
-                <div className="flex justify-between mt-4">
+                {/* Buttons Layout */}
+                <div className="flex items-center gap-4 mt-4">
                     <button
                         onClick={onClose}
-                        className="w-[48%] bg-gray-300 text-gray-800 py-3 rounded hover:bg-gray-400"
+                        className="w-[40%] bg-gray-300 text-gray-800 py-3 rounded hover:bg-gray-400"
                     >
                         Close
                     </button>
 
                     <button
                         onClick={() => onArchive(card.id)}
-                        className="w-[48%] bg-red-500 text-white py-3 rounded hover:bg-red-600"
+                        className="w-[40%] bg-red-500 text-white py-3 rounded hover:bg-red-600"
                     >
                         Archive
+                    </button>
+
+                    <button
+                        onClick={() => {
+                            if (confirm("Are you sure you want to delete this task? This action cannot be undone by you.")) {
+                                onDelete(card.id);
+                            }
+                        }}
+                        className="w-[20%] bg-red-700 text-white py-3 rounded hover:bg-red-800"
+                    >
+                        Delete
                     </button>
                 </div>
             </div>
         </div>
-    )
-}
+    );
+
+}   
