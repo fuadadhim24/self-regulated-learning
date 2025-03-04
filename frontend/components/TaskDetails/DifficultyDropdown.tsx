@@ -3,8 +3,8 @@
 import { useState, useRef, useEffect } from "react"
 
 interface DifficultyDropdownProps {
-    difficulty: "easy" | "medium" | "hard"
-    onChange: (newDifficulty: "easy" | "medium" | "hard") => void
+    difficulty: "easy" | "medium" | "hard" | "expert"
+    onChange: (newDifficulty: "easy" | "medium" | "hard" | "expert") => void
 }
 
 export default function DifficultyDropdown({ difficulty, onChange }: DifficultyDropdownProps) {
@@ -27,11 +27,13 @@ export default function DifficultyDropdown({ difficulty, onChange }: DifficultyD
     const getColorForDifficulty = (level: string) => {
         switch (level) {
             case "easy":
-                return "bg-green-500"
+                return "bg-[#DADDFC]"
             case "medium":
-                return "bg-yellow-500"
+                return "bg-[#537EC5]"
             case "hard":
-                return "bg-red-500"
+                return "bg-[#F39422]"
+            case "expert":
+                return "bg-[#8F4426]"
             default:
                 return "bg-gray-500"
         }
@@ -66,12 +68,12 @@ export default function DifficultyDropdown({ difficulty, onChange }: DifficultyD
 
                 {isDropdownOpen && (
                     <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg overflow-hidden">
-                        {["easy", "medium", "hard"].map((level) => (
+                        {["easy", "medium", "hard", "expert"].map((level) => (
                             <button
                                 key={level}
                                 className="flex items-center w-full p-2 text-sm hover:bg-gray-100 transition-colors duration-200"
                                 onClick={() => {
-                                    onChange(level as "easy" | "medium" | "hard")
+                                    onChange(level as "easy" | "medium" | "hard" | "expert");
                                     setIsDropdownOpen(false)
                                 }}
                                 aria-label={`Set difficulty to ${level}`}

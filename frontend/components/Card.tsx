@@ -4,8 +4,8 @@ interface CardProps {
     id: string;
     title: string;
     subTitle: string;
-    difficulty: 'easy' | 'medium' | 'hard';
-    priority: 'low' | 'medium' | 'high';
+    difficulty: 'easy' | 'medium' | 'hard' | 'expert';
+    priority: 'low' | 'medium' | 'high' | 'critical';
     index: number;
     onClick: () => void;
 }
@@ -13,15 +13,17 @@ interface CardProps {
 export default function Card({ id, title, subTitle, difficulty, priority, index, onClick }: CardProps) {
     // Color coding based on difficulty
     const difficultyColor = {
-        easy: "bg-green-500 text-white",
-        medium: "bg-yellow-500 text-white",
-        hard: "bg-red-500 text-white",
+        easy: "bg-[#DADDFC] text-black",
+        medium: "bg-[#537EC5] text-white",
+        hard: "bg-[#F39422] text-white",
+        expert: "bg-[#8F4426] text-white",
     };
 
     const priorityColor = {
-        low: "bg-green-300 text-white",
-        medium: "bg-yellow-300 text-white",
-        high: "bg-red-300 text-white",
+        low: "bg-[#31a38b] text-white",
+        medium: "bg-green-300 text-white",
+        high: "bg-yellow-300 text-white",
+        critical: "bg-red-500 text-white",
     };
 
     return (

@@ -19,7 +19,7 @@ interface TaskDetailsProps {
         sub_title: string
         description?: string
         difficulty: "easy" | "medium" | "hard"
-        priority: "low" | "medium" | "high"
+        priority: "low" | "medium" | "high" | "critical"
         learning_strategy: string
         checklists?: Checklists[]
         rating?: number
@@ -30,7 +30,7 @@ interface TaskDetailsProps {
     onUpdateSubTitle: (cardId: string, newSubTitle: string) => void
     onUpdateDescription: (cardId: string, newDescription: string) => void
     onUpdateDifficulty: (cardId: string, newDifficulty: "easy" | "medium" | "hard") => void
-    onUpdatePriority: (cardId: string, newPriority: "low" | "medium" | "high") => void
+    onUpdatePriority: (cardId: string, newPriority: "low" | "medium" | "high" | "critical") => void
     onUpdateLearningStrategy: (cardId: string, newLearningStrategy: string) => void
     onUpdateChecklists: (cardId: string, updatedChecklists: Checklists[]) => void
     onUpdateRating: (cardId: string, newRating: number) => void
@@ -72,7 +72,7 @@ export default function TaskDetails({
         onUpdateDifficulty(card.id, newDifficulty)
     }
 
-    const handlePriorityChange = (newPriority: "low" | "medium" | "high") => {
+    const handlePriorityChange = (newPriority: "low" | "medium" | "high" | "critical") => {
         setPriority(newPriority)
         onUpdatePriority(card.id, newPriority)
     }

@@ -3,8 +3,8 @@
 import { useState, useRef, useEffect } from "react"
 
 interface PriorityDropdownProps {
-    priority: "low" | "medium" | "high"
-    onChange: (newPriority: "low" | "medium" | "high") => void
+    priority: "low" | "medium" | "high" | "critical"
+    onChange: (newPriority: "low" | "medium" | "high" | "critical") => void
 }
 
 export default function PriorityDropdown({ priority, onChange }: PriorityDropdownProps) {
@@ -27,11 +27,13 @@ export default function PriorityDropdown({ priority, onChange }: PriorityDropdow
     const getColorForPriority = (level: string) => {
         switch (level) {
             case "low":
-                return "bg-green-300"
+                return "bg-[#31a38b]"
             case "medium":
-                return "bg-yellow-300"
+                return "bg-green-500"
             case "high":
-                return "bg-red-300"
+                return "bg-yellow-500"
+            case "critical":
+                return "bg-red-500"
             default:
                 return "bg-gray-300"
         }
@@ -66,12 +68,12 @@ export default function PriorityDropdown({ priority, onChange }: PriorityDropdow
 
                 {isDropdownOpen && (
                     <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg overflow-hidden">
-                        {["low", "medium", "high"].map((level) => (
+                        {["low", "medium", "high", "critical"].map((level) => (
                             <button
                                 key={level}
                                 className="flex items-center w-full p-2 text-sm hover:bg-gray-100 transition-colors duration-200"
                                 onClick={() => {
-                                    onChange(level as "low" | "medium" | "high")
+                                    onChange(level as "low" | "medium" | "high" | "critical");
                                     setIsDropdownOpen(false)
                                 }}
                                 aria-label={`Set priority to ${level}`}
