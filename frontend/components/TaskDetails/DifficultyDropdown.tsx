@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
+import { ChevronDown, Zap, Dumbbell, Brain, Award } from "lucide-react"
 
 interface DifficultyDropdownProps {
     difficulty: "easy" | "medium" | "hard" | "expert"
@@ -24,66 +25,83 @@ export default function DifficultyDropdown({ difficulty, onChange }: DifficultyD
         }
     }, [])
 
-    const getColorForDifficulty = (level: string) => {
-        switch (level) {
-            case "easy":
-                return "bg-[#DADDFC]"
-            case "medium":
-                return "bg-[#537EC5]"
-            case "hard":
-                return "bg-[#F39422]"
-            case "expert":
-                return "bg-[#8F4426]"
-            default:
-                return "bg-gray-500"
-        }
-    }
+    const difficultyOptions = [
+        {
+            value: "easy",
+            label: "Easy",
+            icon: <Zap className="h-4 w-4" />,
+            color: "bg-blue-100 text-blue-800 border-blue-200",
+            description: "Basic concepts, minimal effort required",
+        },
+        {
+            value: "medium",
+            label: "Medium",
+            icon: <Dumbbell className="h-4 w-4" />,
+            color: "bg-indigo-100 text-indigo-800 border-indigo-200",
+            description: "Moderate complexity, requires focus",
+        },
+        {
+            value: "hard",
+            label: "Hard",
+            icon: <Brain className="h-4 w-4" />,
+            color: "bg-orange-100 text-orange-800 border-orange-200",
+            description: "Complex concepts, significant effort needed",
+        },
+        {
+            value: "expert",
+            label: "Expert",
+            icon: <Award className="h-4 w-4" />,
+            color: "bg-purple-100 text-purple-800 border-purple-200",
+            description: "Advanced material, mastery required",
+        },
+    ]
+
+    const selectedOption = difficultyOptions.find((option) => option.value === difficulty) || difficultyOptions[0]
 
     return (
-        <div className="relative mb-4 w-full max-w-xs" ref={dropdownRef}>
-            <label className="block text-gray-700 font-semibold mb-2">Difficulty</label>
-            <div className="relative">
-                <button
-                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className="w-full flex items-center justify-between p-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white border border-gray-300 hover:bg-gray-50 transition-colors duration-200"
-                    aria-haspopup="true"
-                    aria-expanded={isDropdownOpen}
-                    aria-label={`Current difficulty: ${difficulty}`}
-                >
-                    <div className={`flex-grow h-8 rounded-md ${getColorForDifficulty(difficulty)}`} aria-hidden="true"></div>
-                    <svg
-                        className="h-5 w-5 text-gray-400 ml-2 flex-shrink-0"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                        aria-hidden="true"
-                    >
-                        <path
-                            fillRule="evenodd"
-                            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                            clipRule="evenodd"
-                        />
-                    </svg>
-                </button>
+        <div className="relative" ref={dropdownRef}>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Difficulty</label>
+            <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="w-full flex items-center justify-between p-2.5 rounded-md border border-gray-300 bg-white hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                aria-haspopup="true"
+                aria-expanded={isDropdownOpen}
+                aria-label={`Current difficulty: ${difficulty}`}
+            >
+                <div className={`flex items-center ${selectedOption.color} px-2.5 py-1 rounded-md`}>
+                    {selectedOption.icon}
+                    <span className="ml-1.5 font-medium">{selectedOption.label}</span>
+                </div>
+                <ChevronDown
+                    className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`}
+                />
+            </button>
 
-                {isDropdownOpen && (
-                    <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg overflow-hidden">
-                        {["easy", "medium", "hard", "expert"].map((level) => (
+            {isDropdownOpen && (
+                <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-hidden">
+                    <div className="py-1">
+                        {difficultyOptions.map((option) => (
                             <button
-                                key={level}
-                                className="flex items-center w-full p-2 text-sm hover:bg-gray-100 transition-colors duration-200"
+                                key={option.value}
+                                className={`flex flex-col w-full px-3 py-2 text-left hover:bg-gray-50 transition-colors ${difficulty === option.value ? "bg-gray-50" : ""}`}
                                 onClick={() => {
-                                    onChange(level as "easy" | "medium" | "hard" | "expert");
+                                    onChange(option.value as "easy" | "medium" | "hard" | "expert")
                                     setIsDropdownOpen(false)
                                 }}
-                                aria-label={`Set difficulty to ${level}`}
+                                aria-label={`Set difficulty to ${option.label}`}
                             >
-                                <div className={`flex-grow h-8 rounded-md ${getColorForDifficulty(level)}`} aria-hidden="true"></div>
+                                <div className="flex items-center">
+                                    <div className={`flex items-center ${option.color} px-2 py-1 rounded-md`}>
+                                        {option.icon}
+                                        <span className="ml-1.5 font-medium">{option.label}</span>
+                                    </div>
+                                </div>
+                                <p className="text-xs text-gray-500 mt-1">{option.description}</p>
                             </button>
                         ))}
                     </div>
-                )}
-            </div>
+                </div>
+            )}
         </div>
     )
 }

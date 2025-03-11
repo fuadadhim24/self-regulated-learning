@@ -23,7 +23,7 @@ export function addCard(
     courseCode: string,
     courseName: string,
     material: string,
-    difficulty: "easy" | "medium" | "hard",
+    difficulty: "easy" | "medium" | "hard" | "expert",
     boardId: string | null
 ) {
     const newCard: Card = {

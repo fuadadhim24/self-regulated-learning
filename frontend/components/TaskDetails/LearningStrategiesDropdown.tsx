@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
+import { ChevronDown, BookOpen, FileText, Network, Brain, Clock, Users } from "lucide-react"
 
 interface LearningStrategiesDropdownProps {
     strategy: string
@@ -25,59 +26,98 @@ export default function LearningStrategiesDropdown({ strategy, onChange }: Learn
     }, [])
 
     const learningStrategies = [
-        "Rehearsal Strategies - Pengulangan Materi",
-        "Elaboration Strategies - Membuat Ringkasan dengan Kata Sendiri",
-        "Organization Strategies - Membuat Mind Map dan Outline",
-        "Metacognitive Strategies - Evaluasi Hasil Belajar & Atur Strategi Belajar",
-        "Time Management Strategies - Teknik Pomodoro",
-        "Help-seeking Strategies - Belajar dengan AI & Platform Online",
+        {
+            value: "Rehearsal Strategies - Pengulangan Materi",
+            label: "Rehearsal Strategies",
+            description: "Pengulangan Materi",
+            icon: <BookOpen className="h-4 w-4" />,
+            color: "bg-blue-100 text-blue-800 border-blue-200",
+        },
+        {
+            value: "Elaboration Strategies - Membuat Ringkasan dengan Kata Sendiri",
+            label: "Elaboration Strategies",
+            description: "Membuat Ringkasan dengan Kata Sendiri",
+            icon: <FileText className="h-4 w-4" />,
+            color: "bg-green-100 text-green-800 border-green-200",
+        },
+        {
+            value: "Organization Strategies - Membuat Mind Map dan Outline",
+            label: "Organization Strategies",
+            description: "Membuat Mind Map dan Outline",
+            icon: <Network className="h-4 w-4" />,
+            color: "bg-purple-100 text-purple-800 border-purple-200",
+        },
+        {
+            value: "Metacognitive Strategies - Evaluasi Hasil Belajar & Atur Strategi Belajar",
+            label: "Metacognitive Strategies",
+            description: "Evaluasi Hasil Belajar & Atur Strategi Belajar",
+            icon: <Brain className="h-4 w-4" />,
+            color: "bg-indigo-100 text-indigo-800 border-indigo-200",
+        },
+        {
+            value: "Time Management Strategies - Teknik Pomodoro",
+            label: "Time Management Strategies",
+            description: "Teknik Pomodoro",
+            icon: <Clock className="h-4 w-4" />,
+            color: "bg-amber-100 text-amber-800 border-amber-200",
+        },
+        {
+            value: "Help-seeking Strategies - Belajar dengan AI & Platform Online",
+            label: "Help-seeking Strategies",
+            description: "Belajar dengan AI & Platform Online",
+            icon: <Users className="h-4 w-4" />,
+            color: "bg-red-100 text-red-800 border-red-200",
+        },
     ]
 
-    return (
-        <div className="relative mb-4 w-full max-w-xs" ref={dropdownRef}>
-            <label className="block text-gray-700 font-semibold mb-2">Learning Strategy</label>
-            <div className="relative">
-                <button
-                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className="w-full flex items-center justify-between p-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white border border-gray-300 hover:bg-gray-50 transition-colors duration-200"
-                    aria-haspopup="true"
-                    aria-expanded={isDropdownOpen}
-                    aria-label={`Current learning strategy: ${strategy}`}
-                >
-                    <span className="flex-grow text-left">{strategy}</span>
-                    <svg
-                        className="h-5 w-5 text-gray-400 ml-2 flex-shrink-0"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                        aria-hidden="true"
-                    >
-                        <path
-                            fillRule="evenodd"
-                            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                            clipRule="evenodd"
-                        />
-                    </svg>
-                </button>
+    const selectedStrategy = learningStrategies.find((s) => s.value === strategy) || learningStrategies[0]
 
-                {isDropdownOpen && (
-                    <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg overflow-hidden">
+    return (
+        <div className="relative" ref={dropdownRef}>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Learning Strategy</label>
+            <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="w-full flex items-center justify-between p-2.5 rounded-md border border-gray-300 bg-white hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                aria-haspopup="true"
+                aria-expanded={isDropdownOpen}
+                aria-label={`Current learning strategy: ${strategy}`}
+            >
+                <div className="flex items-center">
+                    <div className={`p-1.5 rounded-md ${selectedStrategy.color}`}>{selectedStrategy.icon}</div>
+                    <div className="ml-2 text-left">
+                        <div className="font-medium text-sm">{selectedStrategy.label}</div>
+                        <div className="text-xs text-gray-500 truncate max-w-[200px]">{selectedStrategy.description}</div>
+                    </div>
+                </div>
+                <ChevronDown
+                    className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`}
+                />
+            </button>
+
+            {isDropdownOpen && (
+                <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-hidden">
+                    <div className="py-1 max-h-[300px] overflow-y-auto">
                         {learningStrategies.map((strat) => (
                             <button
-                                key={strat}
-                                className="flex items-center w-full p-2 text-sm hover:bg-gray-100 transition-colors duration-200"
+                                key={strat.value}
+                                className={`flex items-center w-full px-3 py-2 text-left hover:bg-gray-50 transition-colors ${strategy === strat.value ? "bg-gray-50" : ""}`}
                                 onClick={() => {
-                                    onChange(strat)
+                                    onChange(strat.value)
                                     setIsDropdownOpen(false)
                                 }}
-                                aria-label={`Set learning strategy to ${strat}`}
+                                aria-label={`Set learning strategy to ${strat.label}`}
                             >
-                                <span className="flex-grow text-left">{strat}</span>
+                                <div className={`p-1.5 rounded-md ${strat.color}`}>{strat.icon}</div>
+                                <div className="ml-2 text-left">
+                                    <div className="font-medium text-sm">{strat.label}</div>
+                                    <div className="text-xs text-gray-500">{strat.description}</div>
+                                </div>
                             </button>
                         ))}
                     </div>
-                )}
-            </div>
+                </div>
+            )}
         </div>
     )
 }
+

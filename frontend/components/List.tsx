@@ -2,9 +2,10 @@
 
 import type React from "react"
 import { useEffect, useState } from "react"
-import { Droppable, Draggable } from "react-beautiful-dnd"
+import { Droppable } from "react-beautiful-dnd"
 import Card from "./Card"
 import { getCourses } from "../utils/api"
+import { Plus, X, ChevronDown } from "lucide-react"
 
 interface ListProps {
     id: string
@@ -14,8 +15,8 @@ interface ListProps {
         title: string
         sub_title: string
         description?: string
-        difficulty: "easy" | "medium" | "hard"
-        priority: "low" | "medium" | "high"
+        difficulty: "easy" | "medium" | "hard" | "expert"
+        priority: "low" | "medium" | "high" | "critical"
         learning_strategy: string
     }>
     isAddingCard: boolean
@@ -24,7 +25,7 @@ interface ListProps {
         courseCode: string,
         courseName: string,
         material: string,
-        difficulty: "easy" | "medium" | "hard",
+        difficulty: "easy" | "medium" | "hard" | "expert",
     ) => void
     onCancelAddCard: (listId: string) => void
     onCardClick: (
@@ -34,8 +35,8 @@ interface ListProps {
             title: string
             sub_title: string
             description?: string
-            difficulty: "easy" | "medium" | "hard"
-            priority: "low" | "medium" | "high"
+            difficulty: "easy" | "medium" | "hard" | "expert"
+            priority: "low" | "medium" | "high" | "critical"
             learning_strategy: string
         },
     ) => void
@@ -47,6 +48,7 @@ const List = ({ id, title, cards, onAddCard, onCardClick }: ListProps) => {
     const [courseName, setCourseName] = useState("")
     const [material, setMaterial] = useState("")
     const [courses, setCourses] = useState<{ course_code: string; course_name: string }[]>([])
+    const [isCollapsed, setIsCollapsed] = useState(false)
 
     useEffect(() => {
         const fetchData = async () => {
@@ -100,86 +102,140 @@ const List = ({ id, title, cards, onAddCard, onCardClick }: ListProps) => {
         setIsAddingCard(false)
     }
 
+    // Get color based on list title
+    const getListHeaderColor = () => {
+        switch (title) {
+            case "To Do":
+                return "bg-blue-50 border-blue-200"
+            case "In Progress":
+                return "bg-amber-50 border-amber-200"
+            case "Review":
+                return "bg-purple-50 border-purple-200"
+            case "Reflection (Done)":
+                return "bg-green-50 border-green-200"
+            default:
+                return "bg-gray-50 border-gray-200"
+        }
+    }
+
     return (
-        <div className="bg-gray-200 p-4 rounded-lg flex-1 min-w-[250px] max-w-[400px]">
-            <h2 className="text-lg font-semibold mb-4">{title}</h2>
-            <Droppable droppableId={id}>
-                {(provided) => (
-                    <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-2 min-h-[100px]">
-                        {cards.map((card, index) => (
-                            <Card
-                                key={card.id}
-                                id={card.id}
-                                title={card.title}
-                                subTitle={card.sub_title}
-                                difficulty={card.difficulty}
-                                priority={card.priority}
-                                index={index}
-                                onClick={() => onCardClick(id, card)}
-                            />
-                        ))}
-                        {provided.placeholder}
+        <div className="bg-gray-50 rounded-lg border border-gray-200 shadow-sm flex-1 min-w-[280px] max-w-[350px] flex flex-col">
+            {/* List Header */}
+            <div
+                className={`px-4 py-3 flex items-center justify-between rounded-t-lg border-b ${getListHeaderColor()}`}
+                onClick={() => setIsCollapsed(!isCollapsed)}
+            >
+                <div className="flex items-center">
+                    <h2 className="text-base font-semibold text-gray-800">{title}</h2>
+                    <div className="ml-2 bg-gray-200 text-gray-700 rounded-full px-2 py-0.5 text-xs font-medium">
+                        {cards.length}
+                    </div>
+                </div>
+                <button className="text-gray-500 hover:text-gray-700">
+                    <ChevronDown className={`h-5 w-5 transition-transform ${isCollapsed ? "rotate-180" : ""}`} />
+                </button>
+            </div>
 
-                        {isAddingCard && (
-                            <div className="p-2">
-                                <select
-                                    value={courseName}
-                                    onChange={handleCourseChange}
-                                    className="w-full p-2 rounded border border-gray-300"
-                                >
-                                    <option value="">Select Course</option>
-                                    {courses.map((course) => (
-                                        <option key={course.course_code} value={course.course_name}>
-                                            {course.course_name}
-                                        </option>
-                                    ))}
-                                </select>
-
-                                <select
-                                    value={courseCode}
-                                    onChange={handleCourseCodeChange}
-                                    className="w-full p-2 rounded border border-gray-300 mt-2"
-                                >
-                                    <option value="">Select Course Code</option>
-                                    {courses.map((course) => (
-                                        <option key={course.course_code} value={course.course_code}>
-                                            {course.course_code}
-                                        </option>
-                                    ))}
-                                </select>
-
-                                <input
-                                    type="text"
-                                    value={material}
-                                    onChange={(e) => setMaterial(e.target.value)}
-                                    placeholder="Enter Material"
-                                    className="w-full p-2 rounded border border-gray-300 mt-2"
+            {/* List Content */}
+            <div
+                className={`flex-1 transition-all duration-300 ${isCollapsed ? "max-h-0 overflow-hidden" : "max-h-[1000px]"}`}
+            >
+                <Droppable droppableId={id}>
+                    {(provided) => (
+                        <div
+                            {...provided.droppableProps}
+                            ref={provided.innerRef}
+                            className="p-3 space-y-3 min-h-[100px] max-h-[calc(100vh-220px)] overflow-y-auto"
+                        >
+                            {cards.map((card, index) => (
+                                <Card
+                                    key={card.id}
+                                    id={card.id}
+                                    title={card.title}
+                                    subTitle={card.sub_title}
+                                    difficulty={card.difficulty}
+                                    priority={card.priority}
+                                    index={index}
+                                    onClick={() => onCardClick(id, card)}
                                 />
+                            ))}
+                            {provided.placeholder}
+                        </div>
+                    )}
+                </Droppable>
 
-                                <div className="mt-2 flex space-x-2">
-                                    <button onClick={handleAddCard} className="bg-blue-500 text-white p-2 rounded">
-                                        Add Card
-                                    </button>
-                                    <button onClick={handleCancelAddCard} className="bg-gray-500 text-white p-2 rounded">
-                                        Cancel
-                                    </button>
-                                </div>
+                {/* Add Card Form */}
+                {isAddingCard && (
+                    <div className="p-3 border-t border-gray-200 bg-white rounded-b-lg">
+                        <div className="space-y-3">
+                            <select
+                                value={courseName}
+                                onChange={handleCourseChange}
+                                className="w-full p-2 rounded-md border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                                <option value="">Select Course</option>
+                                {courses.map((course) => (
+                                    <option key={course.course_code} value={course.course_name}>
+                                        {course.course_name}
+                                    </option>
+                                ))}
+                            </select>
+
+                            <select
+                                value={courseCode}
+                                onChange={handleCourseCodeChange}
+                                className="w-full p-2 rounded-md border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                                <option value="">Select Course Code</option>
+                                {courses.map((course) => (
+                                    <option key={course.course_code} value={course.course_code}>
+                                        {course.course_code}
+                                    </option>
+                                ))}
+                            </select>
+
+                            <input
+                                type="text"
+                                value={material}
+                                onChange={(e) => setMaterial(e.target.value)}
+                                placeholder="Enter Material"
+                                className="w-full p-2 rounded-md border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            />
+
+                            <div className="flex space-x-2">
+                                <button
+                                    onClick={handleAddCard}
+                                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-md text-sm font-medium transition-colors"
+                                >
+                                    Add Card
+                                </button>
+                                <button
+                                    onClick={handleCancelAddCard}
+                                    className="p-2 rounded-md border border-gray-300 hover:bg-gray-100 text-gray-700 text-sm font-medium transition-colors"
+                                >
+                                    <X className="h-4 w-4" />
+                                </button>
                             </div>
-                        )}
+                        </div>
                     </div>
                 )}
-            </Droppable>
 
-            {!isAddingCard && (
-                <button
-                    onClick={() => setIsAddingCard(true)}
-                    className="mt-4 w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
-                >
-                    Add Card
-                </button>
-            )}
+                {/* Add Card Button */}
+                {!isAddingCard && !isCollapsed && (
+                    <div className="p-3 border-t border-gray-200">
+                        <button
+                            onClick={() => setIsAddingCard(true)}
+                            className="w-full flex items-center justify-center gap-1 py-2 px-3 bg-white border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 hover:text-blue-600 hover:border-blue-300 transition-colors text-sm font-medium"
+                        >
+                            <Plus className="h-4 w-4" />
+                            Add Card
+                        </button>
+                    </div>
+                )}
+            </div>
         </div>
     )
 }
 
 export default List
+
