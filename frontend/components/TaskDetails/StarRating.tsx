@@ -15,8 +15,9 @@ export default function StarRating({ rating, onRate, isDisabled = false }: StarR
             {[1, 2, 3, 4, 5].map((star) => (
                 <FaStar
                     key={star}
-                    className={`cursor-pointer text-3xl transition-colors ${(hover || rating) >= star ? "text-yellow-400" : "text-gray-300"
-                        } ${isDisabled ? "cursor-not-allowed opacity-50" : ""}`}
+                    className={`text-3xl transition-colors 
+                        ${(hover || rating) >= star ? "text-yellow-400" : "text-gray-300"} 
+                        ${isDisabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
                     onMouseEnter={() => !isDisabled && setHover(star)}
                     onMouseLeave={() => setHover(null)}
                     onClick={() => !isDisabled && onRate(star)}
