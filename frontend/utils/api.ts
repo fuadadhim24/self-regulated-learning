@@ -111,3 +111,44 @@ export async function getCourses(token: string) {
     });
     return response;
 }
+
+export async function deleteCourse(token: string, courseId: string) {
+    const response = await fetch(`${API_URL}/courses/${courseId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    return response;
+}
+
+export async function addCourse(token: string, course: any) {
+    const response = await fetch(`${API_URL}/courses`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(course),
+    });
+    return response;
+}
+
+export async function getBoardByUser(token: string, userId: string) {
+    const response = await fetch(`${API_URL}/board/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    return response;
+}
+
+export async function getAllUsers(token: string) {
+    const response = await fetch(`${API_URL}/users`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    return response;
+}
+
+export async function getUserByUsername(token: string, username: string) {
+    const response = await fetch(`${API_URL}/users/${username}`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    return response;
+}

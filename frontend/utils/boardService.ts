@@ -33,7 +33,7 @@ export function addCard(
         description: "",
         difficulty,
         priority: "medium",
-        learning_strategy: "Learning Strategy 1",
+        learning_strategy: "Select a Learning Strategy",
     };
 
     const updatedLists = lists.map((list) =>

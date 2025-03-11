@@ -1,72 +1,106 @@
-// components/Admin/CourseForm.tsx
-import { useState } from "react";
+"use client"
+
+import type React from "react"
+
+import { useState } from "react"
+import { addCourse } from "@/utils/api"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { AlertCircle, Loader2 } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 interface Course {
-    id: string;
-    course_code: string;
-    course_name: string;
-    materials: string[];
+    id: string
+    course_code: string
+    course_name: string
 }
 
 interface CourseFormProps {
-    onCourseSaved: (course: Course) => void;
+    onCourseSaved: (course: Course) => void
 }
 
 export default function CourseForm({ onCourseSaved }: CourseFormProps) {
-    const [courseCode, setCourseCode] = useState("");
-    const [courseName, setCourseName] = useState("");
-    const [materials, setMaterials] = useState("");
+    const [courseCode, setCourseCode] = useState("")
+    const [courseName, setCourseName] = useState("")
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState<string | null>(null)
 
     const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        const newCourse = {
-            id: `${Date.now()}`,
-            course_code: courseCode,
-            course_name: courseName,
-            materials: materials.split(",").map((m) => m.trim()),
-        };
+        e.preventDefault()
+        setLoading(true)
+        setError(null)
 
-        // Call your API to save the course
-        const res = await fetch("/api/courses", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(newCourse),
-        });
-        if (res.ok) {
-            onCourseSaved(newCourse);
-            setCourseCode("");
-            setCourseName("");
-            setMaterials("");
+        try {
+            const token = localStorage.getItem("token")
+            if (!token) {
+                setError("No token found. Please log in.")
+                setLoading(false)
+                return
+            }
+
+            const newCourse = { course_code: courseCode, course_name: courseName }
+            const response = await addCourse(token, newCourse)
+
+            if (!response.ok) {
+                throw new Error("Failed to add course.")
+            }
+
+            const savedCourse = await response.json()
+            onCourseSaved(savedCourse)
+            setCourseCode("")
+            setCourseName("")
+        } catch (err: any) {
+            setError(err.message || "An error occurred.")
+        } finally {
+            setLoading(false)
         }
-    };
+    }
 
     return (
-        <form onSubmit={handleSubmit} className="border p-4 rounded">
-            <h3 className="font-bold mb-2">Add New Course</h3>
-            <input
-                type="text"
-                value={courseCode}
-                onChange={(e) => setCourseCode(e.target.value)}
-                placeholder="Course Code"
-                className="border p-2 rounded w-full mb-2"
-            />
-            <input
-                type="text"
-                value={courseName}
-                onChange={(e) => setCourseName(e.target.value)}
-                placeholder="Course Name"
-                className="border p-2 rounded w-full mb-2"
-            />
-            <input
-                type="text"
-                value={materials}
-                onChange={(e) => setMaterials(e.target.value)}
-                placeholder="Materials (comma separated)"
-                className="border p-2 rounded w-full mb-2"
-            />
-            <button type="submit" className="bg-green-500 text-white py-2 px-4 rounded">
-                Save Course
-            </button>
-        </form>
-    );
+        <Card>
+            <CardHeader>
+                <CardTitle>Add New Course</CardTitle>
+                <CardDescription>Create a new course in the system</CardDescription>
+            </CardHeader>
+            <form onSubmit={handleSubmit}>
+                <CardContent className="space-y-4">
+                    {error && (
+                        <Alert variant="destructive">
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertDescription>{error}</AlertDescription>
+                        </Alert>
+                    )}
+
+                    <div className="space-y-2">
+                        <Input
+                            type="text"
+                            value={courseCode}
+                            onChange={(e) => setCourseCode(e.target.value)}
+                            placeholder="Course Code"
+                            disabled={loading}
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Input
+                            type="text"
+                            value={courseName}
+                            onChange={(e) => setCourseName(e.target.value)}
+                            placeholder="Course Name"
+                            disabled={loading}
+                        />
+                    </div>
+                </CardContent>
+
+                <CardFooter>
+                    <Button type="submit" disabled={loading || !courseCode || !courseName}>
+                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {loading ? "Saving..." : "Save Course"}
+                    </Button>
+                </CardFooter>
+            </form>
+        </Card>
+    )
 }
+
