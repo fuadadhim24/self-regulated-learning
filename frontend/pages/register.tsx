@@ -1,125 +1,198 @@
-import { useState } from 'react';
-import { useRouter } from 'next/router';
-import Link from 'next/link';
-import { Player } from '@lottiefiles/react-lottie-player';
-import { register } from '@/utils/api';
+"use client"
+
+import type React from "react"
+
+import { useState } from "react"
+import { useRouter } from "next/router"
+import Link from "next/link"
+import { Player } from "@lottiefiles/react-lottie-player"
+import { register } from "@/utils/api"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { AlertCircle, AtSign, GraduationCap, Loader2, LockKeyhole, User, UserRound } from "lucide-react"
 
 export default function Register() {
-    const [firstName, setFirstName] = useState('');
-    const [lastName, setLastName] = useState('');
-    const [email, setEmail] = useState('');
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const router = useRouter();
+    const [firstName, setFirstName] = useState("")
+    const [lastName, setLastName] = useState("")
+    const [email, setEmail] = useState("")
+    const [username, setUsername] = useState("")
+    const [password, setPassword] = useState("")
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState<string | null>(null)
+    const router = useRouter()
 
     const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        const response = await register(firstName, lastName, email, username, password);
-        if (response.ok) {
-            router.push('/login');
-        } else {
-            const data = await response.json();
-            alert(data.message || 'Registration failed');
+        e.preventDefault()
+        setLoading(true)
+        setError(null)
+
+        try {
+            const response = await register(firstName, lastName, email, username, password)
+
+            if (response.ok) {
+                router.push("/login?registered=true")
+            } else {
+                const data = await response.json().catch(() => ({}))
+                setError(data.message || "Registration failed. Please try again.")
+            }
+        } catch (err) {
+            setError("Connection error. Please try again.")
+        } finally {
+            setLoading(false)
         }
-    };
+    }
+
+    const isFormValid = firstName && lastName && email && username && password
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
-            <div className="flex flex-col lg:flex-row items-center bg-white shadow-md rounded-lg">
-                {/* Lottie Animation on the Left */}
-                <div className="flex justify-center items-center w-full lg:w-1/2 p-8">
-                    <Player
-                        src="https://assets5.lottiefiles.com/packages/lf20_jcikwtux.json"
-                        className="w-full max-w-sm"
-                        loop
-                        autoplay
-                    />
+        <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-muted/50 to-muted p-4 sm:p-8">
+            <div className="absolute top-8 left-8 flex items-center gap-2">
+                <GraduationCap className="h-6 w-6 text-primary" />
+                <span className="font-bold text-xl">Learning Platform</span>
+            </div>
+
+            <div className="w-full max-w-6xl flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
+                {/* Left side - Animation */}
+                <div className="w-full lg:w-1/2 flex flex-col items-center">
+                    <div className="relative w-full max-w-md">
+                        <Player
+                            src="https://assets5.lottiefiles.com/packages/lf20_jcikwtux.json"
+                            className="w-full"
+                            loop
+                            autoplay
+                        />
+                    </div>
+                    <div className="text-center mt-4 space-y-2">
+                        <h2 className="text-2xl font-bold">Join Our Learning Community</h2>
+                        <p className="text-muted-foreground max-w-md">
+                            Create an account to start your educational journey and access personalized learning resources.
+                        </p>
+                    </div>
                 </div>
 
-                {/* Register Form on the Right */}
-                <div className="w-full lg:w-1/2 p-8">
-                    <h1 className="text-2xl font-bold mb-6 text-center">Register</h1>
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div>
-                            <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
-                                First Name
-                            </label>
-                            <input
-                                type="text"
-                                id="firstName"
-                                value={firstName}
-                                onChange={(e) => setFirstName(e.target.value)}
-                                required
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                            />
-                        </div>
-                        <div>
-                            <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
-                                Last Name
-                            </label>
-                            <input
-                                type="text"
-                                id="lastName"
-                                value={lastName}
-                                onChange={(e) => setLastName(e.target.value)}
-                                required
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                            />
-                        </div>
-                        <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                                Email
-                            </label>
-                            <input
-                                type="email"
-                                id="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                            />
-                        </div>
-                        <div>
-                            <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                                Username
-                            </label>
-                            <input
-                                type="text"
-                                id="username"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
-                                required
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                            />
-                        </div>
-                        <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                                Password
-                            </label>
-                            <input
-                                type="password"
-                                id="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                            />
-                        </div>
-                        <button
-                            type="submit"
-                            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                        >
-                            Register
-                        </button>
-                    </form>
-                    <p className="mt-4 text-center text-sm text-gray-600">
-                        Already have an account?{' '}
-                        <Link href="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
-                            Login
-                        </Link>
-                    </p>
+                {/* Right side - Register Form */}
+                <div className="w-full lg:w-1/2 max-w-md">
+                    <Card className="border-muted/60 shadow-lg">
+                        <CardHeader className="space-y-1">
+                            <CardTitle className="text-2xl font-bold text-center">Create Account</CardTitle>
+                            <CardDescription className="text-center">Enter your information to register</CardDescription>
+                        </CardHeader>
+                        <form onSubmit={handleSubmit}>
+                            <CardContent className="space-y-4">
+                                {error && (
+                                    <Alert variant="destructive" className="text-sm">
+                                        <AlertCircle className="h-4 w-4" />
+                                        <AlertDescription>{error}</AlertDescription>
+                                    </Alert>
+                                )}
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="firstName">First Name</Label>
+                                        <div className="relative">
+                                            <UserRound className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                            <Input
+                                                id="firstName"
+                                                placeholder="First name"
+                                                className="pl-9"
+                                                value={firstName}
+                                                onChange={(e) => setFirstName(e.target.value)}
+                                                disabled={loading}
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="lastName">Last Name</Label>
+                                        <div className="relative">
+                                            <UserRound className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                            <Input
+                                                id="lastName"
+                                                placeholder="Last name"
+                                                className="pl-9"
+                                                value={lastName}
+                                                onChange={(e) => setLastName(e.target.value)}
+                                                disabled={loading}
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="email">Email</Label>
+                                    <div className="relative">
+                                        <AtSign className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                        <Input
+                                            id="email"
+                                            type="email"
+                                            placeholder="your.email@example.com"
+                                            className="pl-9"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            disabled={loading}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="username">Username</Label>
+                                    <div className="relative">
+                                        <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                        <Input
+                                            id="username"
+                                            placeholder="Choose a username"
+                                            className="pl-9"
+                                            value={username}
+                                            onChange={(e) => setUsername(e.target.value)}
+                                            disabled={loading}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="password">Password</Label>
+                                    <div className="relative">
+                                        <LockKeyhole className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                        <Input
+                                            id="password"
+                                            type="password"
+                                            placeholder="Create a password"
+                                            className="pl-9"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            disabled={loading}
+                                            required
+                                        />
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">Password must be at least 8 characters long</p>
+                                </div>
+                            </CardContent>
+
+                            <CardFooter className="flex flex-col space-y-4">
+                                <Button type="submit" className="w-full" disabled={loading || !isFormValid}>
+                                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                    {loading ? "Creating Account..." : "Create Account"}
+                                </Button>
+
+                                <div className="text-center text-sm">
+                                    Already have an account?{" "}
+                                    <Link href="/login" className="text-primary font-medium hover:underline">
+                                        Sign in
+                                    </Link>
+                                </div>
+                            </CardFooter>
+                        </form>
+                    </Card>
                 </div>
             </div>
         </div>
-    );
+    )
 }
+
