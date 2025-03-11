@@ -17,6 +17,24 @@ def get_board():
         "lists": board["lists"]
     }), 200
 
+def get_all_boards():
+    boards = Board.get_all_boards()
+    return jsonify([
+        {"id": str(board["_id"]), "name": board["name"], "lists": board["lists"]}
+        for board in boards
+    ]), 200
+
+def get_board_by_user_id(user_id):
+    board = Board.find_board_by_user_id(user_id)
+    if not board:
+        return jsonify({"message": "Board not found"}), 404
+
+    return jsonify({
+        "id": str(board["_id"]),
+        "name": board["name"],
+        "lists": board["lists"]
+    }), 200
+
 @jwt_required()
 def update_board():
     verify_jwt_in_request()

@@ -2,11 +2,10 @@ from utils.db import mongo
 
 class Course:
     @staticmethod
-    def add_course(course_code, course_name, materials):
+    def add_course(course_code, course_name):
         course_data = {
             "course_code": course_code,
             "course_name": course_name,
-            "materials": materials  # This should be an array
         }
         course_id = mongo.db.courses.insert_one(course_data).inserted_id
         return course_id

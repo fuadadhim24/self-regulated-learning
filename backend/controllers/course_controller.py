@@ -6,12 +6,11 @@ def add_course():
     data = request.json
     course_code = data.get("course_code")
     course_name = data.get("course_name")
-    materials = data.get("materials")  # Expecting an array of subtopics
 
-    if not course_code or not course_name or not materials:
-        return jsonify({"message": "All fields (course_code, course_name, materials) are required"}), 400
+    if not course_code or not course_name:
+        return jsonify({"message": "All fields (course_code, course_name) are required"}), 400
 
-    course_id = Course.add_course(course_code, course_name, materials)
+    course_id = Course.add_course(course_code, course_name)
     return jsonify({"message": "Course added successfully", "course_id": str(course_id)}), 201
 
 # Get a course by code

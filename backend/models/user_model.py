@@ -33,7 +33,11 @@ class User:
     @staticmethod
     def find_user_by_id(user_id):
         try:
-            return mongo.db.users.find_one({"_id": ObjectId(user_id)})
+            if not ObjectId.is_valid(user_id):
+                raise ValueError("Invalid ObjectId format")
+            
+            user = mongo.db.users.find_one({"_id": ObjectId(user_id)})
+            return user
         except Exception as e:
-            print(f"Error converting user_id to ObjectId: {e}")
+            print(f"Error finding user: {e}")
             return None

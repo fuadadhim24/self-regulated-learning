@@ -18,6 +18,10 @@ class Board:
         mongo.db.boards.insert_one(initial_board)
 
     @staticmethod
+    def get_all_boards():
+        return list(mongo.db.boards.find({}))
+
+    @staticmethod
     def find_board_by_user_id(user_id):
         return mongo.db.boards.find_one({"user_id": ObjectId(user_id)})
 
