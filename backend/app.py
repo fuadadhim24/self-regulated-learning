@@ -6,6 +6,7 @@ from routes.auth_routes import auth_bp
 from routes.board_routes import board_bp
 from routes.user_routes import user_bp
 from routes.course_routes import course_bp
+from routes.learningstrat_routes import learningstrat_bp
 import os
 from utils.db import init_db
 
@@ -39,6 +40,7 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(board_bp)
 app.register_blueprint(user_bp)
 app.register_blueprint(course_bp)
+app.register_blueprint(learningstrat_bp)
 
 @app.before_request
 def list_routes():
@@ -48,8 +50,6 @@ def list_routes():
         print(f"{rule.endpoint}: {rule.rule} [{methods}]")
 
 if __name__ == "__main__":
-    list_routes()
-
     list_routes()
 
     app.run(debug=True)
