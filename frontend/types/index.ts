@@ -22,6 +22,10 @@ export interface Card {
     checklists?: Checklists[];
     rating?: number;
     notes?: string;
+    pre_test_grade?: string;
+    post_test_grade?: string;
+    created_at: string;
+    column_movement_times?: { [columnId: string]: string };
 }
 
 export interface ListType {
@@ -34,6 +38,7 @@ export interface ListType {
 export interface LearningStrategy {
     id: string;
     name: string;
+    description?: string;
 }
 
 export interface User {
