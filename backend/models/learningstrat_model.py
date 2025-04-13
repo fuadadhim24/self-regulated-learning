@@ -3,9 +3,10 @@ from bson.objectid import ObjectId
 
 class LearningStrat:
     @staticmethod
-    def add_learning_strat(learning_strat_name):
+    def add_learning_strat(learning_strat_name, description):
         learning_strat_data = {
             "learning_strat_name": learning_strat_name,
+            "description": description,
         }
         learning_strat_id = mongo.db.learning_strats.insert_one(learning_strat_data).inserted_id
         return learning_strat_id

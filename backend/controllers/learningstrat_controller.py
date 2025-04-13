@@ -4,11 +4,12 @@ from flask import jsonify, request
 def add_learning_strat():
     data = request.json
     learning_strat_name = data.get("learning_strat_name")
+    description = data.get("description")
 
     if not learning_strat_name:
         return jsonify({"message": "All fields (learning_strat_name) are required"}), 400
 
-    learning_strat_id = LearningStrat.add_learning_strat(learning_strat_name)
+    learning_strat_id = LearningStrat.add_learning_strat(learning_strat_name, description)
     return jsonify({"message": "Learning strategy added successfully", "learning_strat_id": str(learning_strat_id)}), 201
 
 def get_learning_strat(learning_strat_id):
