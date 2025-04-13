@@ -52,6 +52,7 @@ export default function BoardContent({
             {selectedCard && (
                 <TaskDetails
                     listName={lists.find((list) => list.id === selectedCard.listId)?.title || ""}
+                    boardId={boardId || ""}
                     card={selectedCard.card}
                     onClose={() => setSelectedCard(null)}
                     onUpdateTitle={(id, value) => updateCard(lists, setLists, boardId, id, "title", value)}
@@ -63,6 +64,8 @@ export default function BoardContent({
                     onUpdateChecklists={(id, value) => updateCard(lists, setLists, boardId, id, "checklists", value)}
                     onUpdateRating={(id, value) => updateCard(lists, setLists, boardId, id, "rating", value)}
                     onUpdateNotes={(id, value) => updateCard(lists, setLists, boardId, id, "notes", value)}
+                    onUpdatePreTestGrade={(id, value) => updateCard(lists, setLists, boardId, id, "pre_test_grade", value)}
+                    onUpdatePostTestGrade={(id, value) => updateCard(lists, setLists, boardId, id, "post_test_grade", value)}
                     onArchive={(cardId) => {
                         archiveCard(lists, setLists, boardId, cardId)
                         setSelectedCard(null)

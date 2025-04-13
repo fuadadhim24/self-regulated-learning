@@ -1,7 +1,7 @@
 "use client"
 
 import { Draggable } from "react-beautiful-dnd"
-import { Clock, AlertTriangle, AlertCircle } from "lucide-react"
+import { Clock, AlertTriangle, AlertCircle, Percent } from "lucide-react"
 
 interface CardProps {
     id: string
@@ -9,11 +9,12 @@ interface CardProps {
     subTitle: string
     difficulty: "easy" | "medium" | "hard" | "expert"
     priority: "low" | "medium" | "high" | "critical"
+    grade?: string
     index: number
     onClick: () => void
 }
 
-export default function Card({ id, title, subTitle, difficulty, priority, index, onClick }: CardProps) {
+export default function Card({ id, title, subTitle, difficulty, priority, grade, index, onClick }: CardProps) {
     // Get priority icon and color
     const getPriorityDetails = (priority: string) => {
         switch (priority) {
@@ -92,7 +93,7 @@ export default function Card({ id, title, subTitle, difficulty, priority, index,
                     {...provided.draggableProps}
                     {...provided.dragHandleProps}
                     className={`bg-white p-4 rounded-lg border border-gray-200 hover:border-blue-300 shadow-sm hover:shadow-md transition-all duration-200 
-                    ${snapshot.isDragging ? "shadow-lg ring-2 ring-blue-500 ring-opacity-50" : ""}`}
+                   ${snapshot.isDragging ? "shadow-lg ring-2 ring-blue-500 ring-opacity-50" : ""}`}
                     onClick={onClick}
                 >
                     <div className="flex flex-col space-y-3">
@@ -115,6 +116,12 @@ export default function Card({ id, title, subTitle, difficulty, priority, index,
                             >
                                 <span>{difficultyDetails.label}</span>
                             </div>
+                            {grade && (
+                                <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border-gray-200">
+                                    <Percent className="h-3 w-3 mr-1" />
+                                    <span>{grade}</span>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

@@ -18,6 +18,8 @@ interface ListProps {
         difficulty: "easy" | "medium" | "hard" | "expert"
         priority: "low" | "medium" | "high" | "critical"
         learning_strategy: string
+        created_at: string
+        column_movement_times?: { [columnId: string]: string }
     }>
     isAddingCard: boolean
     onAddCard: (
@@ -38,6 +40,8 @@ interface ListProps {
             difficulty: "easy" | "medium" | "hard" | "expert"
             priority: "low" | "medium" | "high" | "critical"
             learning_strategy: string
+            created_at: string
+            column_movement_times?: { [columnId: string]: string }
         },
     ) => void
 }

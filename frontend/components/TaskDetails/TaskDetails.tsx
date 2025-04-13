@@ -11,10 +11,12 @@ import LearningStrategiesDropdown from "./LearningStrategiesDropdown"
 import StarRating from "./StarRating"
 import TaskNotes from "./TaskNotes"
 import FileUpload from "./FileUpload"
+import GradeInput from "./GradeInput"
 import type { Checklists } from "@/types"
 
 interface TaskDetailsProps {
     listName: string
+    boardId: string
     card: {
         id: string
         title: string
@@ -26,6 +28,10 @@ interface TaskDetailsProps {
         checklists?: Checklists[]
         rating?: number
         notes?: string
+        pre_test_grade?: string
+        post_test_grade?: string
+        created_at: string
+        column_movement_times?: { [columnId: string]: string }
     }
     onClose: () => void
     onUpdateTitle: (cardId: string, newTitle: string) => void
@@ -37,12 +43,15 @@ interface TaskDetailsProps {
     onUpdateChecklists: (cardId: string, updatedChecklists: Checklists[]) => void
     onUpdateRating: (cardId: string, newRating: number) => void
     onUpdateNotes: (cardId: string, newNotes: string) => void
+    onUpdatePreTestGrade: (cardId: string, newGrade: string) => void
+    onUpdatePostTestGrade: (cardId: string, newGrade: string) => void
     onArchive: (cardId: string) => void
     onDelete: (cardId: string) => void
 }
 
 export default function TaskDetails({
     listName,
+    boardId,
     card,
     onClose,
     onUpdateTitle,
@@ -54,22 +63,21 @@ export default function TaskDetails({
     onUpdateChecklists,
     onUpdateRating,
     onUpdateNotes,
+    onUpdatePreTestGrade,
+    onUpdatePostTestGrade,
     onArchive,
     onDelete,
 }: TaskDetailsProps) {
-    const [isToggleOn, setIsToggleOn] = useState(false)
     const [difficulty, setDifficulty] = useState(card.difficulty)
     const [priority, setPriority] = useState(card.priority)
     const [learningStrategy, setLearningStrategy] = useState(card.learning_strategy ?? "Learning Strategies")
     const [checklists, setChecklists] = useState<Checklists[]>(card.checklists ?? [])
     const [rating, setRating] = useState(card.rating ?? 0)
     const [notes, setNotes] = useState(card.notes ?? "")
+    const [preTestGrade, setPreTestGrade] = useState(card.pre_test_grade ?? "")
+    const [postTestGrade, setPostTestGrade] = useState(card.post_test_grade ?? "")
     const isRatingEnabled = listName === "Reflection (Done)"
     const isNotesEnabled = listName === "Reflection (Done)"
-
-    const handleToggle = () => {
-        setIsToggleOn(!isToggleOn)
-    }
 
     const handleDifficultyChange = (newDifficulty: "easy" | "medium" | "hard" | "expert") => {
         setDifficulty(newDifficulty)
@@ -101,6 +109,16 @@ export default function TaskDetails({
         onUpdateNotes(cardId, newNotes)
     }
 
+    const handleUpdatePreTestGrade = (newGrade: string) => {
+        setPreTestGrade(newGrade)
+        onUpdatePreTestGrade(card.id, newGrade)
+    }
+
+    const handleUpdatePostTestGrade = (newGrade: string) => {
+        setPostTestGrade(newGrade)
+        onUpdatePostTestGrade(card.id, newGrade)
+    }
+
     // Get color based on list name
     const getHeaderColor = () => {
         switch (listName) {
@@ -117,6 +135,12 @@ export default function TaskDetails({
         }
     }
 
+    // Add this function to format dates
+    const formatDate = (dateString: string) => {
+        const date = new Date(dateString);
+        return date.toLocaleString();
+    };
+
     return (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 p-4 overflow-auto">
             <div className="bg-white rounded-xl shadow-xl w-[800px] max-h-[90vh] overflow-hidden flex flex-col">
@@ -131,6 +155,29 @@ export default function TaskDetails({
                     </button>
                 </div>
 
+                {/* Add this section to display creation date and column movement times */}
+                <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                        <p><strong>Created:</strong> {formatDate(card.created_at)}</p>
+                        {card.column_movement_times && Object.keys(card.column_movement_times).length > 0 && (
+                            <div className="mt-2">
+                                <p className="font-medium">Column Movement History:</p>
+                                <ul className="list-disc pl-5 mt-1">
+                                    {Object.entries(card.column_movement_times).map(([columnId, timestamp]) => (
+                                        <li key={columnId}>
+                                            {columnId === listName ? (
+                                                <span className="font-medium">{listName}</span>
+                                            ) : (
+                                                listName
+                                            )}: {formatDate(timestamp)}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto p-6">
                     <TaskInfo
@@ -142,13 +189,26 @@ export default function TaskDetails({
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                         <div className="space-y-6">
-                            <StartStopToggle isToggleOn={isToggleOn} onToggle={handleToggle} />
+                            {/* Timer and Grade section */}
+                            <div className="flex flex-col sm:flex-row gap-4">
+                                <div className="flex-1">
+                                    <StartStopToggle cardId={card.id} />
+                                </div>
+                                <div className="w-full sm:w-64">
+                                    <GradeInput
+                                        preTestGrade={preTestGrade}
+                                        postTestGrade={postTestGrade}
+                                        onUpdatePreTestGrade={handleUpdatePreTestGrade}
+                                        onUpdatePostTestGrade={handleUpdatePostTestGrade}
+                                    />
+                                </div>
+                            </div>
 
                             <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                                 <Checklist cardId={card.id} checklists={checklists} onUpdateChecklists={handleUpdateChecklists} />
                             </div>
 
-                            <FileUpload />
+                            <FileUpload boardId={boardId} cardId={card.id} />
 
                             <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                                 <TaskNotes

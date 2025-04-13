@@ -6,7 +6,7 @@ class Board:
     @staticmethod
     def create_initial_board(user_id):
         initial_board = {
-            "user_id": user_id,
+            "user_id": ObjectId(user_id),
             "name": "Self-Regulated Learning",
             "lists": [
                 {"id": "list1", "title": "Planning (To Do)", "cards": []},
@@ -15,7 +15,8 @@ class Board:
                 {"id": "list4", "title": "Reflection (Done)", "cards": []}
             ]
         }
-        mongo.db.boards.insert_one(initial_board)
+        result = mongo.db.boards.insert_one(initial_board)
+        return str(result.inserted_id)
 
     @staticmethod
     def get_all_boards():
@@ -23,15 +24,23 @@ class Board:
 
     @staticmethod
     def find_board_by_user_id(user_id):
-        return mongo.db.boards.find_one({"user_id": ObjectId(user_id)})
+        try:
+            return mongo.db.boards.find_one({"user_id": ObjectId(user_id)})
+        except Exception as e:
+            print(f"Error finding board by user ID: {str(e)}")
+            return None
 
     @staticmethod
     def update_board(board_id, user_id, lists):
-        result = mongo.db.boards.update_one(
-            {"_id": ObjectId(board_id), "user_id": ObjectId(user_id)},
-            {"$set": {"lists": lists}}
-        )
-        return result
+        try:
+            result = mongo.db.boards.update_one(
+                {"_id": ObjectId(board_id), "user_id": ObjectId(user_id)},
+                {"$set": {"lists": lists}}
+            )
+            return result
+        except Exception as e:
+            print(f"Error updating board: {str(e)}")
+            return None
 
     @staticmethod
     def update_card(user_id, card_id, title=None, sub_title=None, description=None, difficulty=None):

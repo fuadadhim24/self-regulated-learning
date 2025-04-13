@@ -85,32 +85,126 @@ def update_card():
 @jwt_required()
 def get_progress_report():
     user_id = get_jwt_identity()
-
-    # Fetch the user's board
     board = Board.find_board_by_user_id(user_id)
+    
     if not board:
         return jsonify({"message": "Board not found"}), 404
 
-    # Initialize progress report
+    lists = board.get("lists", [])
     total_cards = 0
-    report = {}
     done_cards = 0
+    report = {}
+    strategy_stats = {}
+    course_stats = {}  # New dictionary for course statistics
 
-    for list_item in board.get("lists", []):
-        list_id = list_item.get("id")
-        list_title = list_item.get("title")
-        cards = list_item.get("cards", [])
+    # Get all active (non-archived, non-deleted) cards
+    active_cards = []
+    for list_data in lists:
+        list_name = list_data.get("title", "Unknown")
+        cards = list_data.get("cards", [])
+        card_count = len([c for c in cards if not c.get("archived") and not c.get("deleted")])
+        report[list_name] = card_count
+        total_cards += card_count
+        
+        if list_name == "Reflection (Done)":
+            done_cards = card_count
+        
+        # Add non-archived, non-deleted cards to active_cards
+        active_cards.extend([c for c in cards if not c.get("archived") and not c.get("deleted")])
 
-        # Filter out archived cards
-        active_cards = [card for card in cards if not card.get("archived", False)]
+    # Collect grade statistics for each learning strategy and course
+    for card in active_cards:
+        strategy = card.get("learning_strategy")
+        title_parts = card.get("title", "").split("[")
+        if len(title_parts) >= 2:
+            course_name = title_parts[0].strip()
+        else:
+            continue  # Skip if card title doesn't follow the expected format
 
-        # Add count for this list (excluding archived cards)
-        report[list_title] = len(active_cards)
-        total_cards += len(active_cards)
+        # Initialize strategy stats if needed
+        if strategy and strategy not in strategy_stats:
+            strategy_stats[strategy] = {
+                "pre_test": {"grades": [], "min": 100, "q1": 0, "median": 0, "q3": 0, "max": 0, "count": 0},
+                "post_test": {"grades": [], "min": 100, "q1": 0, "median": 0, "q3": 0, "max": 0, "count": 0}
+            }
+        
+        # Initialize course stats if needed
+        if course_name and course_name not in course_stats:
+            course_stats[course_name] = {
+                "pre_test": {"grades": [], "avg": 0, "count": 0},
+                "post_test": {"grades": [], "avg": 0, "count": 0}
+            }
 
-        # Check if this list is "Done"
-        if "done" in list_title.lower():
-            done_cards += len(active_cards)
+        # Add pre-test grade if available
+        pre_test_grade = card.get("pre_test_grade")
+        if pre_test_grade and pre_test_grade.strip():
+            try:
+                grade = float(pre_test_grade)
+                if strategy:
+                    strategy_stats[strategy]["pre_test"]["grades"].append(grade)
+                if course_name:
+                    course_stats[course_name]["pre_test"]["grades"].append(grade)
+            except ValueError:
+                pass
+
+        # Add post-test grade if available
+        post_test_grade = card.get("post_test_grade")
+        if post_test_grade and post_test_grade.strip():
+            try:
+                grade = float(post_test_grade)
+                if strategy:
+                    strategy_stats[strategy]["post_test"]["grades"].append(grade)
+                if course_name:
+                    course_stats[course_name]["post_test"]["grades"].append(grade)
+            except ValueError:
+                pass
+
+    # Calculate statistics for each strategy
+    for strategy in strategy_stats:
+        for grade_type in ["pre_test", "post_test"]:
+            grades = strategy_stats[strategy][grade_type]["grades"]
+            if grades:
+                grades.sort()
+                count = len(grades)
+                strategy_stats[strategy][grade_type].update({
+                    "min": grades[0],
+                    "max": grades[-1],
+                    "count": count
+                })
+                
+                if count >= 4:
+                    q1_index = count // 4
+                    median_index = count // 2
+                    q3_index = (3 * count) // 4
+                    
+                    strategy_stats[strategy][grade_type].update({
+                        "q1": grades[q1_index],
+                        "median": grades[median_index],
+                        "q3": grades[q3_index]
+                    })
+                elif count > 0:
+                    # For small samples, use the same value for all quartiles
+                    strategy_stats[strategy][grade_type].update({
+                        "q1": grades[0],
+                        "median": grades[0],
+                        "q3": grades[0]
+                    })
+
+            # Clean up the grades array as it's no longer needed
+            del strategy_stats[strategy][grade_type]["grades"]
+
+    # Calculate average grades for each course
+    for course_name in course_stats:
+        for grade_type in ["pre_test", "post_test"]:
+            grades = course_stats[course_name][grade_type]["grades"]
+            if grades:
+                avg = sum(grades) / len(grades)
+                course_stats[course_name][grade_type].update({
+                    "avg": round(avg, 2),
+                    "count": len(grades)
+                })
+            # Clean up the grades array as it's no longer needed
+            del course_stats[course_name][grade_type]["grades"]
 
     # Calculate progress percentage
     progress_percentage = (done_cards / total_cards * 100) if total_cards > 0 else 0
@@ -119,5 +213,7 @@ def get_progress_report():
         "total_cards": total_cards,
         "done_cards": done_cards,
         "progress_percentage": progress_percentage,
-        "list_report": report
+        "list_report": report,
+        "strategy_stats": strategy_stats,
+        "course_stats": course_stats
     }), 200
