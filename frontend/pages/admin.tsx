@@ -1,8 +1,7 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { BookOpen, GraduationCap, Lightbulb, Users, Bell, Search, Menu } from "lucide-react"
 import CoursesList from "@/components/Admin/CoursesList"
 import LearningStrategiesList from "@/components/Admin/LearningStrategiesList"
@@ -19,11 +18,49 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { getCurrentUser } from "@/utils/api"
+import { useRouter } from "next/router"
+import Navbar from "@/components/Navbar"
 
 type Section = "courses" | "learningStrategies" | "users"
 
 export default function AdminDashboard() {
     const [selectedSection, setSelectedSection] = useState<Section>("courses")
+    const [user, setUser] = useState<{
+        first_name: string;
+        last_name: string;
+        email: string;
+        username: string;
+    } | null>(null)
+    const [loading, setLoading] = useState(true)
+    const router = useRouter()
+
+    useEffect(() => {
+        const fetchUser = async () => {
+            try {
+                const token = localStorage.getItem("token")
+                if (!token) {
+                    router.push("/login")
+                    return
+                }
+
+                const userData = await getCurrentUser(token)
+                setUser(userData)
+            } catch (error) {
+                console.error("Error fetching user:", error)
+                router.push("/login")
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        fetchUser()
+    }, [router])
+
+    const handleLogout = () => {
+        localStorage.removeItem("token")
+        router.push("/login")
+    }
 
     const NavItem = ({
         title,
@@ -46,88 +83,30 @@ export default function AdminDashboard() {
         </button>
     )
 
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-background flex flex-col">
+                <Navbar variant="admin" title="Learning Admin" showProfile={false} />
+            </div>
+        )
+    }
+
+    if (!user) {
+        return null
+    }
+
+    const userFullName = `${user.first_name} ${user.last_name}`
+    const userInitials = `${user.first_name[0]}${user.last_name[0]}`
+
     return (
         <div className="min-h-screen bg-background flex flex-col">
             {/* Header */}
-            <header className="border-b sticky top-0 z-30 bg-background">
-                <div className="flex h-16 items-center px-4 md:px-6">
-                    <Sheet>
-                        <SheetTrigger asChild>
-                            <Button variant="outline" size="icon" className="md:hidden mr-2">
-                                <Menu className="h-5 w-5" />
-                                <span className="sr-only">Toggle navigation menu</span>
-                            </Button>
-                        </SheetTrigger>
-                        <SheetContent side="left" className="w-64 p-0">
-                            <div className="flex flex-col h-full">
-                                <div className="border-b p-4">
-                                    <h2 className="text-xl font-bold flex items-center gap-2">
-                                        <GraduationCap className="h-6 w-6" />
-                                        Learning Admin
-                                    </h2>
-                                </div>
-                                <nav className="flex-1 p-4 space-y-2">
-                                    <NavItem title="Courses" icon={BookOpen} value="courses" active={selectedSection === "courses"} />
-                                    <NavItem
-                                        title="Learning Strategies"
-                                        icon={Lightbulb}
-                                        value="learningStrategies"
-                                        active={selectedSection === "learningStrategies"}
-                                    />
-                                    <NavItem title="Users & Boards" icon={Users} value="users" active={selectedSection === "users"} />
-                                </nav>
-                            </div>
-                        </SheetContent>
-                    </Sheet>
-
-                    <div className="flex items-center gap-2 md:hidden">
-                        <GraduationCap className="h-6 w-6" />
-                        <h1 className="text-xl font-bold">Learning Admin</h1>
-                    </div>
-
-                    <div className="hidden md:flex md:flex-1 md:items-center md:gap-4 md:px-4">
-                        <div className="relative w-full max-w-sm">
-                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                            <Input
-                                type="search"
-                                placeholder="Search..."
-                                className="w-full bg-background pl-8 md:w-[300px] lg:w-[400px]"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-4">
-                        <Button variant="ghost" size="icon" className="text-muted-foreground">
-                            <Bell className="h-5 w-5" />
-                            <span className="sr-only">Notifications</span>
-                        </Button>
-
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                                    <Avatar className="h-8 w-8">
-                                        <AvatarImage src="/placeholder.svg" alt="Admin" />
-                                        <AvatarFallback>AD</AvatarFallback>
-                                    </Avatar>
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent className="w-56" align="end" forceMount>
-                                <DropdownMenuLabel className="font-normal">
-                                    <div className="flex flex-col space-y-1">
-                                        <p className="text-sm font-medium leading-none">Admin User</p>
-                                        <p className="text-xs leading-none text-muted-foreground">admin@example.com</p>
-                                    </div>
-                                </DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem>Profile</DropdownMenuItem>
-                                <DropdownMenuItem>Settings</DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem>Log out</DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                </div>
-            </header>
+            <Navbar
+                variant="admin"
+                title="Learning Admin"
+                showSearch={true}
+                showNotifications={true}
+            />
 
             <div className="flex flex-1 overflow-hidden">
                 {/* Sidebar - Desktop */}
