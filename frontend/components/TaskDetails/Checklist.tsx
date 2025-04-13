@@ -78,6 +78,20 @@ export default function Checklist({ cardId, checklists = [], onUpdateChecklists 
         onUpdateChecklists(updatedChecklists)
     }
 
+    const handleDeleteItem = (checklistId: string, itemId: string) => {
+        const updatedChecklists = localChecklists.map((list) =>
+            list.id === checklistId
+                ? {
+                    ...list,
+                    items: list.items.filter((item) => item.id !== itemId),
+                }
+                : list,
+        )
+
+        setLocalChecklists(updatedChecklists)
+        onUpdateChecklists(updatedChecklists)
+    }
+
     const calculateProgress = (items: ChecklistItem[]) => {
         if (items.length === 0) return 0
         const completed = items.filter((item) => item.completed).length
@@ -172,18 +186,27 @@ export default function Checklist({ cardId, checklists = [], onUpdateChecklists 
                             {list.items.length > 0 ? (
                                 <ul className="space-y-2 mb-3">
                                     {list.items.map((item) => (
-                                        <li key={item.id} className="flex items-start">
-                                            <div
-                                                className={`flex-shrink-0 w-5 h-5 rounded border ${item.completed ? "bg-blue-500 border-blue-500" : "border-gray-300"} flex items-center justify-center cursor-pointer mt-0.5`}
-                                                onClick={() => handleToggleItem(list.id, item.id)}
-                                            >
-                                                {item.completed && <Check className="h-3 w-3 text-white" />}
+                                        <li key={item.id} className="flex items-start justify-between group">
+                                            <div className="flex items-start">
+                                                <div
+                                                    className={`flex-shrink-0 w-5 h-5 rounded border ${item.completed ? "bg-blue-500 border-blue-500" : "border-gray-300"} flex items-center justify-center cursor-pointer mt-0.5`}
+                                                    onClick={() => handleToggleItem(list.id, item.id)}
+                                                >
+                                                    {item.completed && <Check className="h-3 w-3 text-white" />}
+                                                </div>
+                                                <span
+                                                    className={`ml-2 text-sm ${item.completed ? "line-through text-gray-500" : "text-gray-700"}`}
+                                                >
+                                                    {item.text}
+                                                </span>
                                             </div>
-                                            <span
-                                                className={`ml-2 text-sm ${item.completed ? "line-through text-gray-500" : "text-gray-700"}`}
+                                            <button
+                                                onClick={() => handleDeleteItem(list.id, item.id)}
+                                                className="text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-gray-100 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                aria-label="Delete item"
                                             >
-                                                {item.text}
-                                            </span>
+                                                <Trash2 className="h-3 w-3" />
+                                            </button>
                                         </li>
                                     ))}
                                 </ul>
