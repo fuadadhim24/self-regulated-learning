@@ -26,6 +26,7 @@ export function addCard(
     difficulty: "easy" | "medium" | "hard" | "expert",
     boardId: string | null
 ) {
+    const now = new Date().toISOString();
     const newCard: Card = {
         id: `${courseCode}-${courseName}-${material}`,
         title: `${courseName} [${courseCode}]`,
@@ -34,6 +35,10 @@ export function addCard(
         difficulty,
         priority: "medium",
         learning_strategy: "Select a Learning Strategy",
+        created_at: now,
+        column_movement_times: {
+            [listId]: now // Record the time when the card was added to the first column
+        }
     };
 
     const updatedLists = lists.map((list) =>
@@ -81,6 +86,15 @@ export function moveCard(
     const movedCard = sourceList.cards[sourceIndex];
     if (!movedCard) return; // Exit early if no card is found
     sourceList.cards.splice(sourceIndex, 1);
+
+    // Only update column_movement_times if the card is moving to a different column
+    if (sourceList.id !== destList.id) {
+        const now = new Date().toISOString();
+        movedCard.column_movement_times = {
+            ...movedCard.column_movement_times,
+            [destinationDroppableId]: now // Record the time when the card entered the new column
+        };
+    }
 
     if (sourceList.id === destList.id) {
         sourceList.cards.splice(destinationIndex, 0, movedCard);

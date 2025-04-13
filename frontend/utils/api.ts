@@ -3,7 +3,7 @@ import { use } from "react"
 const API_URL = 'http://localhost:5000'
 
 export async function register(firstName: string, lastName: string, email: string, username: string, password: string) {
-    const response = await fetch(`${API_URL}/register`, {
+    const response = await fetch(`${API_URL}/api/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ firstName, lastName, email, username, password }),
@@ -12,7 +12,7 @@ export async function register(firstName: string, lastName: string, email: strin
 }
 
 export async function login(username: string, password: string) {
-    const response = await fetch(`${API_URL}/login`, {
+    const response = await fetch(`${API_URL}/api/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
@@ -21,7 +21,7 @@ export async function login(username: string, password: string) {
 }
 
 export async function searchUserByUsername(token: string, username: string) {
-    const response = await fetch(`${API_URL}/${username}`, {
+    const response = await fetch(`${API_URL}/username/${username}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -32,7 +32,7 @@ export async function searchUserByUsername(token: string, username: string) {
 }
 
 export async function searchUserById(token: string, userId: string) {
-    const response = await fetch(`${API_URL}/user/${userId}`, {
+    const response = await fetch(`${API_URL}/users/id/${userId}`, {
         method: 'GET',
         headers: {
             Authorization: `Bearer ${token}`,
@@ -147,8 +147,89 @@ export async function getAllUsers(token: string) {
 }
 
 export async function getUserByUsername(token: string, username: string) {
-    const response = await fetch(`${API_URL}/users/${username}`, {
+    const response = await fetch(`${API_URL}/users/username/${username}`, {
         headers: { Authorization: `Bearer ${token}` },
     });
     return response;
+}
+
+export async function getAllLearningStrategies(token: string) {
+    console.log('Fetching all learning strategies...');
+    const response = await fetch(`${API_URL}/learningstrats`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    console.log('Get all learning strategies response:', response.status);
+    return response;
+}
+
+export async function getLearningStrategy(token: string, id: string) {
+    const response = await fetch(`${API_URL}/learningstrats/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    return response;
+}
+
+export async function addLearningStrategy(token: string, strategy: { name: string; description?: string }) {
+    console.log('Adding learning strategy:', strategy);
+    const response = await fetch(`${API_URL}/learningstrats`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+            learning_strat_name: strategy.name,
+            description: strategy.description
+        }),
+    });
+    console.log('Add learning strategy response:', response.status);
+    return response;
+}
+
+export async function updateLearningStrategy(token: string, id: string, strategy: { name: string; description?: string }) {
+    const response = await fetch(`${API_URL}/learningstrats/${id}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+            learning_strat_name: strategy.name,
+            description: strategy.description
+        }),
+    });
+    return response;
+}
+
+export async function deleteLearningStrategy(token: string, id: string) {
+    const response = await fetch(`${API_URL}/learningstrats/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    return response;
+}
+
+export async function getCurrentUser(token: string) {
+    try {
+        // Get user ID from token
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userId = payload.sub;
+
+        const response = await fetch(`${API_URL}/users/id/${userId}`, {
+            method: 'GET',
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error fetching user: ${response.status} ${response.statusText}`);
+        }
+
+        return response.json();
+    } catch (error) {
+        console.error('Error getting current user:', error);
+        throw error;
+    }
 }
