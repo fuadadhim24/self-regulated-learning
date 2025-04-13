@@ -1,16 +1,69 @@
 "use client"
 
 import type React from "react"
-
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Upload, X, File, Check, AlertCircle } from "lucide-react"
 
-export default function FileUpload() {
+interface FileUploadProps {
+    boardId: string
+    cardId: string
+    onUploadComplete?: () => void
+}
+
+interface Attachment {
+    _id: string
+    file_path: string
+    original_filename: string
+    created_at: string
+    user_id: string
+    board_id: string
+    card_id: string
+}
+
+export default function FileUpload({ boardId, cardId, onUploadComplete }: FileUploadProps) {
     const [showUpload, setShowUpload] = useState(false)
     const [files, setFiles] = useState<File[]>([])
     const [isDragging, setIsDragging] = useState(false)
     const [uploadStatus, setUploadStatus] = useState<"idle" | "uploading" | "success" | "error">("idle")
+    const [error, setError] = useState<string | null>(null)
+    const [attachments, setAttachments] = useState<Attachment[]>([])
     const fileInputRef = useRef<HTMLInputElement>(null)
+
+    useEffect(() => {
+        fetchAttachments()
+    }, [cardId])
+
+    const fetchAttachments = async () => {
+        try {
+            const token = localStorage.getItem("token")
+            console.log('Token from localStorage:', token ? token.substring(0, 20) + '...' : 'No token found')
+
+            if (!token) {
+                setError("No token found. Please log in.")
+                return
+            }
+
+            console.log('Making request to:', `${process.env.NEXT_PUBLIC_API_URL}/api/attachments/card/${cardId}`)
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/attachments/card/${cardId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            })
+
+            if (!response.ok) {
+                const errorData = await response.json()
+                console.error('Error response:', errorData)
+                throw new Error(errorData.error || "Failed to fetch attachments")
+            }
+
+            const data = await response.json()
+            console.log('Successfully fetched attachments:', data)
+            setAttachments(data)
+        } catch (err: any) {
+            console.error('Error fetching attachments:', err)
+            setError(err.message)
+        }
+    }
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.files && event.target.files.length > 0) {
@@ -40,18 +93,44 @@ export default function FileUpload() {
         }
     }
 
-    const handleUpload = () => {
+    const handleUpload = async () => {
         if (files.length === 0) {
-            alert("Please select a file first.")
+            setError("Please select a file first.")
             return
         }
 
         setUploadStatus("uploading")
+        setError(null)
 
-        // Simulate upload process
-        setTimeout(() => {
-            console.log("Files selected:", files)
+        try {
+            const token = localStorage.getItem("token")
+            if (!token) {
+                throw new Error("No token found. Please log in.")
+            }
+
+            const formData = new FormData()
+            formData.append('file', files[0])
+            formData.append('board_id', boardId)
+            formData.append('card_id', cardId)
+
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/attachments/upload`, {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${token}`
+                },
+                body: formData
+            })
+
+            if (!response.ok) {
+                const errorData = await response.json()
+                throw new Error(errorData.error || "Failed to upload file")
+            }
+
             setUploadStatus("success")
+            await fetchAttachments()
+            if (onUploadComplete) {
+                onUploadComplete()
+            }
 
             // Reset after showing success
             setTimeout(() => {
@@ -59,7 +138,73 @@ export default function FileUpload() {
                 setShowUpload(false)
                 setUploadStatus("idle")
             }, 1500)
-        }, 1500)
+        } catch (err: any) {
+            console.error('Error uploading file:', err)
+            setError(err.message || "An error occurred while uploading the file")
+            setUploadStatus("error")
+        }
+    }
+
+    const handleDelete = async (attachmentId: string) => {
+        try {
+            const token = localStorage.getItem("token")
+            if (!token) {
+                throw new Error("No token found. Please log in.")
+            }
+
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/attachments/${attachmentId}`, {
+                method: 'DELETE',
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            })
+
+            if (!response.ok) {
+                const errorData = await response.json()
+                throw new Error(errorData.error || "Failed to delete file")
+            }
+
+            await fetchAttachments()
+            if (onUploadComplete) {
+                onUploadComplete()
+            }
+        } catch (err: any) {
+            console.error('Error deleting file:', err)
+            setError(err.message || "An error occurred while deleting the file")
+        }
+    }
+
+    const handleDownload = async (attachment: Attachment) => {
+        try {
+            const token = localStorage.getItem("token")
+            if (!token) {
+                throw new Error("No token found. Please log in.")
+            }
+
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/attachments/download/${attachment._id}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            })
+
+            if (!response.ok) {
+                const errorData = await response.json()
+                throw new Error(errorData.error || "Failed to download file")
+            }
+
+            const blob = await response.blob()
+            const url = window.URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            a.download = attachment.original_filename
+            document.body.appendChild(a)
+            a.click()
+            window.URL.revokeObjectURL(url)
+            document.body.removeChild(a)
+        } catch (err: any) {
+            console.error('Error downloading file:', err)
+            setError(err.message || "An error occurred while downloading the file")
+        }
     }
 
     const removeFile = (index: number) => {
@@ -108,6 +253,13 @@ export default function FileUpload() {
                     </div>
 
                     <div className={`p-6 ${uploadStatus === "uploading" ? "opacity-50 pointer-events-none" : ""}`}>
+                        {error && (
+                            <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md flex items-center gap-2">
+                                <AlertCircle size={18} />
+                                {error}
+                            </div>
+                        )}
+
                         {/* Drag & Drop Area */}
                         <div
                             className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300 hover:border-blue-400"
@@ -157,6 +309,42 @@ export default function FileUpload() {
                                             >
                                                 <X size={18} />
                                             </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Existing Attachments */}
+                        {attachments.length > 0 && (
+                            <div className="mt-4">
+                                <h4 className="text-sm font-medium text-gray-700 mb-2">Attached Files</h4>
+                                <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+                                    {attachments.map((attachment) => (
+                                        <div key={attachment._id} className="flex items-center bg-gray-50 p-2 rounded-md border border-gray-200">
+                                            <div className="flex-shrink-0 mr-3">
+                                                <File className="h-10 w-10 text-gray-400" />
+                                            </div>
+                                            <div className="flex-grow min-w-0">
+                                                <p className="text-sm font-medium text-gray-800 truncate">{attachment.original_filename}</p>
+                                                <p className="text-xs text-gray-500">
+                                                    {new Date(attachment.created_at).toLocaleDateString()}
+                                                </p>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => handleDownload(attachment)}
+                                                    className="text-blue-500 hover:text-blue-700"
+                                                >
+                                                    <File size={18} />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(attachment._id)}
+                                                    className="text-red-500 hover:text-red-700"
+                                                >
+                                                    <X size={18} />
+                                                </button>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
