@@ -7,10 +7,14 @@ import { Button } from "@/components/ui/button"
 import { Edit, Lightbulb, Loader2, MoreHorizontal, Trash } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Skeleton } from "@/components/ui/skeleton"
+import { AlertCircle } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { getAllLearningStrategies, deleteLearningStrategy } from "@/utils/api"
 
 interface LearningStrategy {
     id: string
     name: string
+    description?: string
 }
 
 export default function LearningStrategiesList() {
@@ -18,29 +22,72 @@ export default function LearningStrategiesList() {
     const [editingStrategy, setEditingStrategy] = useState<LearningStrategy | null>(null)
     const [loading, setLoading] = useState(true)
     const [deletingId, setDeletingId] = useState<string | null>(null)
+    const [error, setError] = useState<string | null>(null)
 
     // Fetch strategies from the API
+    const fetchStrategies = async () => {
+        try {
+            setLoading(true)
+            setError(null)
+            const token = localStorage.getItem("token")
+            if (!token) {
+                setError("No token found. Please log in.")
+                return
+            }
+
+            console.log('Fetching strategies with token:', token.substring(0, 10) + '...');
+            const response = await getAllLearningStrategies(token)
+            console.log('Response status:', response.status);
+
+            if (!response.ok) {
+                const errorData = await response.text();
+                console.error('Error response:', errorData);
+                throw new Error(`Failed to fetch learning strategies: ${response.status} ${response.statusText}`);
+            }
+
+            const data = await response.json()
+            console.log('Fetched strategies data:', data);
+
+            // Map the data to match our interface
+            const mappedStrategies = data.map((strategy: any) => ({
+                id: strategy._id || strategy.id,
+                name: strategy.learning_strat_name || strategy.name,
+                description: strategy.description
+            }));
+
+            console.log('Mapped strategies:', mappedStrategies);
+            setStrategies(mappedStrategies)
+        } catch (err: any) {
+            console.error('Error in fetchStrategies:', err);
+            setError(err.message || "An error occurred while fetching strategies")
+        } finally {
+            setLoading(false)
+        }
+    }
+
     useEffect(() => {
-        setLoading(true)
-        fetch("/api/learning-strategies")
-            .then((res) => res.json())
-            .then((data) => {
-                setStrategies(data)
-                setLoading(false)
-            })
-            .catch((error) => {
-                console.error("Error fetching strategies:", error)
-                setLoading(false)
-            })
+        fetchStrategies()
     }, [])
 
     const handleDelete = async (id: string) => {
         try {
             setDeletingId(id)
-            await fetch(`/api/learning-strategies/${id}`, { method: "DELETE" })
-            setStrategies((prev) => prev.filter((strategy) => strategy.id !== id))
-        } catch (error) {
-            console.error("Error deleting strategy:", error)
+            setError(null)
+            const token = localStorage.getItem("token")
+            if (!token) {
+                setError("No token found. Please log in.")
+                return
+            }
+
+            const response = await deleteLearningStrategy(token, id)
+            if (!response.ok) {
+                throw new Error("Failed to delete learning strategy")
+            }
+
+            // Refresh the list after successful deletion
+            fetchStrategies()
+        } catch (err: any) {
+            setError(err.message || "An error occurred while deleting the strategy")
         } finally {
             setDeletingId(null)
         }
@@ -52,17 +99,28 @@ export default function LearningStrategiesList() {
                 <h2 className="text-3xl font-bold tracking-tight">Learning Strategies</h2>
             </div>
 
+            {error && (
+                <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{error}</AlertDescription>
+                </Alert>
+            )}
+
             {/* Form for adding a new strategy */}
             {!editingStrategy && (
-                <LearningStrategyForm onStrategySaved={(newStrategy) => setStrategies((prev) => [...prev, newStrategy])} />
+                <LearningStrategyForm
+                    onStrategySaved={() => {
+                        fetchStrategies()
+                    }}
+                />
             )}
 
             {/* Editing form */}
             {editingStrategy && (
                 <LearningStrategyForm
                     strategy={editingStrategy}
-                    onStrategySaved={(updatedStrategy) => {
-                        setStrategies((prev) => prev.map((s) => (s.id === updatedStrategy.id ? updatedStrategy : s)))
+                    onStrategySaved={() => {
+                        fetchStrategies()
                         setEditingStrategy(null)
                     }}
                     onCancel={() => setEditingStrategy(null)}
@@ -99,7 +157,12 @@ export default function LearningStrategiesList() {
                                     key={strategy.id}
                                     className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
                                 >
-                                    <p className="font-medium">{strategy.name}</p>
+                                    <div>
+                                        <p className="font-medium">{strategy.name}</p>
+                                        {strategy.description && (
+                                            <p className="text-sm text-muted-foreground mt-1">{strategy.description}</p>
+                                        )}
+                                    </div>
                                     <div className="flex items-center gap-2">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>

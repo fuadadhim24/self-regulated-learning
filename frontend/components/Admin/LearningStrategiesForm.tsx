@@ -1,64 +1,79 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2 } from "lucide-react"
+import { Loader2, AlertCircle } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import type { LearningStrategy } from "../../types"
+import { addLearningStrategy, updateLearningStrategy } from "@/utils/api"
 
 interface LearningStrategyFormProps {
     strategy?: LearningStrategy // If provided, we're editing
-    onStrategySaved: (strategy: LearningStrategy) => void
+    onStrategySaved: () => void
     onCancel?: () => void
 }
 
 export default function LearningStrategyForm({ strategy, onStrategySaved, onCancel }: LearningStrategyFormProps) {
     const [name, setName] = useState(strategy ? strategy.name : "")
+    const [description, setDescription] = useState(strategy ? strategy.description || "" : "")
     const [loading, setLoading] = useState(false)
+    const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
         if (strategy) {
             setName(strategy.name)
+            setDescription(strategy.description || "")
         }
     }, [strategy])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
-
-        const newStrategy: LearningStrategy = {
-            id: strategy ? strategy.id : `${Date.now()}`, // Generate new ID if not editing
-            name,
-        }
+        setError(null)
 
         try {
+            const token = localStorage.getItem("token")
+            if (!token) {
+                setError("No token found. Please log in.")
+                return
+            }
+
+            console.log('Submitting strategy with token:', token.substring(0, 10) + '...');
             if (strategy) {
-                // Update existing strategy via PUT
-                const res = await fetch(`/api/learning-strategies/${newStrategy.id}`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(newStrategy),
-                })
-                if (res.ok) {
-                    onStrategySaved(newStrategy)
+                // Update existing strategy
+                console.log('Updating strategy:', strategy);
+                const response = await updateLearningStrategy(token, strategy.id, { name, description })
+                console.log('Update response status:', response.status);
+
+                if (!response.ok) {
+                    const errorData = await response.text();
+                    console.error('Error response:', errorData);
+                    throw new Error(`Failed to update learning strategy: ${response.status} ${response.statusText}`);
                 }
             } else {
-                // Create new strategy via POST
-                const res = await fetch("/api/learning-strategies", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(newStrategy),
-                })
-                if (res.ok) {
-                    onStrategySaved(newStrategy)
-                    setName("")
+                // Create new strategy
+                console.log('Creating new strategy:', { name, description });
+                const response = await addLearningStrategy(token, { name, description })
+                console.log('Create response status:', response.status);
+
+                if (!response.ok) {
+                    const errorData = await response.text();
+                    console.error('Error response:', errorData);
+                    throw new Error(`Failed to add learning strategy: ${response.status} ${response.statusText}`);
                 }
             }
-        } catch (error) {
-            console.error("Error saving learning strategy:", error)
+
+            onStrategySaved()
+            if (!strategy) {
+                setName("")
+                setDescription("")
+            }
+        } catch (err: any) {
+            console.error('Error in handleSubmit:', err);
+            setError(err.message || "An error occurred while saving the strategy")
         } finally {
             setLoading(false)
         }
@@ -76,12 +91,25 @@ export default function LearningStrategyForm({ strategy, onStrategySaved, onCanc
             </CardHeader>
             <form onSubmit={handleSubmit}>
                 <CardContent>
+                    {error && (
+                        <Alert variant="destructive" className="mb-4">
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertDescription>{error}</AlertDescription>
+                        </Alert>
+                    )}
                     <div className="space-y-2">
                         <Input
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             placeholder="Learning Strategy Name"
+                            disabled={loading}
+                        />
+                        <textarea
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            placeholder="Description (optional)"
+                            className="w-full min-h-[100px] p-2 border rounded-md"
                             disabled={loading}
                         />
                     </div>
