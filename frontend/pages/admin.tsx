@@ -44,7 +44,7 @@ export default function AdminDashboard() {
                     return
                 }
 
-                const userData = await getCurrentUser(token)
+                const userData = await getCurrentUser()
                 setUser(userData)
             } catch (error) {
                 console.error("Error fetching user:", error)
