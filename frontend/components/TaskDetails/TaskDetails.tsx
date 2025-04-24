@@ -155,29 +155,6 @@ export default function TaskDetails({
                     </button>
                 </div>
 
-                {/* Add this section to display creation date and column movement times */}
-                <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                        <p><strong>Created:</strong> {formatDate(card.created_at)}</p>
-                        {card.column_movement_times && Object.keys(card.column_movement_times).length > 0 && (
-                            <div className="mt-2">
-                                <p className="font-medium">Column Movement History:</p>
-                                <ul className="list-disc pl-5 mt-1">
-                                    {Object.entries(card.column_movement_times).map(([columnId, timestamp]) => (
-                                        <li key={columnId}>
-                                            {columnId === listName ? (
-                                                <span className="font-medium">{listName}</span>
-                                            ) : (
-                                                listName
-                                            )}: {formatDate(timestamp)}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto p-6">
                     <TaskInfo

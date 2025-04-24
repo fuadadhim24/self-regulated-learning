@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle, GraduationCap, Loader2, LockKeyhole, User } from "lucide-react"
+import { setAccessToken } from "@/utils/auth"
 
 export default function Login() {
     const [username, setUsername] = useState("")
@@ -31,7 +32,7 @@ export default function Login() {
 
             if (response.ok) {
                 const data = await response.json()
-                localStorage.setItem("token", data.token)
+                setAccessToken(data.token)
 
                 if (data.role === "admin") {
                     router.push("/admin")

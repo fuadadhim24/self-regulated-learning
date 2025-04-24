@@ -4,13 +4,10 @@ import { NextRouter } from "next/router";
 
 export async function updateBoardState(boardId: string | null, lists: ListType[]) {
     if (!boardId) return;
-    const token = localStorage.getItem("token");
-    if (!token) return;
 
     try {
-        const data = await updateBoard(token, boardId, lists);
+        const data = await updateBoard(boardId, lists);
         console.log("Board updated:", data);
-
     } catch (error) {
         console.error("Error updating board:", error);
     }
@@ -37,7 +34,7 @@ export function addCard(
         learning_strategy: "Select a Learning Strategy",
         created_at: now,
         column_movement_times: {
-            [listId]: now // Record the time when the card was added to the first column
+            [listId]: now
         }
     };
 
@@ -59,7 +56,9 @@ export function updateCard(
 ) {
     const updatedLists = lists.map((list) => ({
         ...list,
-        cards: list.cards.map((card) => (card.id === cardId ? { ...card, [field]: newValue } : card)),
+        cards: list.cards.map((card) =>
+            card.id === cardId ? { ...card, [field]: newValue } : card
+        ),
     }));
 
     setLists(updatedLists);
@@ -84,15 +83,15 @@ export function moveCard(
     const destList = { ...lists[destListIndex], cards: [...lists[destListIndex].cards] };
 
     const movedCard = sourceList.cards[sourceIndex];
-    if (!movedCard) return; // Exit early if no card is found
+    if (!movedCard) return;
+
     sourceList.cards.splice(sourceIndex, 1);
 
-    // Only update column_movement_times if the card is moving to a different column
     if (sourceList.id !== destList.id) {
         const now = new Date().toISOString();
         movedCard.column_movement_times = {
             ...movedCard.column_movement_times,
-            [destinationDroppableId]: now // Record the time when the card entered the new column
+            [destinationDroppableId]: now
         };
     }
 
@@ -116,14 +115,8 @@ export async function fetchBoardData(
     setBoardName: (name: string) => void,
     router: NextRouter
 ) {
-    const token = localStorage.getItem("token");
-    if (!token) {
-        router.push("/login");
-        return;
-    }
-
     try {
-        const response = await getBoard(token);
+        const response = await getBoard();
         if (!response.ok) {
             router.push("/login");
             return;

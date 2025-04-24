@@ -38,4 +38,3 @@ export default function BoardHeader({ boardName, onShowArchived }: BoardHeaderPr
         </div>
     )
 }
-

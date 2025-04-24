@@ -17,7 +17,7 @@ interface NavbarProps {
 
 const Navbar = ({
     variant = "default",
-    title = "SRL Planner",
+    title = "GAMATUTOR.ID",
     showSearch = false,
     showNotifications = false,
     showProfile = true,
@@ -43,7 +43,7 @@ const Navbar = ({
                     return
                 }
 
-                const userData = await getCurrentUser(token)
+                const userData = await getCurrentUser()
                 setUser(userData)
             } catch (error) {
                 console.error("Error fetching user:", error)

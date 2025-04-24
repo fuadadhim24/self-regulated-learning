@@ -41,7 +41,7 @@ export default function LearningStrategiesDropdown({ strategy, onChange }: Learn
                     return
                 }
 
-                const response = await getAllLearningStrategies(token)
+                const response = await getAllLearningStrategies()
                 if (!response.ok) {
                     throw new Error(`Failed to fetch learning strategies: ${response.status} ${response.statusText}`)
                 }

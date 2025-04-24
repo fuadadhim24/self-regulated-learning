@@ -58,7 +58,7 @@ const List = ({ id, title, cards, onAddCard, onCardClick }: ListProps) => {
         const fetchData = async () => {
             const token = localStorage.getItem("token")
             if (token) {
-                const response = await getCourses(token)
+                const response = await getCourses()
                 if (response.ok) {
                     const data = await response.json()
                     setCourses(data) // Store courses

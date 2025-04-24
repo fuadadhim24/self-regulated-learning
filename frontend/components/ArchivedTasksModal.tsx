@@ -121,8 +121,8 @@ export default function ArchivedTasksModal({ archivedTasks, onClose, onRestore, 
                         </div>
                         <button
                             className={`flex items-center gap-1 px-3 py-2 border rounded-md text-sm ${filterOpen || Object.values(filters).some((f) => f.length > 0)
-                                    ? "bg-blue-50 text-blue-700 border-blue-200"
-                                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                                ? "bg-blue-50 text-blue-700 border-blue-200"
+                                : "border-gray-300 text-gray-700 hover:bg-gray-50"
                                 }`}
                             onClick={() => setFilterOpen(!filterOpen)}
                         >

@@ -56,61 +56,71 @@ export default function Chatbot() {
             <div
                 className={`bg-white dark:bg-slate-800 rounded-lg shadow-xl transition-all duration-300 ease-in-out overflow-hidden ${isOpen ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
                     }`}
-                style={{ width: "320px", maxHeight: "500px" }}
+                style={{
+                    width: "320px",
+                    maxHeight: "500px",
+                    height: isOpen ? "auto" : "60px", // Adjust height when minimized
+                    visibility: isOpen ? "visible" : "hidden", // Hide when minimized
+                }}
             >
                 {/* Chat Header */}
-                <div className="bg-blue-600 text-white px-4 py-3 flex justify-between items-center">
-                    <span className="font-medium">Learning Assistant</span>
-                    <button onClick={toggleChat} className="text-white hover:text-blue-100 transition-colors">
-                        <X size={20} />
-                    </button>
-                </div>
-
-                {/* Chat Messages */}
-                <div className="h-80 overflow-y-auto p-4 bg-slate-50 dark:bg-slate-900">
-                    {messages.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center h-full text-center text-slate-500 dark:text-slate-400 space-y-2">
-                            <MessageSquare size={32} className="opacity-50" />
-                            <p>How can I help with your learning today?</p>
-                        </div>
-                    ) : (
-                        messages.map((msg, index) => (
-                            <div key={index} className={`mb-3 ${msg.sender === "user" ? "text-right" : "text-left"}`}>
-                                <span
-                                    className={`inline-block px-4 py-2 rounded-lg ${msg.sender === "user"
-                                            ? "bg-blue-500 text-white"
-                                            : "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700"
-                                        }`}
-                                >
-                                    {msg.text}
-                                </span>
-                            </div>
-                        ))
-                    )}
-                    <div ref={messagesEndRef} />
-                </div>
-
-                {/* Input Area */}
-                <div className="border-t border-slate-200 dark:border-slate-700 p-3 bg-white dark:bg-slate-800">
-                    <div className="flex items-center">
-                        <input
-                            type="text"
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            onKeyPress={handleKeyPress}
-                            className="flex-grow border border-slate-300 dark:border-slate-600 rounded-l-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"
-                            placeholder="Type a message..."
-                        />
-                        <button
-                            onClick={handleSendMessage}
-                            className="bg-blue-500 hover:bg-blue-600 text-white rounded-r-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-                        >
-                            <Send size={20} />
+                {isOpen && (
+                    <div className="bg-blue-600 text-white px-4 py-3 flex justify-between items-center">
+                        <span className="font-medium">Learning Assistant</span>
+                        <button onClick={toggleChat} className="text-white hover:text-blue-100 transition-colors">
+                            <X size={20} />
                         </button>
                     </div>
-                </div>
+                )}
+
+                {/* Chat Messages */}
+                {isOpen && (
+                    <div className="h-80 overflow-y-auto p-4 bg-slate-50 dark:bg-slate-900">
+                        {messages.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center h-full text-center text-slate-500 dark:text-slate-400 space-y-2">
+                                <MessageSquare size={32} className="opacity-50" />
+                                <p>How can I help with your learning today?</p>
+                            </div>
+                        ) : (
+                            messages.map((msg, index) => (
+                                <div key={index} className={`mb-3 ${msg.sender === "user" ? "text-right" : "text-left"}`}>
+                                    <span
+                                        className={`inline-block px-4 py-2 rounded-lg ${msg.sender === "user"
+                                            ? "bg-blue-500 text-white"
+                                            : "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700"
+                                            }`}
+                                    >
+                                        {msg.text}
+                                    </span>
+                                </div>
+                            ))
+                        )}
+                        <div ref={messagesEndRef} />
+                    </div>
+                )}
+
+                {/* Input Area */}
+                {isOpen && (
+                    <div className="border-t border-slate-200 dark:border-slate-700 p-3 bg-white dark:bg-slate-800">
+                        <div className="flex items-center">
+                            <input
+                                type="text"
+                                value={input}
+                                onChange={(e) => setInput(e.target.value)}
+                                onKeyPress={handleKeyPress}
+                                className="flex-grow border border-slate-300 dark:border-slate-600 rounded-l-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"
+                                placeholder="Type a message..."
+                            />
+                            <button
+                                onClick={handleSendMessage}
+                                className="bg-blue-500 hover:bg-blue-600 text-white rounded-r-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                            >
+                                <Send size={20} />
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     )
 }
-
