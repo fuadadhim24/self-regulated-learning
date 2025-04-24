@@ -32,7 +32,7 @@ export default function UsersList() {
                 const token = localStorage.getItem("token")
                 if (!token) throw new Error("User not authenticated")
 
-                const response = await getAllUsers(token)
+                const response = await getAllUsers()
                 if (!response.ok) throw new Error("Failed to fetch users")
 
                 const data: UserType[] = await response.json()

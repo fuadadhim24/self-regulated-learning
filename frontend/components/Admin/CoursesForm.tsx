@@ -40,7 +40,7 @@ export default function CourseForm({ onCourseSaved }: CourseFormProps) {
             }
 
             const newCourse = { course_code: courseCode, course_name: courseName }
-            const response = await addCourse(token, newCourse)
+            const response = await addCourse(newCourse)
 
             if (!response.ok) {
                 throw new Error("Failed to add course.")

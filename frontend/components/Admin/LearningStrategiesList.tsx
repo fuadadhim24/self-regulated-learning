@@ -36,7 +36,7 @@ export default function LearningStrategiesList() {
             }
 
             console.log('Fetching strategies with token:', token.substring(0, 10) + '...');
-            const response = await getAllLearningStrategies(token)
+            const response = await getAllLearningStrategies()
             console.log('Response status:', response.status);
 
             if (!response.ok) {
@@ -79,7 +79,7 @@ export default function LearningStrategiesList() {
                 return
             }
 
-            const response = await deleteLearningStrategy(token, id)
+            const response = await deleteLearningStrategy(id)
             if (!response.ok) {
                 throw new Error("Failed to delete learning strategy")
             }

@@ -32,7 +32,7 @@ export default function CoursesList() {
                 return
             }
 
-            const response = await getCourses(token)
+            const response = await getCourses()
             if (!response.ok) throw new Error("Failed to fetch courses.")
 
             const data = await response.json()
@@ -57,7 +57,7 @@ export default function CoursesList() {
                 return
             }
 
-            const response = await deleteCourse(token, id)
+            const response = await deleteCourse(id)
             if (!response.ok) throw new Error("Failed to delete course.")
 
             // Refresh the course list from the API instead of just removing locally

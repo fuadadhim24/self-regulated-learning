@@ -59,14 +59,14 @@ export default function UserDetails({ username, onClose }: UserDetailsProps) {
                 }
 
                 // Fetch user details by username
-                const userRes = await getUserByUsername(token, username)
+                const userRes = await getUserByUsername(username)
                 if (!userRes.ok) throw new Error("Failed to fetch user details")
 
                 const foundUser = await userRes.json()
                 setUser(foundUser)
 
                 // Fetch board using the user's ID
-                const boardRes = await getBoardByUser(token, foundUser._id)
+                const boardRes = await getBoardByUser(foundUser._id)
                 if (!boardRes.ok) throw new Error("Failed to fetch user's board")
 
                 const boardData = await boardRes.json()

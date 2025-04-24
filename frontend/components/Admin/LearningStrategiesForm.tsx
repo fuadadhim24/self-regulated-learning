@@ -45,7 +45,7 @@ export default function LearningStrategyForm({ strategy, onStrategySaved, onCanc
             if (strategy) {
                 // Update existing strategy
                 console.log('Updating strategy:', strategy);
-                const response = await updateLearningStrategy(token, strategy.id, { name, description })
+                const response = await updateLearningStrategy(strategy.id, { name, description })
                 console.log('Update response status:', response.status);
 
                 if (!response.ok) {
@@ -56,7 +56,7 @@ export default function LearningStrategyForm({ strategy, onStrategySaved, onCanc
             } else {
                 // Create new strategy
                 console.log('Creating new strategy:', { name, description });
-                const response = await addLearningStrategy(token, { name, description })
+                const response = await addLearningStrategy({ name, description })
                 console.log('Create response status:', response.status);
 
                 if (!response.ok) {
