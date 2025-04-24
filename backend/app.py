@@ -77,7 +77,19 @@ def list_routes():
 def handle_preflight():
     if request.method == "OPTIONS":
         response = make_response()
-        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        origin = request.headers.get("Origin")
+
+        allowed_origins = [
+            "http://localhost:3000",
+            "https://self-regulated-learning.vercel.app"
+        ]
+
+        if origin in allowed_origins:
+            response.headers.add("Access-Control-Allow-Origin", origin)
+            response.headers.add("Vary", "Origin")  # optional but good practice
+        else:
+            response.headers.add("Access-Control-Allow-Origin", "null")
+
         response.headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization")
         response.headers.add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
         response.headers.add("Access-Control-Allow-Credentials", "true")
