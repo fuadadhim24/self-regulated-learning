@@ -4,10 +4,10 @@ from utils.db import mongo
 
 class Board:
     @staticmethod
-    def create_initial_board(user_id):
+    def create_initial_board(user_id, username):
         initial_board = {
             "user_id": ObjectId(user_id),
-            "name": "Self-Regulated Learning",
+            "name": f"{username}'s Board",  # Set the board name to <username>'s Board
             "lists": [
                 {"id": "list1", "title": "Planning (To Do)", "cards": []},
                 {"id": "list2", "title": "Monitoring (In Progress)", "cards": []},

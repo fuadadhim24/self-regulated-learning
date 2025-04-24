@@ -12,6 +12,10 @@ from routes.study_sessions import study_sessions_bp
 import os
 from utils.db import init_db
 from config import Config
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 app = Flask(__name__)
 
@@ -30,23 +34,22 @@ CORS(app, resources={
 # Load configuration
 app.config.from_object("config.Config")
 
-# MongoDB configuration
-app.config["MONGO_URI"] = Config.MONGO_URI
+# MongoDB configuration - ensure it's set from environment variable
+app.config["MONGO_URI"] = os.getenv("MONGO_URI")
+if not app.config["MONGO_URI"]:
+    raise ValueError("MONGO_URI environment variable is not set")
+
+# Initialize database
 init_db(app)
 
 # Additional configuration
 app.config['JWT_SECRET_KEY'] = Config.JWT_SECRET_KEY
 app.config['UPLOAD_FOLDER'] = Config.UPLOAD_FOLDER
 
-mongo.init_app(app)
-
-# Test connection
-with app.app_context():
-    try:
-        print("Testing MongoDB connection...")
-        print("Collections:", mongo.db.list_collection_names())
-    except Exception as e:
-        print("Error connecting to MongoDB:", str(e))
+app.config["JWT_TOKEN_LOCATION"] = ["headers", "cookies"]
+app.config["JWT_COOKIE_CSRF_PROTECT"] = False  # optional: for development only
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = 600  # 10 minutes
+app.config["JWT_REFRESH_TOKEN_EXPIRES"] = 86400 * 7  # 7 days
 
 # Initialize JWTManager
 jwt = JWTManager(app)
