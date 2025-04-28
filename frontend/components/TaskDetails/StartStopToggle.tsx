@@ -46,8 +46,8 @@ export default function StartStopToggle({ cardId }: StartStopToggleProps) {
 
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/study-sessions/card/${cardId}`, {
                 headers: {
-                    Authorization: `Bearer ${token}`
-                }
+                    Authorization: `Bearer ${token}`,
+                },
             })
 
             if (!response.ok) {
@@ -83,8 +83,8 @@ export default function StartStopToggle({ cardId }: StartStopToggleProps) {
 
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/study-sessions/card/${cardId}`, {
                 headers: {
-                    Authorization: `Bearer ${token}`
-                }
+                    Authorization: `Bearer ${token}`,
+                },
             })
 
             if (!response.ok) {
@@ -107,12 +107,12 @@ export default function StartStopToggle({ cardId }: StartStopToggleProps) {
             if (!isToggleOn) {
                 // Start new session
                 const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/study-sessions/start`, {
-                    method: 'POST',
+                    method: "POST",
                     headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${token}`
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
                     },
-                    body: JSON.stringify({ card_id: cardId })
+                    body: JSON.stringify({ card_id: cardId }),
                 })
 
                 if (!response.ok) {
@@ -128,12 +128,12 @@ export default function StartStopToggle({ cardId }: StartStopToggleProps) {
                 // End current session
                 if (currentSessionId) {
                     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/study-sessions/end`, {
-                        method: 'POST',
+                        method: "POST",
                         headers: {
-                            'Content-Type': 'application/json',
-                            Authorization: `Bearer ${token}`
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${token}`,
                         },
-                        body: JSON.stringify({ session_id: currentSessionId })
+                        body: JSON.stringify({ session_id: currentSessionId }),
                     })
 
                     if (!response.ok) {
@@ -154,21 +154,17 @@ export default function StartStopToggle({ cardId }: StartStopToggleProps) {
     }
 
     const formatTime = (minutes: number) => {
-        const hours = Math.floor(minutes / 60)
-        const remainingMinutes = minutes % 60
-        if (hours > 0) {
-            return `${hours}h ${remainingMinutes}m`
-        }
-        return `${remainingMinutes}m`
+        const formattedMinutes = minutes.toFixed(2) // Format to 2 decimal places
+        return `${formattedMinutes} minutes`
     }
 
     return (
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col gap-2">
             <button
                 onClick={handleToggle}
                 className={`relative flex items-center px-4 py-2 rounded-md transition-colors ${isToggleOn
-                    ? "bg-red-50 text-red-700 border border-red-200 hover:bg-red-100"
-                    : "bg-green-50 text-green-700 border border-green-200 hover:bg-green-100"
+                        ? "bg-red-50 text-red-700 border border-red-200 hover:bg-red-100"
+                        : "bg-green-50 text-green-700 border border-green-200 hover:bg-green-100"
                     }`}
             >
                 {isToggleOn ? (
@@ -184,18 +180,10 @@ export default function StartStopToggle({ cardId }: StartStopToggleProps) {
                 )}
             </button>
 
-            {isToggleOn && (
-                <div className="text-sm text-gray-600">
-                    Current session: {formatTime(elapsedTime)}
-                </div>
-            )}
-
-            {totalStudyTime > 0 && (
-                <div className="text-sm text-gray-600">
-                    Total study time: {formatTime(totalStudyTime)}
-                </div>
-            )}
+            <div className="flex flex-col text-sm text-gray-600">
+                {isToggleOn && <div>Current session: {formatTime(elapsedTime)}</div>}
+                {totalStudyTime > 0 && <div>Total study time: {formatTime(totalStudyTime)}</div>}
+            </div>
         </div>
     )
 }
-
