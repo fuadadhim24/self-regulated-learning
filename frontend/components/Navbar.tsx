@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { User, LogOut, Settings, Bell, Menu, X, GraduationCap } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/router"
-import { getCurrentUser } from "@/utils/api"
+import { getCurrentUser, logout } from "@/utils/api"
 
 interface NavbarProps {
     variant?: "default" | "admin"
@@ -56,9 +56,15 @@ const Navbar = ({
         fetchUser()
     }, [router])
 
-    const handleLogout = () => {
-        localStorage.removeItem("token")
-        router.push("/login")
+    const handleLogout = async () => {
+        try {
+            await logout() // call your API logout
+        } catch (error) {
+            console.error("Error during logout:", error)
+        } finally {
+            localStorage.removeItem("token")
+            router.push("/login")
+        }
     }
 
     if (loading) {

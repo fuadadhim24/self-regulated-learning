@@ -2,35 +2,24 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
-import { BookOpen, GraduationCap, Lightbulb, Users, Bell, Search, Menu } from "lucide-react"
+import { BookOpen, GraduationCap, Lightbulb, Users, ClockIcon } from "lucide-react"
 import CoursesList from "@/components/Admin/CoursesList"
 import LearningStrategiesList from "@/components/Admin/LearningStrategiesList"
 import UsersList from "@/components/Admin/UsersList"
-import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import LogsList from "@/components/Admin/LogsList"
 import { getCurrentUser } from "@/utils/api"
 import { useRouter } from "next/router"
 import Navbar from "@/components/Navbar"
 
-type Section = "courses" | "learningStrategies" | "users"
+type Section = "courses" | "learningStrategies" | "users" | "logs"
 
 export default function AdminDashboard() {
     const [selectedSection, setSelectedSection] = useState<Section>("courses")
     const [user, setUser] = useState<{
-        first_name: string;
-        last_name: string;
-        email: string;
-        username: string;
+        first_name: string
+        last_name: string
+        email: string
+        username: string
     } | null>(null)
     const [loading, setLoading] = useState(true)
     const router = useRouter()
@@ -56,11 +45,6 @@ export default function AdminDashboard() {
 
         fetchUser()
     }, [router])
-
-    const handleLogout = () => {
-        localStorage.removeItem("token")
-        router.push("/login")
-    }
 
     const NavItem = ({
         title,
@@ -101,12 +85,7 @@ export default function AdminDashboard() {
     return (
         <div className="min-h-screen bg-background flex flex-col">
             {/* Header */}
-            <Navbar
-                variant="admin"
-                title="Learning Admin"
-                showSearch={true}
-                showNotifications={true}
-            />
+            <Navbar variant="admin" title="Learning Admin" showSearch={true} showNotifications={true} />
 
             <div className="flex flex-1 overflow-hidden">
                 {/* Sidebar - Desktop */}
@@ -126,6 +105,7 @@ export default function AdminDashboard() {
                             active={selectedSection === "learningStrategies"}
                         />
                         <NavItem title="Users & Boards" icon={Users} value="users" active={selectedSection === "users"} />
+                        <NavItem title="System Logs" icon={ClockIcon} value="logs" active={selectedSection === "logs"} />
                     </nav>
                 </aside>
 
@@ -135,10 +115,10 @@ export default function AdminDashboard() {
                         {selectedSection === "courses" && <CoursesList />}
                         {selectedSection === "learningStrategies" && <LearningStrategiesList />}
                         {selectedSection === "users" && <UsersList />}
+                        {selectedSection === "logs" && <LogsList />}
                     </div>
                 </main>
             </div>
         </div>
     )
 }
-

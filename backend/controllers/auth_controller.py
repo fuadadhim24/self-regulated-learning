@@ -2,7 +2,8 @@ from flask import jsonify, request
 from utils.db import mongo
 from models.user_model import User
 from models.board_model import Board
-from flask_jwt_extended import create_access_token, create_refresh_token, set_refresh_cookies, get_jwt_identity, unset_jwt_cookies
+from models.log_model import Log
+from flask_jwt_extended import create_access_token, create_refresh_token, set_refresh_cookies, get_jwt_identity, unset_jwt_cookies, jwt_required
 from werkzeug.security import check_password_hash, generate_password_hash
 
 def register():
@@ -65,6 +66,13 @@ def login():
         refresh_token = create_refresh_token(identity=user_id)
         user_role = user.get("role", "user")
 
+        # Log the login activity
+        Log.create_log(
+            username=username,
+            action_type="login",
+            description=f"{username} logged in to the application"
+        )
+
         # Create response and set refresh token in HttpOnly cookie
         response = jsonify({"token": access_token, "role": user_role})
         set_refresh_cookies(response, refresh_token)
@@ -79,7 +87,25 @@ def refresh():
     access_token = create_access_token(identity=identity)
     return jsonify({"token": access_token}), 200
 
+@jwt_required()
 def logout():
+    # Get the current user's identity
+    user_id = get_jwt_identity()
+    
+    # Get the username for logging
+    try:
+        user = User.find_user_by_id(user_id)
+        if user:
+            username = user.get("username", "Unknown user")
+            # Log the logout activity
+            Log.create_log(
+                username=username,
+                action_type="logout",
+                description=f"{username} logged out of the application"
+            )
+    except Exception as e:
+        print(f"Error logging logout: {str(e)}")
+    
     response = jsonify({"message": "Logged out successfully"})
     unset_jwt_cookies(response)
     return response, 200
