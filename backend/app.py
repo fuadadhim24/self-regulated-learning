@@ -48,7 +48,7 @@ app.config['UPLOAD_FOLDER'] = Config.UPLOAD_FOLDER
 
 app.config["JWT_TOKEN_LOCATION"] = ["headers", "cookies"]
 app.config["JWT_COOKIE_CSRF_PROTECT"] = False  # optional: for development only
-app.config["JWT_ACCESS_TOKEN_EXPIRES"] = 600  # 10 minutes
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = 10800 #  # 3 hours
 app.config["JWT_REFRESH_TOKEN_EXPIRES"] = 86400 * 7  # 7 days
 
 # Initialize JWTManager
