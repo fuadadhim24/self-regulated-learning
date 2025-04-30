@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle, Lock, Loader2 } from "lucide-react"
+import { resetPassword } from "@/utils/api"
 
 export default function ResetPassword() {
     const [password, setPassword] = useState("")
@@ -47,11 +48,7 @@ export default function ResetPassword() {
         }
 
         try {
-            const response = await fetch("http://localhost:5000/api/reset-password", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ token, new_password: password }),
-            })
+            const response = await resetPassword(token, password)
 
             if (response.ok) {
                 setSuccess(true)

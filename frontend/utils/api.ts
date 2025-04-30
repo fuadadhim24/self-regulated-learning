@@ -162,3 +162,11 @@ export async function requestReset(email: string) {
         body: JSON.stringify({ email }),
     })
 }
+
+export async function resetPassword(token: string, newPassword: string) {
+    return fetch(`${API_URL}/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, new_password: newPassword }),
+    })
+}
