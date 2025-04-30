@@ -12,7 +12,6 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
 from dotenv import load_dotenv
-from config import Config
 
 # Load environment variables
 load_dotenv()
@@ -23,7 +22,6 @@ logging.basicConfig(level=logging.INFO)  # Changed from DEBUG to INFO
 logging.getLogger('pymongo').setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
-# API URL
 
 
 # Email configuration
@@ -109,7 +107,7 @@ def send_reset_email(email: str, token: str) -> bool:
         msg['To'] = email
         msg['Subject'] = "Password Reset Request"
 
-        reset_link = f"{Config.API_URL}/api/reset-password?token={token}"
+        reset_link = f"gamatutor.id/reset-password?token={token}"
         
         # Email body
         body = f"""
@@ -124,7 +122,7 @@ def send_reset_email(email: str, token: str) -> bool:
         This link will expire in 1 hour.
 
         Best regards,
-        Your Learning Platform Team
+        GAMATUTOR.ID Team
         """
         
         msg.attach(MIMEText(body, 'plain'))
