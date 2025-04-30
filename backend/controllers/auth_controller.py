@@ -6,6 +6,9 @@ from models.log_model import Log
 from flask_jwt_extended import create_access_token, create_refresh_token, set_refresh_cookies, get_jwt_identity, unset_jwt_cookies, jwt_required
 from werkzeug.security import check_password_hash, generate_password_hash
 
+import re
+from flask import request, jsonify
+
 def register():
     try:
         data = request.json
@@ -20,6 +23,14 @@ def register():
         # Validate required fields
         if not all([first_name, last_name, email, username, password]):
             return jsonify({"message": "All fields are required"}), 400
+
+        # Password validation
+        if len(password) < 8:
+            return jsonify({"message": "Password must be at least 8 characters long"}), 400
+        if not re.search(r"[A-Z]", password):
+            return jsonify({"message": "Password must contain at least one uppercase letter"}), 400
+        if not re.search(r"[0-9]", password):
+            return jsonify({"message": "Password must contain at least one number"}), 400
 
         if User.find_user_by_username(username):
             print(f"Username already exists: {username}")
@@ -40,13 +51,11 @@ def register():
         except Exception as e:
             print(f"Error creating initial board for user {username}: {str(e)}")
             # Don't fail registration if board creation fails
-            # The board can be created later when needed
 
         return jsonify({"message": "User registered successfully"}), 201
     except Exception as e:
         print(f"Error during registration: {str(e)}")
         return jsonify({"message": "An error occurred", "error": str(e)}), 500
-
 
 def login():
     try:
