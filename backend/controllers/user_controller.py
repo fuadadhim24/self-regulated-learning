@@ -12,6 +12,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
 from dotenv import load_dotenv
+from config import Config
 
 # Load environment variables
 load_dotenv()
@@ -21,6 +22,9 @@ logging.basicConfig(level=logging.INFO)  # Changed from DEBUG to INFO
 # Set PyMongo logger to WARNING level to reduce debug messages
 logging.getLogger('pymongo').setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
+
+# API URL
+
 
 # Email configuration
 SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.gmail.com")
@@ -105,8 +109,7 @@ def send_reset_email(email: str, token: str) -> bool:
         msg['To'] = email
         msg['Subject'] = "Password Reset Request"
 
-        # Create reset link
-        reset_link = f"http://localhost:3000/reset-password?token={token}"
+        reset_link = f"{Config.API_URL}/api/reset-password?token={token}"
         
         # Email body
         body = f"""

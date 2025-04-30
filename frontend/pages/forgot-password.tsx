@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle, AtSign, GraduationCap, Loader2 } from "lucide-react"
+import { requestReset } from "@/utils/api"
 
 export default function ForgotPassword() {
     const [email, setEmail] = useState("")
@@ -26,11 +27,7 @@ export default function ForgotPassword() {
         setSuccess(false)
 
         try {
-            const response = await fetch("http://localhost:5000/api/request-reset", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email }),
-            })
+            const response = await requestReset(email)
 
             if (response.ok) {
                 setSuccess(true)

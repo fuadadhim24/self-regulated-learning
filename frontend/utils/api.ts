@@ -154,3 +154,11 @@ export async function logout() {
 export async function getAllLogs() {
     return authorizedFetch(`${API_URL}/api/logs`)
 }
+
+export async function requestReset(email: string) {
+    return fetch(`${API_URL}/api/request-reset`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+    })
+}

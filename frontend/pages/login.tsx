@@ -54,7 +54,7 @@ export default function Login() {
         <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-muted/50 to-muted p-4 sm:p-8">
             <div className="absolute top-8 left-8 flex items-center gap-2">
                 <GraduationCap className="h-6 w-6 text-primary" />
-                <span className="font-bold text-xl">Learning Platform</span>
+                <span className="font-bold text-xl">GAMATUTOR.ID</span>
             </div>
 
             <div className="w-full max-w-5xl flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
