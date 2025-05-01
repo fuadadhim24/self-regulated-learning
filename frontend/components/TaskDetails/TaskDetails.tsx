@@ -125,11 +125,7 @@ export default function TaskDetails({
 
     const handleUpdateLinks = (updatedLinks: { id: string; url: string }[]) => {
         setLinks(updatedLinks)
-        // Assuming there's a function to update links in the parent component
-        // If not, you'll need to add this function to the props interface
-        // if (onUpdateLinks) {
         onUpdateLinks(card.id, updatedLinks)
-        // }
     }
 
     // Get color based on list name
