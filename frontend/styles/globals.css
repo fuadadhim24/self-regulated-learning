@@ -75,6 +75,13 @@
   }
 }
 
+@media (orientation: portrait) {
+  .landscape-only {
+    display: none !important;
+  }
+}
+
+
 /* Custom scrollbar styles */
 .scrollbar-thin::-webkit-scrollbar {
   width: 6px;

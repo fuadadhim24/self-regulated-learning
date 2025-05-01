@@ -20,8 +20,6 @@ interface NavbarProps {
 const Navbar = ({
     variant = "default",
     title = "GAMATUTOR.ID",
-    showSearch = false,
-    showNotifications = false,
     showProfile = true,
     customLinks,
 }: NavbarProps) => {
@@ -32,6 +30,7 @@ const Navbar = ({
         last_name: string
         email: string
         username: string
+        role?: string
     } | null>(null)
     const [loading, setLoading] = useState(true)
     const router = useRouter()
@@ -46,6 +45,7 @@ const Navbar = ({
                 }
 
                 const userData = await getCurrentUser()
+                console.log("User data:", userData)
                 setUser(userData)
             } catch (error) {
                 console.error("Error fetching user:", error)
@@ -121,20 +121,6 @@ const Navbar = ({
 
                     {/* Right side icons */}
                     <div className="hidden md:flex items-center space-x-2">
-                        {showNotifications && (
-                            <button className="p-2 rounded-full text-indigo-500 hover:text-indigo-700 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors">
-                                <Bell className="h-5 w-5" />
-                            </button>
-                        )}
-                        {showSearch && (
-                            <div className="relative">
-                                <input
-                                    type="text"
-                                    placeholder="Search..."
-                                    className="w-full bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-md py-1 px-3 text-sm border border-indigo-200 dark:border-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                                />
-                            </div>
-                        )}
 
                         {/* User dropdown */}
                         {showProfile && (
@@ -163,6 +149,15 @@ const Navbar = ({
                                             <User className="mr-2 h-4 w-4 text-indigo-500" />
                                             Your Profile
                                         </Link>
+                                        {user.role === "user" && (
+                                            <Link
+                                                href="/board"
+                                                className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 flex items-center"
+                                            >
+                                                <GraduationCap className="mr-2 h-4 w-4 text-indigo-500" />
+                                                Your Board
+                                            </Link>
+                                        )}
                                         <button
                                             onClick={handleLogout}
                                             className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center"
@@ -200,6 +195,15 @@ const Navbar = ({
                             >
                                 Your Profile
                             </Link>
+                            {user.role === "user" && (
+                                <Link
+                                    href="/board"
+                                    className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 flex items-center"
+                                >
+                                    <GraduationCap className="mr-2 h-4 w-4 text-indigo-500" />
+                                    Your Board
+                                </Link>
+                            )}
                             <Link
                                 href="/settings"
                                 className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:text-indigo-700 dark:hover:text-indigo-400"

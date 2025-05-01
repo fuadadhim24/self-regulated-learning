@@ -54,9 +54,9 @@ export default function Register() {
                 <span className="font-bold text-xl">GAMATUTOR.ID</span>
             </div>
 
-            <div className="w-full max-w-6xl flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
+            <div className="w-full max-w-5xl flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
                 {/* Left side - Animation */}
-                <div className="w-full lg:w-1/2 flex flex-col items-center">
+                <div className="landscape only w-full lg:w-1/2 flex flex-col items-center">
                     <div className="relative w-full max-w-md">
                         <Player
                             src="https://assets5.lottiefiles.com/packages/lf20_jcikwtux.json"

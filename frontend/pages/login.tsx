@@ -51,19 +51,19 @@ export default function Login() {
     }
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-muted/50 to-muted p-4 sm:p-8">
+        <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-muted/50 to-muted pt-4 sm:pt-8 px-4">
             <div className="absolute top-8 left-8 flex items-center gap-2">
                 <GraduationCap className="h-6 w-6 text-primary" />
                 <span className="font-bold text-xl">GAMATUTOR.ID</span>
             </div>
 
             <div className="w-full max-w-5xl flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
-                {/* Left side - Animation */}
-                <div className="w-full lg:w-1/2 flex flex-col items-center">
+                {/* Left side - Animation (shown only in landscape orientation) */}
+                <div className="landscape-only w-full lg:w-1/2 flex flex-col items-center">
                     <div className="relative w-full max-w-md">
                         <Player
                             src="https://assets7.lottiefiles.com/packages/lf20_87uabjh2.json"
-                            className="w-full"
+                            className="w-full h-full"
                             loop
                             autoplay
                         />

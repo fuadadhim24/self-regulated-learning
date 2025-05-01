@@ -22,6 +22,7 @@ export default function ProfilePage() {
         last_name: string
         email: string
         username: string
+        role: string
     } | null>(null)
 
     const [formData, setFormData] = useState({
@@ -175,11 +176,17 @@ export default function ProfilePage() {
                         <p className="text-muted-foreground">Manage your account settings and preferences</p>
                     </div>
 
-                    <Button variant="outline" className="flex items-center gap-2" onClick={() => router.push("/board")}>
+                    <Button variant="outline" className="flex items-center gap-2" onClick={() => {
+                        if (user.role === "admin") {
+                            router.push("/admin")
+                        } else {
+                            router.push("/board")
+                        }
+                    }}
+                    >
                         <ArrowLeft className="h-4 w-4" />
-                        Go back to your board
+                        {user.role === "admin" ? "Go back to admin page" : "Go back to your board"}
                     </Button>
-
                     <Separator />
 
                     <Tabs defaultValue="profile" className="space-y-6">
