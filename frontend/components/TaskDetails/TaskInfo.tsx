@@ -49,7 +49,7 @@ export default function TaskInfo({ card, onUpdateTitle, onUpdateSubTitle, onUpda
                     type="text"
                     value={title}
                     onChange={(e) => handleTitleChange(e.target.value)}
-                    className="w-full text-xl font-semibold p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full text-xl font-semibold p-2 border border-indigo-300 dark:border-indigo-700 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm shadow-sm"
                     placeholder="Task Title"
                 />
             </div>
@@ -60,22 +60,23 @@ export default function TaskInfo({ card, onUpdateTitle, onUpdateSubTitle, onUpda
                     type="text"
                     value={subTitle}
                     onChange={(e) => handleSubTitleChange(e.target.value)}
-                    className="w-full text-base p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full text-base p-2 border border-indigo-300 dark:border-indigo-700 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm shadow-sm"
                     placeholder="Sub-title"
                 />
             </div>
 
             {/* Description */}
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <label className="block text-sm font-medium text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 mb-1">
+                    Description
+                </label>
                 <textarea
                     value={description}
                     onChange={(e) => handleDescriptionChange(e.target.value)}
-                    className="w-full min-h-[120px] border border-gray-300 rounded-md p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full min-h-[120px] border border-indigo-300 dark:border-indigo-700 rounded-md p-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm shadow-sm"
                     placeholder="Add task details..."
                 />
             </div>
         </div>
     )
 }
-

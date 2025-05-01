@@ -19,7 +19,7 @@ export default function StarRating({ rating, onRate, isDisabled = false }: StarR
                     key={star}
                     type="button"
                     disabled={isDisabled}
-                    className={`relative p-1 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 ${isDisabled ? "cursor-not-allowed" : "cursor-pointer hover:scale-110"
+                    className={`relative p-1 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200 ${isDisabled ? "cursor-not-allowed" : "cursor-pointer hover:scale-110"
                         }`}
                     onMouseEnter={() => !isDisabled && setHover(star)}
                     onMouseLeave={() => setHover(null)}
@@ -27,14 +27,15 @@ export default function StarRating({ rating, onRate, isDisabled = false }: StarR
                     aria-label={`Rate ${star} out of 5 stars`}
                 >
                     <Star
-                        className={`h-6 w-6 transition-colors duration-200 ${(hover || rating) >= star ? "fill-yellow-400 text-yellow-400" : "fill-transparent text-gray-300"
+                        className={`h-6 w-6 transition-colors duration-200 ${(hover || rating) >= star
+                            ? "fill-yellow-400 text-yellow-400 drop-shadow-md"
+                            : "fill-transparent text-gray-300 dark:text-gray-600"
                             } ${isDisabled ? "opacity-70" : ""}`}
                     />
                 </button>
             ))}
 
-            {rating > 0 && <span className="ml-2 text-sm font-medium text-gray-700">{rating}/5</span>}
+            {rating > 0 && <span className="ml-2 text-sm font-medium text-indigo-600 dark:text-indigo-400">{rating}/5</span>}
         </div>
     )
 }
-

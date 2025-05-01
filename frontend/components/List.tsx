@@ -110,20 +110,20 @@ const List = ({ id, title, cards, onAddCard, onCardClick }: ListProps) => {
     const getListHeaderColor = () => {
         switch (title) {
             case "To Do":
-                return "bg-blue-50 border-blue-200"
+                return "bg-gradient-to-r from-blue-100 to-blue-200 dark:from-blue-900/40 dark:to-blue-800/40 border-blue-300 dark:border-blue-700"
             case "In Progress":
-                return "bg-amber-50 border-amber-200"
+                return "bg-gradient-to-r from-amber-100 to-amber-200 dark:from-amber-900/40 dark:to-amber-800/40 border-amber-300 dark:border-amber-700"
             case "Review":
-                return "bg-purple-50 border-purple-200"
+                return "bg-gradient-to-r from-purple-100 to-purple-200 dark:from-purple-900/40 dark:to-purple-800/40 border-purple-300 dark:border-purple-700"
             case "Reflection (Done)":
-                return "bg-green-50 border-green-200"
+                return "bg-gradient-to-r from-green-100 to-green-200 dark:from-green-900/40 dark:to-green-800/40 border-green-300 dark:border-green-700"
             default:
-                return "bg-gray-50 border-gray-200"
+                return "bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950 dark:to-purple-950 border-gray-300 dark:border-gray-700"
         }
     }
 
     return (
-        <div className="bg-gray-50 rounded-lg border border-gray-200 shadow-sm flex-1 min-w-[280px] max-w-[350px] flex flex-col">
+        <div className="bg-gradient-to-r from-indigo-25 to-purple-25 dark:from-indigo-950 dark:to-purple-950 rounded-lg border border-gray-200 shadow-sm flex-1 min-w-[280px] max-w-[350px] flex flex-col">
             {/* List Header */}
             <div
                 className={`px-4 py-3 flex items-center justify-between rounded-t-lg border-b ${getListHeaderColor()}`}

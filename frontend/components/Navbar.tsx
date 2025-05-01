@@ -92,14 +92,18 @@ const Navbar = ({
     const userFullName = `${user.first_name} ${user.last_name}`
 
     return (
-        <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <nav className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950 dark:to-purple-950 border-b border-indigo-200 dark:border-indigo-800 sticky top-0 z-50 shadow-sm">
             <div className="max-w-[95%] mx-auto px-2 sm:px-4">
                 <div className="flex items-center justify-between h-16">
                     {/* Logo and Desktop Navigation */}
                     <div className="flex items-center">
                         <Link href={variant === "admin" ? "/admin" : "/"} className="flex-shrink-0 flex items-center">
-                            {variant === "admin" ? <GraduationCap className="h-6 w-6 mr-2" /> : null}
-                            <span className="text-xl font-semibold text-gray-800">{title}</span>
+                            {variant === "admin" ? (
+                                <GraduationCap className="h-6 w-6 mr-2 text-indigo-600 dark:text-indigo-400" />
+                            ) : null}
+                            <span className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400">
+                                {title}
+                            </span>
                         </Link>
                         <div className="hidden md:block ml-4">{customLinks}</div>
                     </div>
@@ -108,7 +112,7 @@ const Navbar = ({
                     <div className="md:hidden">
                         <button
                             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                            className="inline-flex items-center justify-center p-2 rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+                            className="inline-flex items-center justify-center p-2 rounded-md text-indigo-500 hover:text-indigo-700 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 transition-colors"
                         >
                             <span className="sr-only">{isMobileMenuOpen ? "Close menu" : "Open menu"}</span>
                             {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -118,7 +122,7 @@ const Navbar = ({
                     {/* Right side icons */}
                     <div className="hidden md:flex items-center space-x-2">
                         {showNotifications && (
-                            <button className="p-2 rounded-full text-gray-500 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <button className="p-2 rounded-full text-indigo-500 hover:text-indigo-700 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors">
                                 <Bell className="h-5 w-5" />
                             </button>
                         )}
@@ -127,7 +131,7 @@ const Navbar = ({
                                 <input
                                     type="text"
                                     placeholder="Search..."
-                                    className="w-full bg-gray-100 rounded-md py-1 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-md py-1 px-3 text-sm border border-indigo-200 dark:border-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                                 />
                             </div>
                         )}
@@ -137,29 +141,31 @@ const Navbar = ({
                             <div className="relative">
                                 <button
                                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                    className="flex items-center space-x-2 p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="flex items-center space-x-2 p-1 rounded-full hover:bg-indigo-100 dark:hover:bg-indigo-900/30 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
                                 >
-                                    <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-                                        <User className="h-5 w-5 text-gray-500" />
+                                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center overflow-hidden text-white">
+                                        <User className="h-5 w-5" />
                                     </div>
-                                    <span className="text-sm font-medium text-gray-700 hidden lg:block">{userFullName}</span>
+                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-200 hidden lg:block">
+                                        {userFullName}
+                                    </span>
                                 </button>
                                 {isDropdownOpen && (
-                                    <div className="origin-top-right absolute right-0 mt-2 w-64 rounded-lg shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
-                                        <div className="px-4 py-3 border-b border-gray-100">
-                                            <p className="text-sm font-medium text-gray-900">{userFullName}</p>
-                                            <p className="text-sm text-gray-500 truncate">{user.email}</p>
+                                    <div className="origin-top-right absolute right-0 mt-2 w-64 rounded-lg shadow-lg py-1 bg-white dark:bg-slate-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-10 border border-indigo-200 dark:border-indigo-800">
+                                        <div className="px-4 py-3 border-b border-indigo-100 dark:border-indigo-800/50 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-t-lg">
+                                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{userFullName}</p>
+                                            <p className="text-sm text-indigo-600 dark:text-indigo-400 truncate">{user.email}</p>
                                         </div>
                                         <Link
                                             href="/profile"
-                                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                                            className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 flex items-center"
                                         >
-                                            <User className="mr-2 h-4 w-4" />
+                                            <User className="mr-2 h-4 w-4 text-indigo-500" />
                                             Your Profile
                                         </Link>
                                         <button
                                             onClick={handleLogout}
-                                            className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center"
+                                            className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center"
                                         >
                                             <LogOut className="mr-2 h-4 w-4" />
                                             Sign out
@@ -174,35 +180,35 @@ const Navbar = ({
 
             {/* Mobile menu */}
             {isMobileMenuOpen && (
-                <div className="md:hidden bg-white border-b border-gray-200">
-                    <div className="pt-4 pb-3 border-t border-gray-200">
+                <div className="md:hidden bg-white dark:bg-slate-800 border-b border-indigo-200 dark:border-indigo-800">
+                    <div className="pt-4 pb-3 border-t border-indigo-200 dark:border-indigo-800">
                         <div className="flex items-center px-3">
                             <div className="flex-shrink-0">
-                                <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-                                    <User className="h-6 w-6 text-gray-500" />
+                                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center overflow-hidden text-white">
+                                    <User className="h-6 w-6" />
                                 </div>
                             </div>
                             <div className="ml-3">
-                                <div className="text-base font-medium text-gray-800">{userFullName}</div>
-                                <div className="text-sm font-medium text-gray-500">{user.email}</div>
+                                <div className="text-base font-medium text-gray-800 dark:text-gray-200">{userFullName}</div>
+                                <div className="text-sm font-medium text-indigo-600 dark:text-indigo-400">{user.email}</div>
                             </div>
                         </div>
                         <div className="mt-3 px-2 space-y-1">
                             <Link
                                 href="/profile"
-                                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:text-indigo-700 dark:hover:text-indigo-400"
                             >
                                 Your Profile
                             </Link>
                             <Link
                                 href="/settings"
-                                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:text-indigo-700 dark:hover:text-indigo-400"
                             >
                                 Settings
                             </Link>
                             <button
                                 onClick={handleLogout}
-                                className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-gray-100 hover:text-gray-900"
+                                className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
                             >
                                 Sign out
                             </button>

@@ -60,10 +60,12 @@ export default function DifficultyDropdown({ difficulty, onChange }: DifficultyD
 
     return (
         <div className="relative" ref={dropdownRef}>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Difficulty</label>
+            <label className="block text-sm font-medium text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 mb-1.5">
+                Difficulty
+            </label>
             <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="w-full flex items-center justify-between p-2.5 rounded-md border border-gray-300 bg-white hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="w-full flex items-center justify-between p-2.5 rounded-md border border-indigo-300 dark:border-indigo-700 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm hover:border-indigo-400 dark:hover:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors shadow-sm"
                 aria-haspopup="true"
                 aria-expanded={isDropdownOpen}
                 aria-label={`Current difficulty: ${difficulty}`}
@@ -73,17 +75,17 @@ export default function DifficultyDropdown({ difficulty, onChange }: DifficultyD
                     <span className="ml-1.5 font-medium">{selectedOption.label}</span>
                 </div>
                 <ChevronDown
-                    className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`}
+                    className={`h-4 w-4 text-indigo-500 transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`}
                 />
             </button>
 
             {isDropdownOpen && (
-                <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-hidden">
+                <div className="absolute z-20 mt-1 w-full bg-white dark:bg-slate-800 border border-indigo-200 dark:border-indigo-800 rounded-md shadow-lg overflow-hidden">
                     <div className="py-1">
                         {difficultyOptions.map((option) => (
                             <button
                                 key={option.value}
-                                className={`flex flex-col w-full px-3 py-2 text-left hover:bg-gray-50 transition-colors ${difficulty === option.value ? "bg-gray-50" : ""}`}
+                                className={`flex flex-col w-full px-3 py-2 text-left hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors ${difficulty === option.value ? "bg-indigo-50 dark:bg-indigo-900/30" : ""}`}
                                 onClick={() => {
                                     onChange(option.value as "easy" | "medium" | "hard" | "expert")
                                     setIsDropdownOpen(false)
@@ -96,7 +98,7 @@ export default function DifficultyDropdown({ difficulty, onChange }: DifficultyD
                                         <span className="ml-1.5 font-medium">{option.label}</span>
                                     </div>
                                 </div>
-                                <p className="text-xs text-gray-500 mt-1">{option.description}</p>
+                                <p className="text-xs text-indigo-600 dark:text-indigo-400 mt-1">{option.description}</p>
                             </button>
                         ))}
                     </div>
@@ -105,4 +107,3 @@ export default function DifficultyDropdown({ difficulty, onChange }: DifficultyD
         </div>
     )
 }
-

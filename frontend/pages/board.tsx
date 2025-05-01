@@ -16,18 +16,17 @@ export default function BoardPage() {
     if (!mounted) return null
 
     return (
-        <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+        <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-slate-900 dark:via-indigo-950 dark:to-purple-950">
             <Navbar />
             <main className="flex-grow px-4 md:px-6 lg:px-8 py-6">
                 <div className="max-w-[1600px] mx-auto">
                     <Board />
                 </div>
             </main>
-            <footer className="py-4 px-6 text-center text-sm text-slate-500 dark:text-slate-400 border-t border-slate-200 dark:border-slate-700">
+            <footer className="py-4 px-6 text-center text-sm text-indigo-600 dark:text-indigo-400 border-t border-indigo-200 dark:border-indigo-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
                 <p>© {new Date().getFullYear()} SRL Learning Board</p>
             </footer>
             <Chatbot />
         </div>
     )
 }
-

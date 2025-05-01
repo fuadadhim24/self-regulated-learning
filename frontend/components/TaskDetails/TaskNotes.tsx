@@ -26,9 +26,11 @@ export default function TaskNotes({ cardId, notes = "", onUpdateNotes, isDisable
     return (
         <div className="space-y-2">
             <div className="flex items-center justify-between">
-                <label className="block text-sm font-medium text-gray-700">Notes / Summary</label>
+                <label className="block text-sm font-medium text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400">
+                    Notes / Summary
+                </label>
                 {isDisabled && (
-                    <div className="flex items-center text-amber-600 text-xs">
+                    <div className="flex items-center text-amber-600 dark:text-amber-500 text-xs">
                         <AlertCircle className="h-3.5 w-3.5 mr-1" />
                         Only editable in Reflection column
                     </div>
@@ -36,10 +38,10 @@ export default function TaskNotes({ cardId, notes = "", onUpdateNotes, isDisable
             </div>
 
             <div
-                className={`relative rounded-md border ${isDisabled ? "bg-gray-50 border-gray-200" : "border-gray-300 hover:border-gray-400"}`}
+                className={`relative rounded-md border ${isDisabled ? "bg-gray-50 dark:bg-slate-900/50 border-gray-200 dark:border-gray-700" : "border-indigo-300 dark:border-indigo-700 hover:border-indigo-400 dark:hover:border-indigo-600"}`}
             >
                 {noteText.trim() === "" && (
-                    <div className="absolute top-3 left-3 flex items-center text-gray-400 pointer-events-none">
+                    <div className="absolute top-3 left-3 flex items-center text-gray-400 dark:text-gray-500 pointer-events-none">
                         <FileText className="h-5 w-5 mr-2 opacity-70" />
                         <span>
                             {isDisabled
@@ -52,19 +54,19 @@ export default function TaskNotes({ cardId, notes = "", onUpdateNotes, isDisable
                     value={noteText}
                     onChange={(e) => handleNotesChange(e.target.value)}
                     className={`w-full rounded-md p-3 min-h-[120px] bg-transparent ${isDisabled
-                            ? "text-gray-500 cursor-not-allowed"
-                            : "text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            ? "text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                            : "text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                         }`}
                     disabled={isDisabled}
                 />
             </div>
 
-            <div className="flex justify-between items-center text-xs text-gray-500">
+            <div className="flex justify-between items-center text-xs text-indigo-600 dark:text-indigo-400">
                 <div>{noteText.length} characters</div>
                 {!isDisabled && (
                     <button
                         onClick={() => handleNotesChange("")}
-                        className="text-gray-500 hover:text-gray-700"
+                        className="text-indigo-500 hover:text-indigo-700 dark:hover:text-indigo-300"
                         disabled={noteText.length === 0}
                     >
                         Clear
@@ -74,4 +76,3 @@ export default function TaskNotes({ cardId, notes = "", onUpdateNotes, isDisable
         </div>
     )
 }
-

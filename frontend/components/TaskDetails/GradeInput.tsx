@@ -16,7 +16,7 @@ export default function GradeInput({
     preTestGrade = "",
     postTestGrade = "",
     onUpdatePreTestGrade,
-    onUpdatePostTestGrade
+    onUpdatePostTestGrade,
 }: GradeInputProps) {
     const [preTestValue, setPreTestValue] = useState(preTestGrade.toString())
     const [postTestValue, setPostTestValue] = useState(postTestGrade.toString())
@@ -70,11 +70,11 @@ export default function GradeInput({
     return (
         <div className="space-y-4">
             <div className="relative">
-                <label className="flex items-center text-sm font-medium text-gray-700 mb-1.5">
+                <label className="flex items-center text-sm font-medium text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 mb-1.5">
                     Pre-test Grade
                     <button
                         type="button"
-                        className="ml-1.5 text-gray-400 hover:text-gray-600"
+                        className="ml-1.5 text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300"
                         onMouseEnter={() => setShowTooltip(true)}
                         onMouseLeave={() => setShowTooltip(false)}
                         onClick={() => setShowTooltip(!showTooltip)}
@@ -85,9 +85,9 @@ export default function GradeInput({
                 </label>
 
                 {showTooltip && (
-                    <div className="absolute z-10 -top-2 left-16 transform -translate-y-full w-64 px-3 py-2 bg-gray-800 text-white text-xs rounded shadow-lg">
+                    <div className="absolute z-10 -top-2 left-16 transform -translate-y-full w-64 px-3 py-2 bg-indigo-800 text-white text-xs rounded shadow-lg">
                         Enter your grade from the pre-test assessment.
-                        <div className="absolute bottom-0 left-3 transform translate-y-1/2 rotate-45 w-2 h-2 bg-gray-800"></div>
+                        <div className="absolute bottom-0 left-3 transform translate-y-1/2 rotate-45 w-2 h-2 bg-indigo-800"></div>
                     </div>
                 )}
 
@@ -98,21 +98,21 @@ export default function GradeInput({
                         onChange={handlePreTestChange}
                         onBlur={handlePreTestBlur}
                         placeholder="Enter pre-test grade"
-                        className="w-full pl-3 pr-10 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700"
+                        className="w-full pl-3 pr-10 py-2 border border-indigo-300 dark:border-indigo-700 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 dark:text-gray-200 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm shadow-sm"
                         aria-label="Pre-test grade"
                     />
                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <Percent className="h-4 w-4 text-gray-400" />
+                        <Percent className="h-4 w-4 text-indigo-400" />
                     </div>
                 </div>
             </div>
 
             <div className="relative">
-                <label className="flex items-center text-sm font-medium text-gray-700 mb-1.5">
+                <label className="flex items-center text-sm font-medium text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 mb-1.5">
                     Post-test Grade
                     <button
                         type="button"
-                        className="ml-1.5 text-gray-400 hover:text-gray-600"
+                        className="ml-1.5 text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300"
                         onMouseEnter={() => setShowTooltip(true)}
                         onMouseLeave={() => setShowTooltip(false)}
                         onClick={() => setShowTooltip(!showTooltip)}
@@ -123,9 +123,9 @@ export default function GradeInput({
                 </label>
 
                 {showTooltip && (
-                    <div className="absolute z-10 -top-2 left-16 transform -translate-y-full w-64 px-3 py-2 bg-gray-800 text-white text-xs rounded shadow-lg">
+                    <div className="absolute z-10 -top-2 left-16 transform -translate-y-full w-64 px-3 py-2 bg-indigo-800 text-white text-xs rounded shadow-lg">
                         Enter your grade from the post-test assessment.
-                        <div className="absolute bottom-0 left-3 transform translate-y-1/2 rotate-45 w-2 h-2 bg-gray-800"></div>
+                        <div className="absolute bottom-0 left-3 transform translate-y-1/2 rotate-45 w-2 h-2 bg-indigo-800"></div>
                     </div>
                 )}
 
@@ -136,15 +136,14 @@ export default function GradeInput({
                         onChange={handlePostTestChange}
                         onBlur={handlePostTestBlur}
                         placeholder="Enter post-test grade"
-                        className="w-full pl-3 pr-10 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700"
+                        className="w-full pl-3 pr-10 py-2 border border-indigo-300 dark:border-indigo-700 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 dark:text-gray-200 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm shadow-sm"
                         aria-label="Post-test grade"
                     />
                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <Percent className="h-4 w-4 text-gray-400" />
+                        <Percent className="h-4 w-4 text-indigo-400" />
                     </div>
                 </div>
             </div>
         </div>
     )
 }
-

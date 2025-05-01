@@ -132,15 +132,15 @@ export default function TaskDetails({
     const getHeaderColor = () => {
         switch (listName) {
             case "To Do":
-                return "bg-blue-50 border-blue-200"
+                return "bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900"
             case "In Progress":
-                return "bg-amber-50 border-amber-200"
+                return "bg-gradient-to-r from-amber-50 to-amber-100 dark:from-amber-950 dark:to-amber-900"
             case "Review":
-                return "bg-purple-50 border-purple-200"
+                return "bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900"
             case "Reflection (Done)":
-                return "bg-green-50 border-green-200"
+                return "bg-gradient-to-r from-green-50 to-green-100 dark:from-green-950 dark:to-green-900"
             default:
-                return "bg-gray-50 border-gray-200"
+                return "bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950 dark:to-purple-950"
         }
     }
 
@@ -152,20 +152,24 @@ export default function TaskDetails({
 
     return (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 p-4 overflow-auto">
-            <div className="bg-white rounded-xl shadow-xl w-[800px] max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-[800px] max-h-[90vh] overflow-hidden flex flex-col border border-indigo-200 dark:border-indigo-800">
                 {/* Header */}
-                <div className={`px-6 py-4 border-b flex justify-between items-center ${getHeaderColor()}`}>
-                    <h2 className="text-lg font-semibold text-gray-800">Task Details</h2>
+                <div
+                    className={`px-6 py-4 border-b border-indigo-200 dark:border-indigo-800 flex justify-between items-center ${getHeaderColor()}`}
+                >
+                    <h2 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400">
+                        Task Details
+                    </h2>
                     <button
                         onClick={onClose}
-                        className="text-gray-500 hover:text-gray-700 rounded-full p-1 hover:bg-gray-200 transition-colors"
+                        className="text-indigo-500 hover:text-indigo-700 dark:hover:text-indigo-400 rounded-full p-1 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors"
                     >
                         <X className="h-5 w-5" />
                     </button>
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto p-6">
+                <div className="flex-1 overflow-y-auto p-6 bg-gradient-to-br from-white to-indigo-50/30 dark:from-slate-800 dark:to-indigo-950/30">
                     <TaskInfo
                         card={card}
                         onUpdateTitle={onUpdateTitle}
@@ -190,15 +194,15 @@ export default function TaskDetails({
                                 </div>
                             </div>
 
-                            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-lg p-4 border border-indigo-200 dark:border-indigo-800 shadow-sm hover:shadow-md transition-all duration-300">
                                 <Checklist cardId={card.id} checklists={checklists} onUpdateChecklists={handleUpdateChecklists} />
                             </div>
 
-                            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-lg p-4 border border-indigo-200 dark:border-indigo-800 shadow-sm hover:shadow-md transition-all duration-300">
                                 <LinkInput cardId={card.id} links={links} onUpdateLinks={handleUpdateLinks} />
                             </div>
 
-                            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-lg p-4 border border-indigo-200 dark:border-indigo-800 shadow-sm hover:shadow-md transition-all duration-300">
                                 <TaskNotes
                                     cardId={card.id}
                                     notes={notes}
@@ -209,8 +213,10 @@ export default function TaskDetails({
                         </div>
 
                         <div className="space-y-6">
-                            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                                <h3 className="text-sm font-medium text-gray-700 mb-3">Task Properties</h3>
+                            <div className="bg-white/80 dark:bg-slate-800/80 rounded-lg p-4 border border-indigo-200 dark:border-indigo-800 shadow-sm hover:shadow-md transition-all duration-300">
+                                <h3 className="text-sm font-medium text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 mb-3">
+                                    Task Properties
+                                </h3>
                                 <div className="space-y-4">
                                     <PriorityDropdown priority={priority} onChange={handlePriorityChange} />
                                     <DifficultyDropdown difficulty={difficulty} onChange={handleDifficultyChange} />
@@ -218,10 +224,12 @@ export default function TaskDetails({
                                 </div>
                             </div>
 
-                            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                                <h3 className="text-sm font-medium text-gray-700 mb-3">Learning Reflection</h3>
+                            <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-lg p-4 border border-indigo-200 dark:border-indigo-800 shadow-sm hover:shadow-md transition-all duration-300">
+                                <h3 className="text-sm font-medium text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 mb-3">
+                                    Learning Reflection
+                                </h3>
                                 <div className="space-y-2">
-                                    <p className="text-sm text-gray-600">
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">
                                         {isRatingEnabled
                                             ? "Rate how well you understood this material:"
                                             : "Rating will be available when task is completed"}
@@ -234,17 +242,17 @@ export default function TaskDetails({
                 </div>
 
                 {/* Footer */}
-                <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex items-center gap-3">
+                <div className="px-6 py-4 border-t border-indigo-200 dark:border-indigo-800 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950 dark:to-purple-950 flex items-center gap-3">
                     <button
                         onClick={onClose}
-                        className="flex-1 py-2 px-4 bg-white border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium"
+                        className="flex-1 py-2 px-4 bg-white dark:bg-slate-800 border border-indigo-300 dark:border-indigo-700 rounded-md text-indigo-700 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors text-sm font-medium shadow-sm hover:shadow-md"
                     >
                         Close
                     </button>
 
                     <button
                         onClick={() => onArchive(card.id)}
-                        className="flex items-center justify-center gap-1 py-2 px-4 bg-amber-50 border border-amber-200 rounded-md text-amber-700 hover:bg-amber-100 transition-colors text-sm font-medium"
+                        className="flex items-center justify-center gap-1 py-2 px-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 border border-amber-400 rounded-md text-white hover:shadow-lg transition-all duration-200 text-sm font-medium transform hover:-translate-y-0.5"
                     >
                         <Archive className="h-4 w-4" />
                         Archive
@@ -256,7 +264,7 @@ export default function TaskDetails({
                                 onDelete(card.id)
                             }
                         }}
-                        className="flex items-center justify-center gap-1 py-2 px-4 bg-red-50 border border-red-200 rounded-md text-red-700 hover:bg-red-100 transition-colors text-sm font-medium"
+                        className="flex items-center justify-center gap-1 py-2 px-4 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 border border-red-400 rounded-md text-white hover:shadow-lg transition-all duration-200 text-sm font-medium transform hover:-translate-y-0.5"
                     >
                         <Trash2 className="h-4 w-4" />
                         Delete

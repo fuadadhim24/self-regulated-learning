@@ -162,9 +162,9 @@ export default function StartStopToggle({ cardId }: StartStopToggleProps) {
         <div className="flex flex-col gap-2">
             <button
                 onClick={handleToggle}
-                className={`relative flex items-center px-4 py-2 rounded-md transition-colors ${isToggleOn
-                        ? "bg-red-50 text-red-700 border border-red-200 hover:bg-red-100"
-                        : "bg-green-50 text-green-700 border border-green-200 hover:bg-green-100"
+                className={`relative flex items-center px-4 py-2 rounded-md transition-all duration-200 shadow-sm hover:shadow-md transform hover:-translate-y-0.5 ${isToggleOn
+                        ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white border border-red-400"
+                        : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white border border-green-400"
                     }`}
             >
                 {isToggleOn ? (
@@ -180,7 +180,7 @@ export default function StartStopToggle({ cardId }: StartStopToggleProps) {
                 )}
             </button>
 
-            <div className="flex flex-col text-sm text-gray-600">
+            <div className="flex flex-col text-sm text-indigo-600 dark:text-indigo-400">
                 {isToggleOn && <div>Current session: {formatTime(elapsedTime)}</div>}
                 {totalStudyTime > 0 && <div>Total study time: {formatTime(totalStudyTime)}</div>}
             </div>
