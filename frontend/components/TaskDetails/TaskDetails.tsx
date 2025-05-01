@@ -10,8 +10,8 @@ import Checklist from "./Checklist"
 import LearningStrategiesDropdown from "./LearningStrategiesDropdown"
 import StarRating from "./StarRating"
 import TaskNotes from "./TaskNotes"
-import WorkLinks from "./LinkInput"
 import GradeInput from "./GradeInput"
+import LinkInput from "./LinkInput"
 import type { Checklists } from "@/types"
 
 interface TaskDetailsProps {
@@ -26,13 +26,13 @@ interface TaskDetailsProps {
         priority: "low" | "medium" | "high" | "critical"
         learning_strategy: string
         checklists?: Checklists[]
+        links?: { id: string; url: string }[]
         rating?: number
         notes?: string
         pre_test_grade?: string
         post_test_grade?: string
         created_at: string
         column_movement_times?: { [columnId: string]: string }
-        links?: string[]
     }
     onClose: () => void
     onUpdateTitle: (cardId: string, newTitle: string) => void
@@ -42,13 +42,13 @@ interface TaskDetailsProps {
     onUpdatePriority: (cardId: string, newPriority: "low" | "medium" | "high" | "critical") => void
     onUpdateLearningStrategy: (cardId: string, newLearningStrategy: string) => void
     onUpdateChecklists: (cardId: string, updatedChecklists: Checklists[]) => void
+    onUpdateLinks: (cardId: string, updatedLinks: { id: string; url: string }[]) => void
     onUpdateRating: (cardId: string, newRating: number) => void
     onUpdateNotes: (cardId: string, newNotes: string) => void
     onUpdatePreTestGrade: (cardId: string, newGrade: string) => void
     onUpdatePostTestGrade: (cardId: string, newGrade: string) => void
     onArchive: (cardId: string) => void
     onDelete: (cardId: string) => void
-    onUpdateLinks?: (cardId: string, links: string[]) => void
 }
 
 export default function TaskDetails({
@@ -79,7 +79,7 @@ export default function TaskDetails({
     const [notes, setNotes] = useState(card.notes ?? "")
     const [preTestGrade, setPreTestGrade] = useState(card.pre_test_grade ?? "")
     const [postTestGrade, setPostTestGrade] = useState(card.post_test_grade ?? "")
-    const [links, setLinks] = useState<string[]>(card.links ?? [])
+    const [links, setLinks] = useState<{ id: string; url: string }[]>(card.links ?? [])
     const isRatingEnabled = listName === "Reflection (Done)"
     const isNotesEnabled = listName === "Reflection (Done)"
 
@@ -123,11 +123,13 @@ export default function TaskDetails({
         onUpdatePostTestGrade(card.id, newGrade)
     }
 
-    const handleUpdateLinks = (newLinks: string[]) => {
-        setLinks(newLinks)
-        if (onUpdateLinks) {
-            onUpdateLinks(card.id, newLinks)
-        }
+    const handleUpdateLinks = (updatedLinks: { id: string; url: string }[]) => {
+        setLinks(updatedLinks)
+        // Assuming there's a function to update links in the parent component
+        // If not, you'll need to add this function to the props interface
+        // if (onUpdateLinks) {
+        onUpdateLinks(card.id, updatedLinks)
+        // }
     }
 
     // Get color based on list name
@@ -197,13 +199,7 @@ export default function TaskDetails({
                             </div>
 
                             <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                                <WorkLinks
-                                    links={links}
-                                    onChange={(newLinks) => {
-                                        setLinks(newLinks)
-                                        handleUpdateLinks(newLinks)
-                                    }}
-                                />
+                                <LinkInput cardId={card.id} links={links} onUpdateLinks={handleUpdateLinks} />
                             </div>
 
                             <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">

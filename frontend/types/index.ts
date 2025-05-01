@@ -9,6 +9,12 @@ export interface Checklists {
     title: string;
     items: ChecklistItem[];
 }
+
+export interface Links {
+    id: string;
+    url: string;
+}
+
 export interface Card {
     id: string;
     title: string;
@@ -20,6 +26,7 @@ export interface Card {
     archived?: boolean;
     deleted?: boolean;
     checklists?: Checklists[];
+    links?: Links[];
     rating?: number;
     notes?: string;
     pre_test_grade?: string;
