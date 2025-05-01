@@ -12,7 +12,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
-import { AlertCircle, User, Lock, Loader2, CheckCircle2, UserRound, AtSign } from "lucide-react"
+import { AlertCircle, User, Lock, Loader2, CheckCircle2, UserRound, AtSign, ArrowLeft } from "lucide-react"
 import { getCurrentUser, updateProfile, updatePassword } from "@/utils/api"
 
 export default function ProfilePage() {
@@ -168,12 +168,17 @@ export default function ProfilePage() {
     return (
         <div className="min-h-screen bg-background flex flex-col">
             <Navbar />
-            <main className="flex-1 container max-w-4xl py-10 px-4 md:px-6">
+            <main className="flex-1 container max-w-4xl py-10 px-4 md:px-6 mx-auto">
                 <div className="space-y-6">
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight">Profile Settings</h1>
                         <p className="text-muted-foreground">Manage your account settings and preferences</p>
                     </div>
+
+                    <Button variant="outline" className="flex items-center gap-2" onClick={() => router.push("/board")}>
+                        <ArrowLeft className="h-4 w-4" />
+                        Go back to your board
+                    </Button>
 
                     <Separator />
 
