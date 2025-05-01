@@ -67,14 +67,14 @@ app.register_blueprint(attachments_bp)
 app.register_blueprint(study_sessions_bp)
 
 @app.before_request
-def list_routes():
+def handle_all_before_requests():
+    # Print routes
     print("Available Endpoints:")
     for rule in app.url_map.iter_rules():
         methods = ','.join(rule.methods)
         print(f"{rule.endpoint}: {rule.rule} [{methods}]")
 
-@app.before_request
-def handle_preflight():
+    # Handle preflight (OPTIONS)
     if request.method == "OPTIONS":
         response = make_response()
         origin = request.headers.get("Origin")
@@ -87,7 +87,7 @@ def handle_preflight():
 
         if origin in allowed_origins:
             response.headers.add("Access-Control-Allow-Origin", origin)
-            response.headers.add("Vary", "Origin")  # optional but good practice
+            response.headers.add("Vary", "Origin")
         else:
             response.headers.add("Access-Control-Allow-Origin", "null")
 
@@ -96,6 +96,6 @@ def handle_preflight():
         response.headers.add("Access-Control-Allow-Credentials", "true")
         return response
 
+
 if __name__ == "__main__":
-    list_routes()
     app.run(debug=True)

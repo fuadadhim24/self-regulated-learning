@@ -2,7 +2,7 @@ from flask import jsonify, request
 from bson.objectid import ObjectId
 from utils.db import mongo
 from models.user_model import User
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 import logging
 from datetime import datetime, timedelta
 import jwt
@@ -11,6 +11,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
+from utils.auth import get_user_id_from_token
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -47,24 +48,50 @@ def get_user_by_username(username):
     return jsonify(user), 200
 
 # Update user details
-def update_user(user_id):
+def update_user():
+    auth_header = request.headers.get("Authorization", "")
+    user_id = get_user_id_from_token(auth_header)
+
     user_data = request.json
     if not user_data:
         return jsonify({"message": "No data provided"}), 400
 
-    allowed_updates = {"first_name", "last_name", "email", "username", "password"}
+    allowed_updates = {"first_name", "last_name", "email", "username"}
     updates = {key: value for key, value in user_data.items() if key in allowed_updates}
-
-    if "password" in updates:
-        updates["password"] = generate_password_hash(updates["password"])  # Hash the new password
 
     result = mongo.db.users.update_one({"_id": ObjectId(user_id)}, {"$set": updates})
 
     if result.modified_count == 0:
         return jsonify({"message": "User not found or no changes made"}), 404
 
-    return jsonify({"message": "User updated successfully"}), 200
+    return jsonify({"message": "Profile updated successfully"}), 200
 
+def update_user_password():
+    # Get token from headers
+    auth_header = request.headers.get("Authorization", "")
+    user_id = get_user_id_from_token(auth_header)
+
+    if not user_id:
+        return jsonify({"message": "Invalid or missing token"}), 401
+
+    data = request.get_json()
+    current_password = data.get("current_password")
+    new_password = data.get("new_password")
+
+    if not current_password or not new_password:
+        return jsonify({"message": "Both current and new passwords are required"}), 400
+
+    user = mongo.db.users.find_one({"_id": ObjectId(user_id)})
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+
+    if not check_password_hash(user["password"], current_password):
+        return jsonify({"message": "Current password is incorrect"}), 400
+
+    hashed = generate_password_hash(new_password)
+    mongo.db.users.update_one({"_id": ObjectId(user_id)}, {"$set": {"password": hashed}})
+
+    return jsonify({"message": "Password updated successfully"}), 200
 # Delete user
 def delete_user(user_id):
     result = mongo.db.users.delete_one({"_id": ObjectId(user_id)})

@@ -1,7 +1,9 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect } from "react"
-import { User, LogOut, Settings, Bell, Menu, X, GraduationCap } from "lucide-react"
+import { User, LogOut, Bell, Menu, X, GraduationCap } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/router"
 import { getCurrentUser, logout } from "@/utils/api"
@@ -21,15 +23,15 @@ const Navbar = ({
     showSearch = false,
     showNotifications = false,
     showProfile = true,
-    customLinks
+    customLinks,
 }: NavbarProps) => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false)
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
     const [user, setUser] = useState<{
-        first_name: string;
-        last_name: string;
-        email: string;
-        username: string;
+        first_name: string
+        last_name: string
+        email: string
+        username: string
     } | null>(null)
     const [loading, setLoading] = useState(true)
     const router = useRouter()
@@ -96,14 +98,10 @@ const Navbar = ({
                     {/* Logo and Desktop Navigation */}
                     <div className="flex items-center">
                         <Link href={variant === "admin" ? "/admin" : "/"} className="flex-shrink-0 flex items-center">
-                            {variant === "admin" ? (
-                                <GraduationCap className="h-6 w-6 mr-2" />
-                            ) : null}
+                            {variant === "admin" ? <GraduationCap className="h-6 w-6 mr-2" /> : null}
                             <span className="text-xl font-semibold text-gray-800">{title}</span>
                         </Link>
-                        <div className="hidden md:block ml-4">
-                            {customLinks}
-                        </div>
+                        <div className="hidden md:block ml-4">{customLinks}</div>
                     </div>
 
                     {/* Mobile menu button */}
@@ -152,20 +150,13 @@ const Navbar = ({
                                             <p className="text-sm font-medium text-gray-900">{userFullName}</p>
                                             <p className="text-sm text-gray-500 truncate">{user.email}</p>
                                         </div>
-                                        {/* <Link
+                                        <Link
                                             href="/profile"
                                             className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                                         >
                                             <User className="mr-2 h-4 w-4" />
                                             Your Profile
                                         </Link>
-                                        <Link
-                                            href="/settings"
-                                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                                        >
-                                            <Settings className="mr-2 h-4 w-4" />
-                                            Settings
-                                        </Link> */}
                                         <button
                                             onClick={handleLogout}
                                             className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center"
@@ -211,7 +202,7 @@ const Navbar = ({
                             </Link>
                             <button
                                 onClick={handleLogout}
-                                className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-gray-100"
+                                className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-gray-100 hover:text-gray-900"
                             >
                                 Sign out
                             </button>
@@ -224,4 +215,3 @@ const Navbar = ({
 }
 
 export default Navbar
-

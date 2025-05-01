@@ -52,6 +52,27 @@ export async function getCurrentUser() {
     return searchUserById(userId)
 }
 
+export async function updateProfile(userData: {
+    first_name: string
+    last_name: string
+    email: string
+    username: string
+}) {
+    return authorizedFetch(`${API_URL}/update-user`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userData),
+    })
+}
+
+export async function updatePassword(currentPassword: string, newPassword: string) {
+    return authorizedFetch(`${API_URL}/update-password`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+    })
+}
+
 export async function getBoard() {
     return authorizedFetch(`${API_URL}/board`)
 }
