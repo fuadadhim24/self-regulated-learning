@@ -144,6 +144,14 @@ export async function deleteLearningStrategy(id: string) {
     })
 }
 
+export async function updateLinks(id: string, links: string[]) {
+    return authorizedFetch(`${API_URL}/api/cards/${id}/links`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ links }),
+    })
+}
+
 export async function logout() {
     return authorizedFetch(`${API_URL}/api/logout`, {
         method: "POST",

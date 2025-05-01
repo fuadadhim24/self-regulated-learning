@@ -10,7 +10,7 @@ import Checklist from "./Checklist"
 import LearningStrategiesDropdown from "./LearningStrategiesDropdown"
 import StarRating from "./StarRating"
 import TaskNotes from "./TaskNotes"
-import FileUpload from "./FileUpload"
+import WorkLinks from "./LinkInput"
 import GradeInput from "./GradeInput"
 import type { Checklists } from "@/types"
 
@@ -32,6 +32,7 @@ interface TaskDetailsProps {
         post_test_grade?: string
         created_at: string
         column_movement_times?: { [columnId: string]: string }
+        links?: string[]
     }
     onClose: () => void
     onUpdateTitle: (cardId: string, newTitle: string) => void
@@ -47,6 +48,7 @@ interface TaskDetailsProps {
     onUpdatePostTestGrade: (cardId: string, newGrade: string) => void
     onArchive: (cardId: string) => void
     onDelete: (cardId: string) => void
+    onUpdateLinks?: (cardId: string, links: string[]) => void
 }
 
 export default function TaskDetails({
@@ -67,6 +69,7 @@ export default function TaskDetails({
     onUpdatePostTestGrade,
     onArchive,
     onDelete,
+    onUpdateLinks,
 }: TaskDetailsProps) {
     const [difficulty, setDifficulty] = useState(card.difficulty)
     const [priority, setPriority] = useState(card.priority)
@@ -76,6 +79,7 @@ export default function TaskDetails({
     const [notes, setNotes] = useState(card.notes ?? "")
     const [preTestGrade, setPreTestGrade] = useState(card.pre_test_grade ?? "")
     const [postTestGrade, setPostTestGrade] = useState(card.post_test_grade ?? "")
+    const [links, setLinks] = useState<string[]>(card.links ?? [])
     const isRatingEnabled = listName === "Reflection (Done)"
     const isNotesEnabled = listName === "Reflection (Done)"
 
@@ -119,6 +123,13 @@ export default function TaskDetails({
         onUpdatePostTestGrade(card.id, newGrade)
     }
 
+    const handleUpdateLinks = (newLinks: string[]) => {
+        setLinks(newLinks)
+        if (onUpdateLinks) {
+            onUpdateLinks(card.id, newLinks)
+        }
+    }
+
     // Get color based on list name
     const getHeaderColor = () => {
         switch (listName) {
@@ -137,9 +148,9 @@ export default function TaskDetails({
 
     // Add this function to format dates
     const formatDate = (dateString: string) => {
-        const date = new Date(dateString);
-        return date.toLocaleString();
-    };
+        const date = new Date(dateString)
+        return date.toLocaleString()
+    }
 
     return (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 p-4 overflow-auto">
@@ -185,7 +196,15 @@ export default function TaskDetails({
                                 <Checklist cardId={card.id} checklists={checklists} onUpdateChecklists={handleUpdateChecklists} />
                             </div>
 
-                            <FileUpload boardId={boardId} cardId={card.id} />
+                            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                                <WorkLinks
+                                    links={links}
+                                    onChange={(newLinks) => {
+                                        setLinks(newLinks)
+                                        handleUpdateLinks(newLinks)
+                                    }}
+                                />
+                            </div>
 
                             <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                                 <TaskNotes
@@ -255,4 +274,3 @@ export default function TaskDetails({
         </div>
     )
 }
-
