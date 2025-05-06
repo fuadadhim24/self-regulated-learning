@@ -221,6 +221,13 @@ def reset_password():
         
         if not token or not new_password:
             return jsonify({'error': 'Token and new password are required'}), 400
+        
+        if len(new_password) < 8:
+            return jsonify({"message": "Password must be at least 8 characters long"}), 400
+        if not re.search(r"[A-Z]", new_password):
+            return jsonify({"message": "Password must contain at least one uppercase letter"}), 400
+        if not re.search(r"[0-9]", new_password):
+            return jsonify({"message": "Password must contain at least one number"}), 400
             
         # Find user with valid reset token
         user = User.find_by_reset_token(token)
