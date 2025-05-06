@@ -82,6 +82,8 @@ export default function TaskDetails({
     const [links, setLinks] = useState<{ id: string; url: string }[]>(card.links ?? [])
     const isRatingEnabled = listName === "Reflection (Done)"
     const isNotesEnabled = listName === "Reflection (Done)"
+    const isPreTestEnabled = listName !== "Reflection (Done)"
+    const isPostTestEnabled = listName === "Controlling (Review)" || listName === "Reflection (Done)"
 
     const handleDifficultyChange = (newDifficulty: "easy" | "medium" | "hard" | "expert") => {
         setDifficulty(newDifficulty)
@@ -190,6 +192,8 @@ export default function TaskDetails({
                                         postTestGrade={postTestGrade}
                                         onUpdatePreTestGrade={handleUpdatePreTestGrade}
                                         onUpdatePostTestGrade={handleUpdatePostTestGrade}
+                                        isPreTestDisabled={!isPreTestEnabled}
+                                        isPostTestDisabled={!isPostTestEnabled}
                                     />
                                 </div>
                             </div>

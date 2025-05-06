@@ -10,6 +10,8 @@ interface GradeInputProps {
     postTestGrade?: string | number
     onUpdatePreTestGrade: (newGrade: string) => void
     onUpdatePostTestGrade: (newGrade: string) => void
+    isPreTestDisabled?: boolean
+    isPostTestDisabled?: boolean
 }
 
 export default function GradeInput({
@@ -17,6 +19,8 @@ export default function GradeInput({
     postTestGrade = "",
     onUpdatePreTestGrade,
     onUpdatePostTestGrade,
+    isPreTestDisabled = false,
+    isPostTestDisabled = false,
 }: GradeInputProps) {
     const [preTestValue, setPreTestValue] = useState(preTestGrade.toString())
     const [postTestValue, setPostTestValue] = useState(postTestGrade.toString())
@@ -98,9 +102,12 @@ export default function GradeInput({
                         onChange={handlePreTestChange}
                         onBlur={handlePreTestBlur}
                         placeholder="Enter pre-test grade"
-                        className="w-full pl-3 pr-10 py-2 border border-indigo-300 dark:border-indigo-700 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 dark:text-gray-200 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm shadow-sm"
-                        aria-label="Pre-test grade"
+                        disabled={isPreTestDisabled}
+                        className={`w-full pl-3 pr-10 py-2 border rounded-md focus:ring-2 text-gray-700 dark:text-gray-200 backdrop-blur-sm shadow-sm
+                            ${isPreTestDisabled ? "bg-gray-200 dark:bg-slate-700 cursor-not-allowed opacity-70 border-gray-300 dark:border-slate-600" :
+                                "bg-white/80 dark:bg-slate-800/80 border-indigo-300 dark:border-indigo-700 focus:ring-indigo-500 focus:border-indigo-500"}`}
                     />
+
                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                         <Percent className="h-4 w-4 text-indigo-400" />
                     </div>
@@ -136,8 +143,10 @@ export default function GradeInput({
                         onChange={handlePostTestChange}
                         onBlur={handlePostTestBlur}
                         placeholder="Enter post-test grade"
-                        className="w-full pl-3 pr-10 py-2 border border-indigo-300 dark:border-indigo-700 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 dark:text-gray-200 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm shadow-sm"
-                        aria-label="Post-test grade"
+                        disabled={isPostTestDisabled}
+                        className={`w-full pl-3 pr-10 py-2 border rounded-md focus:ring-2 text-gray-700 dark:text-gray-200 backdrop-blur-sm shadow-sm
+                            ${isPostTestDisabled ? "bg-gray-200 dark:bg-slate-700 cursor-not-allowed opacity-70 border-gray-300 dark:border-slate-600" :
+                                "bg-white/80 dark:bg-slate-800/80 border-indigo-300 dark:border-indigo-700 focus:ring-indigo-500 focus:border-indigo-500"}`}
                     />
                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                         <Percent className="h-4 w-4 text-indigo-400" />
