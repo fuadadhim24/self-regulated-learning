@@ -73,6 +73,7 @@ export default function GradeInput({
 
     return (
         <div className="space-y-4">
+            {/* --- Pre-test Grade Input --- */}
             <div className="relative">
                 <label className="flex items-center text-sm font-medium text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 mb-1.5">
                     Pre-test Grade
@@ -95,7 +96,8 @@ export default function GradeInput({
                     </div>
                 )}
 
-                <div className="relative">
+                {/* Tooltip wrapper for disabled input */}
+                <div className={`relative group`}>
                     <input
                         type="text"
                         value={preTestValue}
@@ -104,16 +106,23 @@ export default function GradeInput({
                         placeholder="Enter pre-test grade"
                         disabled={isPreTestDisabled}
                         className={`w-full pl-3 pr-10 py-2 border rounded-md focus:ring-2 text-gray-700 dark:text-gray-200 backdrop-blur-sm shadow-sm
-                            ${isPreTestDisabled ? "bg-gray-200 dark:bg-slate-700 cursor-not-allowed opacity-70 border-gray-300 dark:border-slate-600" :
+                  ${isPreTestDisabled ? "bg-gray-200 dark:bg-slate-700 cursor-not-allowed opacity-70 border-gray-300 dark:border-slate-600" :
                                 "bg-white/80 dark:bg-slate-800/80 border-indigo-300 dark:border-indigo-700 focus:ring-indigo-500 focus:border-indigo-500"}`}
                     />
 
                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                         <Percent className="h-4 w-4 text-indigo-400" />
                     </div>
+
+                    {isPreTestDisabled && (
+                        <div className="absolute -top-8 left-0 w-max max-w-xs px-2 py-1 text-xs text-white bg-gray-800 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                            Not editable in "Reflection (Done)" stage
+                        </div>
+                    )}
                 </div>
             </div>
 
+            {/* --- Post-test Grade Input --- */}
             <div className="relative">
                 <label className="flex items-center text-sm font-medium text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 mb-1.5">
                     Post-test Grade
@@ -136,7 +145,7 @@ export default function GradeInput({
                     </div>
                 )}
 
-                <div className="relative">
+                <div className="relative group">
                     <input
                         type="text"
                         value={postTestValue}
@@ -145,14 +154,21 @@ export default function GradeInput({
                         placeholder="Enter post-test grade"
                         disabled={isPostTestDisabled}
                         className={`w-full pl-3 pr-10 py-2 border rounded-md focus:ring-2 text-gray-700 dark:text-gray-200 backdrop-blur-sm shadow-sm
-                            ${isPostTestDisabled ? "bg-gray-200 dark:bg-slate-700 cursor-not-allowed opacity-70 border-gray-300 dark:border-slate-600" :
+                  ${isPostTestDisabled ? "bg-gray-200 dark:bg-slate-700 cursor-not-allowed opacity-70 border-gray-300 dark:border-slate-600" :
                                 "bg-white/80 dark:bg-slate-800/80 border-indigo-300 dark:border-indigo-700 focus:ring-indigo-500 focus:border-indigo-500"}`}
                     />
+
                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                         <Percent className="h-4 w-4 text-indigo-400" />
                     </div>
+
+                    {isPostTestDisabled && (
+                        <div className="absolute -top-8 left-0 w-max max-w-xs px-2 py-1 text-xs text-white bg-gray-800 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                            Only editable in "Controlling (Review)" or "Reflection (Done)" stage
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
-    )
+    );
 }
