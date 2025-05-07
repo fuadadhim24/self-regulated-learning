@@ -82,7 +82,7 @@ export default function TaskDetails({
     const [links, setLinks] = useState<{ id: string; url: string }[]>(card.links ?? [])
     const [isTimerActive, setIsTimerActive] = useState(false)
     const isRatingEnabled = listName === "Reflection (Done)"
-    const isNotesEnabled = listName === "Reflection (Done)"
+    const isNotesEnabled = listName === "Reflection (Done)" || listName === "Controlling (Review)"
     const isPreTestEnabled = listName !== "Reflection (Done)"
     const isPostTestEnabled = listName === "Controlling (Review)" || listName === "Reflection (Done)"
     const isDeleteEnabled = listName === "Reflection (Done)" || !isTimerActive

@@ -32,7 +32,7 @@ export default function TaskNotes({ cardId, notes = "", onUpdateNotes, isDisable
                 {isDisabled && (
                     <div className="flex items-center text-amber-600 dark:text-amber-500 text-xs">
                         <AlertCircle className="h-3.5 w-3.5 mr-1" />
-                        Only editable in Reflection column
+                        Only editable in Controlling (Review) or Reflection (Done) column
                     </div>
                 )}
             </div>
@@ -54,8 +54,8 @@ export default function TaskNotes({ cardId, notes = "", onUpdateNotes, isDisable
                     value={noteText}
                     onChange={(e) => handleNotesChange(e.target.value)}
                     className={`w-full rounded-md p-3 min-h-[120px] bg-transparent ${isDisabled
-                            ? "text-gray-500 dark:text-gray-400 cursor-not-allowed"
-                            : "text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        ? "text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                        : "text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                         }`}
                     disabled={isDisabled}
                 />

@@ -7,6 +7,7 @@ import type { ListType, Card } from "@/types"
 import List from "../List"
 import TaskDetails from "../TaskDetails/TaskDetails"
 import { addCard, updateCard, moveCard, archiveCard, deleteCard } from "@/utils/boardService"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 
 export default function BoardContent({
     lists,
@@ -18,11 +19,40 @@ export default function BoardContent({
     boardId: string | null
 }) {
     const [selectedCard, setSelectedCard] = useState<{ listId: string; card: Card } | null>(null)
+    const [showNotesAlert, setShowNotesAlert] = useState(false)
+    const [pendingMove, setPendingMove] = useState<{ source: any; destination: any } | null>(null)
 
     const handleDragEnd = (result: DropResult) => {
         const { source, destination } = result
         if (!destination) return
+
+        // Check if moving to Reflection column
+        const destinationList = lists.find(list => list.id === destination.droppableId)
+        if (destinationList?.title === "Reflection (Done)") {
+            const sourceList = lists.find(list => list.id === source.droppableId)
+            const card = sourceList?.cards[source.index]
+
+            if (!card?.notes) {
+                setPendingMove({ source, destination })
+                setShowNotesAlert(true)
+                return
+            }
+        }
+
         moveCard(lists, setLists, boardId, source.index, destination.index, source.droppableId, destination.droppableId)
+    }
+
+    const handleNotesAlertConfirm = () => {
+        if (pendingMove) {
+            const { source, destination } = pendingMove
+            const sourceList = lists.find(list => list.id === source.droppableId)
+            const card = sourceList?.cards[source.index]
+            if (card) {
+                setSelectedCard({ listId: source.droppableId, card })
+            }
+        }
+        setShowNotesAlert(false)
+        setPendingMove(null)
     }
 
     return (
@@ -74,6 +104,24 @@ export default function BoardContent({
                     onDelete={(cardId) => deleteCard(lists, setLists, boardId, cardId)}
                 />
             )}
+
+            <AlertDialog open={showNotesAlert} onOpenChange={setShowNotesAlert}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Notes Required</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Please add your learning notes/summary before moving this task to the Reflection column. This helps track your learning progress and understanding.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => {
+                            setShowNotesAlert(false)
+                            setPendingMove(null)
+                        }}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleNotesAlertConfirm}>Add Notes Now</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </DragDropContext>
     )
 }
