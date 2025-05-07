@@ -10,6 +10,13 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { AlertCircle } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { getAllLearningStrategies, deleteLearningStrategy } from "@/utils/api"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
 
 interface LearningStrategy {
     id: string
@@ -107,25 +114,34 @@ export default function LearningStrategiesList() {
             )}
 
             {/* Form for adding a new strategy */}
-            {!editingStrategy && (
-                <LearningStrategyForm
-                    onStrategySaved={() => {
-                        fetchStrategies()
-                    }}
-                />
-            )}
+            <LearningStrategyForm
+                onStrategySaved={() => {
+                    fetchStrategies()
+                }}
+            />
 
-            {/* Editing form */}
-            {editingStrategy && (
-                <LearningStrategyForm
-                    strategy={editingStrategy}
-                    onStrategySaved={() => {
-                        fetchStrategies()
-                        setEditingStrategy(null)
-                    }}
-                    onCancel={() => setEditingStrategy(null)}
-                />
-            )}
+            {/* Edit Modal */}
+            <Dialog open={!!editingStrategy} onOpenChange={() => setEditingStrategy(null)}>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle>Edit Learning Strategy</DialogTitle>
+                        <DialogDescription>
+                            Update the details of this learning strategy
+                        </DialogDescription>
+                    </DialogHeader>
+                    {editingStrategy && (
+                        <LearningStrategyForm
+                            strategy={editingStrategy}
+                            onStrategySaved={() => {
+                                fetchStrategies()
+                                setEditingStrategy(null)
+                            }}
+                            onCancel={() => setEditingStrategy(null)}
+                            isModal={true}
+                        />
+                    )}
+                </DialogContent>
+            </Dialog>
 
             <Card>
                 <CardHeader>

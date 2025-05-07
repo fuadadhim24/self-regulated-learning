@@ -2,6 +2,17 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
 
 import { authorizedFetch, getAccessToken } from "./auth"
 
+interface LearningStrategy {
+    id: string
+    name: string
+    description: string | null
+}
+
+interface LearningStrategyInput {
+    name: string
+    description?: string | null
+}
+
 // --- PUBLIC ROUTES ---
 
 export async function register(firstName: string, lastName: string, email: string, username: string, password: string) {
@@ -137,25 +148,39 @@ export async function getLearningStrategy(id: string) {
     return authorizedFetch(`${API_URL}/learningstrats/${id}`)
 }
 
-export async function addLearningStrategy(strategy: { name: string; description?: string }) {
-    return authorizedFetch(`${API_URL}/learningstrats`, {
+export const addLearningStrategy = async (strategy: LearningStrategyInput): Promise<Response> => {
+    const token = localStorage.getItem("token")
+    if (!token) throw new Error("No token found")
+
+    return fetch(`${API_URL}/learningstrats`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
-            learning_strat_name: strategy.name,
-            description: strategy.description,
+            name: strategy.name,
+            description: strategy.description
         }),
     })
 }
 
-export async function updateLearningStrategy(id: string, strategy: { name: string; description?: string }) {
-    return authorizedFetch(`${API_URL}/learningstrats/${id}`, {
+export const updateLearningStrategy = async (id: string, strategy: LearningStrategyInput): Promise<Response> => {
+    const token = localStorage.getItem("token")
+    if (!token) throw new Error("No token found")
+
+    // Only include fields that have values
+    const updateData: any = {}
+    if (strategy.name) updateData.learning_strat_name = strategy.name
+    if (strategy.description !== undefined) updateData.description = strategy.description
+
+    return fetch(`${API_URL}/learningstrats/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            learning_strat_name: strategy.name,
-            description: strategy.description,
-        }),
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(updateData),
     })
 }
 
@@ -197,5 +222,19 @@ export async function resetPassword(token: string, newPassword: string) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token, new_password: newPassword }),
+    })
+}
+
+export async function updateCourse(courseCode: string, course: { course_code: string; course_name: string }): Promise<Response> {
+    const token = localStorage.getItem("token")
+    if (!token) throw new Error("No token found")
+
+    return fetch(`${API_URL}/courses/${courseCode}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(course),
     })
 }

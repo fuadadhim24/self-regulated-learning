@@ -8,17 +8,18 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Loader2, AlertCircle } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import type { LearningStrategy } from "../../types"
-import { addLearningStrategy, updateLearningStrategy } from "@/utils/api"
+import { addLearningStrategy, updateLearningStrategy } from "../../utils/api"
 
 interface LearningStrategyFormProps {
     strategy?: LearningStrategy // If provided, we're editing
     onStrategySaved: () => void
     onCancel?: () => void
+    isModal?: boolean // New prop to determine if form is in modal
 }
 
-export default function LearningStrategyForm({ strategy, onStrategySaved, onCancel }: LearningStrategyFormProps) {
-    const [name, setName] = useState(strategy ? strategy.name : "")
-    const [description, setDescription] = useState(strategy ? strategy.description || "" : "")
+export default function LearningStrategyForm({ strategy, onStrategySaved, onCancel, isModal = false }: LearningStrategyFormProps) {
+    const [name, setName] = useState(strategy?.name || "")
+    const [description, setDescription] = useState(strategy?.description || "")
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
@@ -44,8 +45,15 @@ export default function LearningStrategyForm({ strategy, onStrategySaved, onCanc
             console.log('Submitting strategy with token:', token.substring(0, 10) + '...');
             if (strategy) {
                 // Update existing strategy
-                console.log('Updating strategy:', strategy);
-                const response = await updateLearningStrategy(strategy.id, { name, description })
+                const updateData = {
+                    name,
+                    description: description.trim() || null
+                };
+                console.log('Updating strategy:', {
+                    id: strategy.id,
+                    ...updateData
+                });
+                const response = await updateLearningStrategy(strategy.id, updateData)
                 console.log('Update response status:', response.status);
 
                 if (!response.ok) {
@@ -53,16 +61,34 @@ export default function LearningStrategyForm({ strategy, onStrategySaved, onCanc
                     console.error('Error response:', errorData);
                     throw new Error(`Failed to update learning strategy: ${response.status} ${response.statusText}`);
                 }
+
+                try {
+                    const responseData = await response.json();
+                    console.log('Update response data:', responseData);
+                } catch (e) {
+                    console.log('No response data to parse');
+                }
             } else {
                 // Create new strategy
-                console.log('Creating new strategy:', { name, description });
-                const response = await addLearningStrategy({ name, description })
+                const createData = {
+                    name,
+                    description: description.trim() || null
+                };
+                console.log('Creating new strategy:', createData);
+                const response = await addLearningStrategy(createData)
                 console.log('Create response status:', response.status);
 
                 if (!response.ok) {
                     const errorData = await response.text();
                     console.error('Error response:', errorData);
                     throw new Error(`Failed to add learning strategy: ${response.status} ${response.statusText}`);
+                }
+
+                try {
+                    const responseData = await response.json();
+                    console.log('Create response data:', responseData);
+                } catch (e) {
+                    console.log('No response data to parse');
                 }
             }
 
@@ -79,6 +105,48 @@ export default function LearningStrategyForm({ strategy, onStrategySaved, onCanc
         }
     }
 
+    const formContent = (
+        <form onSubmit={handleSubmit}>
+            {error && (
+                <Alert variant="destructive" className="mb-4">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{error}</AlertDescription>
+                </Alert>
+            )}
+            <div className="space-y-2">
+                <Input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Learning Strategy Name"
+                    disabled={loading}
+                />
+                <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Description (optional)"
+                    className="w-full min-h-[100px] p-2 border rounded-md"
+                    disabled={loading}
+                />
+            </div>
+            <div className="flex justify-between mt-4">
+                {onCancel && (
+                    <Button type="button" variant="outline" onClick={onCancel}>
+                        Cancel
+                    </Button>
+                )}
+                <Button type="submit" disabled={loading || !name}>
+                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {loading ? "Saving..." : "Save Strategy"}
+                </Button>
+            </div>
+        </form>
+    )
+
+    if (isModal) {
+        return formContent
+    }
+
     return (
         <Card>
             <CardHeader>
@@ -89,43 +157,9 @@ export default function LearningStrategyForm({ strategy, onStrategySaved, onCanc
                         : "Create a new learning strategy for your courses"}
                 </CardDescription>
             </CardHeader>
-            <form onSubmit={handleSubmit}>
-                <CardContent>
-                    {error && (
-                        <Alert variant="destructive" className="mb-4">
-                            <AlertCircle className="h-4 w-4" />
-                            <AlertDescription>{error}</AlertDescription>
-                        </Alert>
-                    )}
-                    <div className="space-y-2">
-                        <Input
-                            type="text"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            placeholder="Learning Strategy Name"
-                            disabled={loading}
-                        />
-                        <textarea
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            placeholder="Description (optional)"
-                            className="w-full min-h-[100px] p-2 border rounded-md"
-                            disabled={loading}
-                        />
-                    </div>
-                </CardContent>
-                <CardFooter className="flex justify-between">
-                    {onCancel && (
-                        <Button type="button" variant="outline" onClick={onCancel}>
-                            Cancel
-                        </Button>
-                    )}
-                    <Button type="submit" disabled={loading || !name}>
-                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        {loading ? "Saving..." : "Save Strategy"}
-                    </Button>
-                </CardFooter>
-            </form>
+            <CardContent>
+                {formContent}
+            </CardContent>
         </Card>
     )
 }

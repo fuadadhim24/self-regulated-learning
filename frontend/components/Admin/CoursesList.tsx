@@ -9,6 +9,13 @@ import { AlertCircle, BookOpen, Edit, Loader2, MoreHorizontal, Trash } from "luc
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Skeleton } from "@/components/ui/skeleton"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
 
 interface Course {
     id: string
@@ -83,6 +90,29 @@ export default function CoursesList() {
             )}
 
             <CourseForm onCourseSaved={() => fetchCourses()} />
+
+            {/* Edit Modal */}
+            <Dialog open={!!editingCourse} onOpenChange={() => setEditingCourse(null)}>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle>Edit Course</DialogTitle>
+                        <DialogDescription>
+                            Update the course details
+                        </DialogDescription>
+                    </DialogHeader>
+                    {editingCourse && (
+                        <CourseForm
+                            course={editingCourse}
+                            onCourseSaved={() => {
+                                fetchCourses()
+                                setEditingCourse(null)
+                            }}
+                            onCancel={() => setEditingCourse(null)}
+                            isModal={true}
+                        />
+                    )}
+                </DialogContent>
+            </Dialog>
 
             <Card>
                 <CardHeader>

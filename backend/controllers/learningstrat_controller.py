@@ -31,11 +31,15 @@ def update_learning_strat(learning_strat_id):
     if not data:
         return jsonify({"message": "No data provided to update"}), 400
 
-    learning_strat_name = data.get("learning_strat_name")
-    if not learning_strat_name:
+    updates = {}
+    if "learning_strat_name" in data:
+        updates["learning_strat_name"] = data["learning_strat_name"]
+    if "description" in data:
+        updates["description"] = data["description"]
+
+    if not updates:
         return jsonify({"message": "No valid fields to update"}), 400
 
-    updates = {"learning_strat_name": learning_strat_name}
     result = LearningStrat.update_learning_strat(learning_strat_id, updates)
 
     # Check if update was successful
@@ -46,9 +50,9 @@ def update_learning_strat(learning_strat_id):
         return jsonify({"message": "Learning strategy not found"}), 404
 
     if result.modified_count == 0:
-        return jsonify({"message": "No changes were made (same value as before)"}), 200  # ✅ More clear message
+        return jsonify({"message": "No changes were made (same value as before)"}), 200
 
-    return jsonify({"message": "Learning strategy updated successfully"}), 200  # ✅ Correct success message
+    return jsonify({"message": "Learning strategy updated successfully"}), 200
 
 def delete_learning_strat(learning_strat_id):
     result = LearningStrat.delete_learning_strat(learning_strat_id)

@@ -35,7 +35,7 @@ def update_course(course_code):
     if not updates:
         return jsonify({"message": "No data provided to update"}), 400
 
-    allowed_updates = {"course_name", "materials"}
+    allowed_updates = {"course_code", "course_name", "materials"}
     filtered_updates = {key: value for key, value in updates.items() if key in allowed_updates}
 
     if not filtered_updates:

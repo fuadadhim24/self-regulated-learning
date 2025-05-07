@@ -278,8 +278,8 @@ export default function TaskDetails({
                                 }}
                                 disabled={!isDeleteEnabled}
                                 className={`flex items-center justify-center gap-1 py-2 px-4 ${isDeleteEnabled
-                                        ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 border border-red-400 text-white hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5"
-                                        : "bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed border border-gray-400"
+                                    ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 border border-red-400 text-white hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5"
+                                    : "bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed border border-gray-400"
                                     } rounded-md text-sm font-medium`}
                             >
                                 <Trash2 className="h-4 w-4" />
