@@ -15,6 +15,7 @@ import {
     DialogDescription,
     DialogHeader,
     DialogTitle,
+    DialogFooter,
 } from "@/components/ui/dialog"
 
 interface Course {
@@ -26,6 +27,7 @@ interface Course {
 export default function CoursesList() {
     const [courses, setCourses] = useState<Course[]>([])
     const [editingCourse, setEditingCourse] = useState<Course | null>(null)
+    const [deletingCourse, setDeletingCourse] = useState<Course | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -55,16 +57,16 @@ export default function CoursesList() {
         fetchCourses()
     }, [])
 
-    const handleDeleteCourse = async (id: string) => {
+    const handleDeleteCourse = async (course: Course) => {
         try {
-            setDeletingId(id)
+            setDeletingId(course.course_code)
             const token = localStorage.getItem("token")
             if (!token) {
                 setError("No token found. Please log in.")
                 return
             }
 
-            const response = await deleteCourse(id)
+            const response = await deleteCourse(course.course_code)
             if (!response.ok) throw new Error("Failed to delete course.")
 
             // Refresh the course list from the API instead of just removing locally
@@ -73,6 +75,7 @@ export default function CoursesList() {
             setError(err.message || "An error occurred.")
         } finally {
             setDeletingId(null)
+            setDeletingCourse(null)
         }
     }
 
@@ -111,6 +114,45 @@ export default function CoursesList() {
                             isModal={true}
                         />
                     )}
+                </DialogContent>
+            </Dialog>
+
+            {/* Delete Confirmation Modal */}
+            <Dialog open={!!deletingCourse} onOpenChange={() => setDeletingCourse(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Delete Course</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to delete this course?
+                        </DialogDescription>
+                    </DialogHeader>
+                    {deletingCourse && (
+                        <div className="py-4">
+                            <div className="space-y-2">
+                                <p className="font-medium">{deletingCourse.course_name}</p>
+                                <p className="text-sm text-muted-foreground">Course Code: {deletingCourse.course_code}</p>
+                            </div>
+                        </div>
+                    )}
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setDeletingCourse(null)}>
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={() => deletingCourse && handleDeleteCourse(deletingCourse)}
+                            disabled={!!deletingId}
+                        >
+                            {deletingId ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Deleting...
+                                </>
+                            ) : (
+                                "Delete Course"
+                            )}
+                        </Button>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
 
@@ -163,7 +205,7 @@ export default function CoursesList() {
                                                     Edit
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem
-                                                    onClick={() => handleDeleteCourse(course.course_code)}
+                                                    onClick={() => setDeletingCourse(course)}
                                                     className="text-destructive focus:text-destructive"
                                                 >
                                                     <Trash className="mr-2 h-4 w-4" />
@@ -171,10 +213,6 @@ export default function CoursesList() {
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
-
-                                        {deletingId === course.course_code && (
-                                            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                                        )}
                                     </div>
                                 </div>
                             ))}

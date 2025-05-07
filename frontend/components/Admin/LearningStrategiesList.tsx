@@ -16,6 +16,7 @@ import {
     DialogDescription,
     DialogHeader,
     DialogTitle,
+    DialogFooter,
 } from "@/components/ui/dialog"
 
 interface LearningStrategy {
@@ -27,6 +28,7 @@ interface LearningStrategy {
 export default function LearningStrategiesList() {
     const [strategies, setStrategies] = useState<LearningStrategy[]>([])
     const [editingStrategy, setEditingStrategy] = useState<LearningStrategy | null>(null)
+    const [deletingStrategy, setDeletingStrategy] = useState<LearningStrategy | null>(null)
     const [loading, setLoading] = useState(true)
     const [deletingId, setDeletingId] = useState<string | null>(null)
     const [error, setError] = useState<string | null>(null)
@@ -76,9 +78,9 @@ export default function LearningStrategiesList() {
         fetchStrategies()
     }, [])
 
-    const handleDelete = async (id: string) => {
+    const handleDelete = async (strategy: LearningStrategy) => {
         try {
-            setDeletingId(id)
+            setDeletingId(strategy.id)
             setError(null)
             const token = localStorage.getItem("token")
             if (!token) {
@@ -86,7 +88,7 @@ export default function LearningStrategiesList() {
                 return
             }
 
-            const response = await deleteLearningStrategy(id)
+            const response = await deleteLearningStrategy(strategy.id)
             if (!response.ok) {
                 throw new Error("Failed to delete learning strategy")
             }
@@ -97,6 +99,7 @@ export default function LearningStrategiesList() {
             setError(err.message || "An error occurred while deleting the strategy")
         } finally {
             setDeletingId(null)
+            setDeletingStrategy(null)
         }
     }
 
@@ -140,6 +143,47 @@ export default function LearningStrategiesList() {
                             isModal={true}
                         />
                     )}
+                </DialogContent>
+            </Dialog>
+
+            {/* Delete Confirmation Modal */}
+            <Dialog open={!!deletingStrategy} onOpenChange={() => setDeletingStrategy(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Delete Learning Strategy</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to delete this learning strategy?
+                        </DialogDescription>
+                    </DialogHeader>
+                    {deletingStrategy && (
+                        <div className="py-4">
+                            <div className="space-y-2">
+                                <p className="font-medium">{deletingStrategy.name}</p>
+                                {deletingStrategy.description && (
+                                    <p className="text-sm text-muted-foreground">{deletingStrategy.description}</p>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setDeletingStrategy(null)}>
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={() => deletingStrategy && handleDelete(deletingStrategy)}
+                            disabled={!!deletingId}
+                        >
+                            {deletingId ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Deleting...
+                                </>
+                            ) : (
+                                "Delete Strategy"
+                            )}
+                        </Button>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
 
@@ -193,7 +237,7 @@ export default function LearningStrategiesList() {
                                                     Edit
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem
-                                                    onClick={() => handleDelete(strategy.id)}
+                                                    onClick={() => setDeletingStrategy(strategy)}
                                                     className="text-destructive focus:text-destructive"
                                                 >
                                                     <Trash className="mr-2 h-4 w-4" />
@@ -201,8 +245,6 @@ export default function LearningStrategiesList() {
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
-
-                                        {deletingId === strategy.id && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
                                     </div>
                                 </div>
                             ))}
