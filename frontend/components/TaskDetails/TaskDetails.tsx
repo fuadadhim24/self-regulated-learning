@@ -80,10 +80,12 @@ export default function TaskDetails({
     const [preTestGrade, setPreTestGrade] = useState(card.pre_test_grade ?? "")
     const [postTestGrade, setPostTestGrade] = useState(card.post_test_grade ?? "")
     const [links, setLinks] = useState<{ id: string; url: string }[]>(card.links ?? [])
+    const [isTimerActive, setIsTimerActive] = useState(false)
     const isRatingEnabled = listName === "Reflection (Done)"
     const isNotesEnabled = listName === "Reflection (Done)"
     const isPreTestEnabled = listName !== "Reflection (Done)"
     const isPostTestEnabled = listName === "Controlling (Review)" || listName === "Reflection (Done)"
+    const isDeleteEnabled = listName === "Reflection (Done)" || !isTimerActive
 
     const handleDifficultyChange = (newDifficulty: "easy" | "medium" | "hard" | "expert") => {
         setDifficulty(newDifficulty)
@@ -184,7 +186,11 @@ export default function TaskDetails({
                             {/* Timer and Grade section */}
                             <div className="flex flex-col sm:flex-row gap-4">
                                 <div className="flex-1">
-                                    <StartStopToggle cardId={card.id} listName={listName} />
+                                    <StartStopToggle
+                                        cardId={card.id}
+                                        listName={listName}
+                                        onToggleStateChange={setIsTimerActive}
+                                    />
                                 </div>
                                 <div className="w-full sm:w-64">
                                     <GradeInput
@@ -262,17 +268,30 @@ export default function TaskDetails({
                         Archive
                     </button>
 
-                    <button
-                        onClick={() => {
-                            if (confirm("Are you sure you want to delete this task? This action cannot be undone.")) {
-                                onDelete(card.id)
-                            }
-                        }}
-                        className="flex items-center justify-center gap-1 py-2 px-4 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 border border-red-400 rounded-md text-white hover:shadow-lg transition-all duration-200 text-sm font-medium transform hover:-translate-y-0.5"
-                    >
-                        <Trash2 className="h-4 w-4" />
-                        Delete
-                    </button>
+                    <div className="flex flex-col items-end">
+                        <div className="relative group">
+                            <button
+                                onClick={() => {
+                                    if (confirm("Are you sure you want to delete this task? This action cannot be undone.")) {
+                                        onDelete(card.id)
+                                    }
+                                }}
+                                disabled={!isDeleteEnabled}
+                                className={`flex items-center justify-center gap-1 py-2 px-4 ${isDeleteEnabled
+                                        ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 border border-red-400 text-white hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5"
+                                        : "bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed border border-gray-400"
+                                    } rounded-md text-sm font-medium`}
+                            >
+                                <Trash2 className="h-4 w-4" />
+                                Delete
+                            </button>
+                            {!isDeleteEnabled && !isRatingEnabled && (
+                                <div className="absolute -top-8 right-0 w-max max-w-xs px-2 py-1 text-xs text-white bg-gray-800 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                                    Cannot delete while timer is active
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
