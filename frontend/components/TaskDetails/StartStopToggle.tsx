@@ -5,14 +5,16 @@ import { useState, useEffect } from "react"
 
 interface StartStopToggleProps {
     cardId: string
+    listName: string
 }
 
-export default function StartStopToggle({ cardId }: StartStopToggleProps) {
+export default function StartStopToggle({ cardId, listName }: StartStopToggleProps) {
     const [isToggleOn, setIsToggleOn] = useState(false)
     const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
     const [totalStudyTime, setTotalStudyTime] = useState<number>(0)
     const [elapsedTime, setElapsedTime] = useState<number>(0)
     const [startTime, setStartTime] = useState<Date | null>(null)
+    const isDisabled = listName === "Reflection (Done)"
 
     // Check if there's an active session when component mounts
     useEffect(() => {
@@ -162,7 +164,10 @@ export default function StartStopToggle({ cardId }: StartStopToggleProps) {
         <div className="flex flex-col gap-2">
             <button
                 onClick={handleToggle}
-                className={`relative flex items-center px-4 py-2 rounded-md transition-all duration-200 shadow-sm hover:shadow-md transform hover:-translate-y-0.5 ${isToggleOn
+                disabled={isDisabled}
+                className={`relative flex items-center px-4 py-2 rounded-md transition-all duration-200 shadow-sm hover:shadow-md transform hover:-translate-y-0.5 ${isDisabled
+                    ? "bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                    : isToggleOn
                         ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white border border-red-400"
                         : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white border border-green-400"
                     }`}
@@ -181,6 +186,11 @@ export default function StartStopToggle({ cardId }: StartStopToggleProps) {
             </button>
 
             <div className="flex flex-col text-sm text-indigo-600 dark:text-indigo-400">
+                {isDisabled && (
+                    <div className="text-amber-600 dark:text-amber-400 italic">
+                        Not editable in Reflection (Done) stage
+                    </div>
+                )}
                 {isToggleOn && <div>Current session: {formatTime(elapsedTime)}</div>}
                 {totalStudyTime > 0 && <div>Total study time: {formatTime(totalStudyTime)}</div>}
             </div>

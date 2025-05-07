@@ -184,7 +184,7 @@ export default function TaskDetails({
                             {/* Timer and Grade section */}
                             <div className="flex flex-col sm:flex-row gap-4">
                                 <div className="flex-1">
-                                    <StartStopToggle cardId={card.id} />
+                                    <StartStopToggle cardId={card.id} listName={listName} />
                                 </div>
                                 <div className="w-full sm:w-64">
                                     <GradeInput
