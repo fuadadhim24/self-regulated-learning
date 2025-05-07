@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
-import { BookOpen, GraduationCap, Lightbulb, Users, ClockIcon } from "lucide-react"
+import { BookOpen, GraduationCap, Lightbulb, Users, ClockIcon, Loader2 } from "lucide-react"
 import CoursesList from "@/components/Admin/CoursesList"
 import LearningStrategiesList from "@/components/Admin/LearningStrategiesList"
 import UsersList from "@/components/Admin/UsersList"
@@ -22,29 +22,50 @@ export default function AdminDashboard() {
         username: string
     } | null>(null)
     const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
     const router = useRouter()
 
     useEffect(() => {
-        const fetchUser = async () => {
+        const checkAuth = async () => {
             try {
+                setLoading(true)
+                setError(null)
+
+                // Check if we're in the browser
+                if (typeof window === 'undefined') return
+
                 const token = localStorage.getItem("token")
                 if (!token) {
-                    router.push("/login")
+                    setError("No authentication token found")
                     return
                 }
 
-                const userData = await getCurrentUser()
-                setUser(userData)
-            } catch (error) {
-                console.error("Error fetching user:", error)
-                router.push("/login")
+                try {
+                    const userData = await getCurrentUser()
+                    setUser(userData)
+                } catch (error: any) {
+                    console.error("Error fetching user:", error)
+                    // If token is invalid, clear it
+                    localStorage.removeItem("token")
+                    setError(error.message || "Failed to fetch user data")
+                }
+            } catch (error: any) {
+                console.error("Error in auth check:", error)
+                setError(error.message || "Authentication error")
             } finally {
                 setLoading(false)
             }
         }
 
-        fetchUser()
-    }, [router])
+        checkAuth()
+    }, [])
+
+    // Redirect to login if there's an error and we're not loading
+    useEffect(() => {
+        if (!loading && error) {
+            router.push("/login")
+        }
+    }, [loading, error, router])
 
     const NavItem = ({
         title,
@@ -71,6 +92,12 @@ export default function AdminDashboard() {
         return (
             <div className="min-h-screen bg-background flex flex-col">
                 <Navbar variant="admin" title="Learning Admin" showProfile={false} />
+                <div className="flex-1 flex items-center justify-center">
+                    <div className="flex flex-col items-center gap-4">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        <p className="text-muted-foreground">Loading admin dashboard...</p>
+                    </div>
+                </div>
             </div>
         )
     }

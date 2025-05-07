@@ -1,6 +1,6 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
 
-import { authorizedFetch, getAccessToken } from "./auth"
+import { authorizedFetch, getAccessToken, setAccessToken } from "./auth"
 
 interface LearningStrategy {
     id: string
@@ -55,12 +55,19 @@ export async function searchUserById(userId: string) {
 
 export async function getCurrentUser() {
     const token = getAccessToken()
-    if (!token) throw new Error("No access token")
+    if (!token) {
+        throw new Error("No token found")
+    }
 
-    const payload = JSON.parse(atob(token.split(".")[1]))
-    const userId = payload.sub
-
-    return searchUserById(userId)
+    try {
+        const payload = JSON.parse(atob(token.split(".")[1]))
+        const userId = payload.sub
+        return searchUserById(userId)
+    } catch (error) {
+        console.error("Error parsing token:", error)
+        setAccessToken(null) // Clear invalid token
+        throw new Error("Invalid token format")
+    }
 }
 
 export async function updateProfile(userData: {
@@ -149,15 +156,9 @@ export async function getLearningStrategy(id: string) {
 }
 
 export const addLearningStrategy = async (strategy: LearningStrategyInput): Promise<Response> => {
-    const token = localStorage.getItem("token")
-    if (!token) throw new Error("No token found")
-
-    return fetch(`${API_URL}/learningstrats`, {
+    return authorizedFetch(`${API_URL}/learningstrats`, {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
             name: strategy.name,
             description: strategy.description
@@ -166,21 +167,13 @@ export const addLearningStrategy = async (strategy: LearningStrategyInput): Prom
 }
 
 export const updateLearningStrategy = async (id: string, strategy: LearningStrategyInput): Promise<Response> => {
-    const token = localStorage.getItem("token")
-    if (!token) throw new Error("No token found")
-
-    // Only include fields that have values
-    const updateData: any = {}
-    if (strategy.name) updateData.learning_strat_name = strategy.name
-    if (strategy.description !== undefined) updateData.description = strategy.description
-
-    return fetch(`${API_URL}/learningstrats/${id}`, {
+    return authorizedFetch(`${API_URL}/learningstrats/${id}`, {
         method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(updateData),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            name: strategy.name,
+            description: strategy.description
+        }),
     })
 }
 
@@ -225,16 +218,10 @@ export async function resetPassword(token: string, newPassword: string) {
     })
 }
 
-export async function updateCourse(courseCode: string, course: { course_code: string; course_name: string }): Promise<Response> {
-    const token = localStorage.getItem("token")
-    if (!token) throw new Error("No token found")
-
-    return fetch(`${API_URL}/courses/${courseCode}`, {
+export async function updateCourse(courseId: string, course: { course_code: string; course_name: string }): Promise<Response> {
+    return authorizedFetch(`${API_URL}/courses/${courseId}`, {
         method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(course),
     })
 }

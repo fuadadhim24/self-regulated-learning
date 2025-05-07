@@ -2,13 +2,21 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'; // a
 
 let accessToken: string | null = null;
 
-export function setAccessToken(token: string) {
-    accessToken = token;
-    localStorage.setItem("token", token);
+export function getAccessToken(): string | null {
+    if (typeof window === 'undefined') return null;
+    if (!accessToken) {
+        accessToken = localStorage.getItem("token");
+    }
+    return accessToken;
 }
 
-export function getAccessToken(): string | null {
-    return accessToken;
+export function setAccessToken(token: string | null) {
+    accessToken = token;
+    if (token) {
+        localStorage.setItem("token", token);
+    } else {
+        localStorage.removeItem("token");
+    }
 }
 
 export function loadAccessTokenFromStorage() {
@@ -35,21 +43,24 @@ async function refreshAccessToken(): Promise<string | null> {
 }
 
 export async function authorizedFetch(input: RequestInfo, init: RequestInit = {}, retry = true): Promise<Response> {
-    if (!accessToken) {
+    const token = getAccessToken();
+    if (!token) {
         throw new Error("No access token available");
     }
 
     init.headers = {
         ...(init.headers || {}),
-        Authorization: `Bearer ${accessToken}`,
+        Authorization: `Bearer ${token}`,
     };
 
     const response = await fetch(input, { ...init, credentials: 'include' });
 
     if (response.status === 401 && retry) {
-        const newToken = await refreshAccessToken();
-        if (newToken) {
-            return authorizedFetch(input, init, false); // Retry once
+        try {
+            setAccessToken(null);
+            throw new Error("Session expired");
+        } catch (error) {
+            throw error;
         }
     }
 
