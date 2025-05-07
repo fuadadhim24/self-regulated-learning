@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-
+import Image from "next/image"
 import { useState } from "react"
 import { useRouter } from "next/router"
 import Link from "next/link"
@@ -50,7 +50,12 @@ export default function Register() {
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-muted/50 to-muted p-4 sm:p-8">
             <div className="absolute top-8 left-8 flex items-center gap-2">
-                <GraduationCap className="h-6 w-6 text-primary" />
+                <Image
+                    src="/logogamatutor.png"
+                    alt="GAMATUTOR Logo"
+                    width={32}
+                    height={32}
+                />
                 <span className="font-bold text-xl">GAMATUTOR.ID</span>
             </div>
 

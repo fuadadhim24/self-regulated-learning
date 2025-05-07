@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+import Image from "next/image"
 import { useState, useEffect } from "react"
 import { BookOpen, GraduationCap, Lightbulb, Users, ClockIcon, Loader2 } from "lucide-react"
 import CoursesList from "@/components/Admin/CoursesList"
@@ -117,12 +118,6 @@ export default function AdminDashboard() {
             <div className="flex flex-1 overflow-hidden">
                 {/* Sidebar - Desktop */}
                 <aside className="hidden md:flex w-64 flex-col border-r bg-muted/40">
-                    <div className="flex h-14 items-center border-b px-4">
-                        <h2 className="text-lg font-semibold flex items-center gap-2">
-                            <GraduationCap className="h-5 w-5" />
-                            Learning Admin
-                        </h2>
-                    </div>
                     <nav className="flex-1 p-4 space-y-2">
                         <NavItem title="Courses" icon={BookOpen} value="courses" active={selectedSection === "courses"} />
                         <NavItem

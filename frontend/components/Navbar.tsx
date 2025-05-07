@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-
+import Image from "next/image"
 import { useState, useEffect } from "react"
 import { User, LogOut, Bell, Menu, X, GraduationCap } from "lucide-react"
 import Link from "next/link"
@@ -99,8 +99,22 @@ const Navbar = ({
                     <div className="flex items-center">
                         <Link href={variant === "admin" ? "/admin" : "/"} className="flex-shrink-0 flex items-center">
                             {variant === "admin" ? (
-                                <GraduationCap className="h-6 w-6 mr-2 text-indigo-600 dark:text-indigo-400" />
-                            ) : null}
+                                <Image
+                                    src="/logogamatutor.png"
+                                    alt="GAMATUTOR Logo"
+                                    width={32}
+                                    height={32}
+                                    className="mr-2"
+                                />
+                            ) : (
+                                <Image
+                                    src="/logogamatutor.png"
+                                    alt="GAMATUTOR Logo"
+                                    width={32}
+                                    height={32}
+                                    className="mr-2"
+                                />
+                            )}
                             <span className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400">
                                 {title}
                             </span>
