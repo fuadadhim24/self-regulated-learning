@@ -171,7 +171,7 @@ export const updateLearningStrategy = async (id: string, strategy: LearningStrat
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-            name: strategy.name,
+            learning_strat_name: strategy.name,
             description: strategy.description
         }),
     })
