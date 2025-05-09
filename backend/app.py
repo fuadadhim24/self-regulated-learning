@@ -9,6 +9,7 @@ from routes.course_routes import course_bp
 from routes.learningstrat_routes import learningstrat_bp
 from routes.attachments import attachments_bp
 from routes.study_sessions import study_sessions_bp
+from routes.card_movement_routes import card_movement_bp
 import os
 from utils.db import init_db
 from config import Config
@@ -65,14 +66,15 @@ app.register_blueprint(course_bp)
 app.register_blueprint(learningstrat_bp)
 app.register_blueprint(attachments_bp)
 app.register_blueprint(study_sessions_bp)
+app.register_blueprint(card_movement_bp, url_prefix='/api')
 
 @app.before_request
 def handle_all_before_requests():
-    # Print routes
-    print("Available Endpoints:")
-    for rule in app.url_map.iter_rules():
-        methods = ','.join(rule.methods)
-        print(f"{rule.endpoint}: {rule.rule} [{methods}]")
+    # # Print routes
+    # print("Available Endpoints:")
+    # for rule in app.url_map.iter_rules():
+    #     methods = ','.join(rule.methods)
+    #     print(f"{rule.endpoint}: {rule.rule} [{methods}]")
 
     # Handle preflight (OPTIONS)
     if request.method == "OPTIONS":

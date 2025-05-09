@@ -15,6 +15,12 @@ export interface Links {
     url: string;
 }
 
+export interface ColumnMovement {
+    fromColumn: string;
+    toColumn: string;
+    timestamp: string;
+}
+
 export interface Card {
     id: string;
     title: string;
@@ -32,7 +38,7 @@ export interface Card {
     pre_test_grade?: string;
     post_test_grade?: string;
     created_at: string;
-    column_movement_times?: { [columnId: string]: string };
+    column_movements: ColumnMovement[];
 }
 
 export interface ListType {

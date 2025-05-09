@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import DashboardModal from "@/components/Board/DashboardModal"
+import DashboardModal from "@/components/Dashboard/DashboardModal"
 import { BarChart3, Archive } from "lucide-react"
 
 interface BoardHeaderProps {

@@ -1,6 +1,7 @@
 import type { ListType, Card } from "@/types";
 import { getBoard, updateBoard } from "@/utils/api";
 import { NextRouter } from "next/router";
+import { createCardMovement } from "./api"
 
 export async function updateBoardState(boardId: string | null, lists: ListType[]) {
     if (!boardId) return;
@@ -33,9 +34,11 @@ export function addCard(
         priority: "medium",
         learning_strategy: "Select a Learning Strategy",
         created_at: now,
-        column_movement_times: {
-            [listId]: now
-        }
+        column_movements: [{
+            fromColumn: "initial",
+            toColumn: listId,
+            timestamp: now
+        }]
     };
 
     const updatedLists = lists.map((list) =>
@@ -65,7 +68,7 @@ export function updateCard(
     updateBoardState(boardId, updatedLists);
 }
 
-export function moveCard(
+export async function moveCard(
     lists: ListType[],
     setLists: React.Dispatch<React.SetStateAction<ListType[]>>,
     boardId: string | null,
@@ -85,28 +88,50 @@ export function moveCard(
     const movedCard = sourceList.cards[sourceIndex];
     if (!movedCard) return;
 
+    // Remove card from source list
     sourceList.cards.splice(sourceIndex, 1);
 
-    if (sourceList.id !== destList.id) {
-        const now = new Date().toISOString();
-        movedCard.column_movement_times = {
-            ...movedCard.column_movement_times,
-            [destinationDroppableId]: now
-        };
-    }
-
+    // Add card to destination list
     if (sourceList.id === destList.id) {
         sourceList.cards.splice(destinationIndex, 0, movedCard);
     } else {
         destList.cards.splice(destinationIndex, 0, movedCard);
     }
 
+    // Update lists state immediately for smooth UI
     const updatedLists = [...lists];
     updatedLists[sourceListIndex] = sourceList;
     updatedLists[destListIndex] = destList;
-
     setLists(updatedLists);
-    updateBoardState(boardId, updatedLists);
+
+    // If moving between columns, record the movement
+    if (sourceList.id !== destList.id) {
+        try {
+            const now = new Date().toISOString();
+            // Update local state first
+            movedCard.column_movements = [
+                ...(movedCard.column_movements || []),
+                {
+                    fromColumn: sourceList.id,
+                    toColumn: destList.id,
+                    timestamp: now
+                }
+            ];
+
+            // Then make API call in the background
+            createCardMovement(movedCard.id, sourceList.id, destList.id).catch(error => {
+                console.error("Failed to record card movement:", error);
+                // Optionally show a notification to the user
+            });
+        } catch (error) {
+            console.error("Failed to update card movement state:", error);
+        }
+    }
+
+    // Update board state in the background
+    updateBoardState(boardId, updatedLists).catch(error => {
+        console.error("Failed to update board state:", error);
+    });
 }
 
 export async function fetchBoardData(

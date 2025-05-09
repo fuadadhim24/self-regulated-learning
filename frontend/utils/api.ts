@@ -225,3 +225,20 @@ export async function updateCourse(courseId: string, course: { course_code: stri
         body: JSON.stringify(course),
     })
 }
+
+export async function getCardMovements(cardId: string) {
+    return authorizedFetch(`${API_URL}/api/cards/${cardId}/movements`)
+}
+
+export async function createCardMovement(cardId: string, fromColumn: string, toColumn: string) {
+    return authorizedFetch(`${API_URL}/api/cards/${cardId}/movements`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            from_column: fromColumn,
+            to_column: toColumn,
+        }),
+    })
+}

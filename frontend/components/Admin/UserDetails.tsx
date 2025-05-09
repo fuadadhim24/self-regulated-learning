@@ -32,6 +32,7 @@ interface Board {
             sub_title: string
             difficulty: string
             priority: string
+            created_at: string
         }[]
     }[]
 }
@@ -200,6 +201,9 @@ export default function UserDetails({ username, onClose }: UserDetailsProps) {
                                                                             </Badge>
                                                                             <Badge variant="outline" className="text-xs">
                                                                                 Priority: {card.priority}
+                                                                            </Badge>
+                                                                            <Badge variant="outline" className="text-xs">
+                                                                                Created: {new Date(card.created_at).toLocaleDateString()}
                                                                             </Badge>
                                                                         </div>
                                                                     </div>
