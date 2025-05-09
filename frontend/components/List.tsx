@@ -6,21 +6,12 @@ import { Droppable } from "react-beautiful-dnd"
 import Card from "./Card"
 import { getCourses } from "../utils/api"
 import { Plus, X, ChevronDown } from "lucide-react"
+import type { Card as CardType } from "@/types"
 
 interface ListProps {
     id: string
     title: string
-    cards: Array<{
-        id: string
-        title: string
-        sub_title: string
-        description?: string
-        difficulty: "easy" | "medium" | "hard" | "expert"
-        priority: "low" | "medium" | "high" | "critical"
-        learning_strategy: string
-        created_at: string
-        column_movement_times?: { [columnId: string]: string }
-    }>
+    cards: CardType[]
     isAddingCard: boolean
     onAddCard: (
         listId: string,
@@ -30,20 +21,7 @@ interface ListProps {
         difficulty: "easy" | "medium" | "hard" | "expert",
     ) => void
     onCancelAddCard: (listId: string) => void
-    onCardClick: (
-        listId: string,
-        card: {
-            id: string
-            title: string
-            sub_title: string
-            description?: string
-            difficulty: "easy" | "medium" | "hard" | "expert"
-            priority: "low" | "medium" | "high" | "critical"
-            learning_strategy: string
-            created_at: string
-            column_movement_times?: { [columnId: string]: string }
-        },
-    ) => void
+    onCardClick: (listId: string, card: CardType) => void
 }
 
 const List = ({ id, title, cards, onAddCard, onCardClick }: ListProps) => {
