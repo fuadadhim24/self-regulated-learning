@@ -227,11 +227,11 @@ export async function updateCourse(courseId: string, course: { course_code: stri
 }
 
 export async function getCardMovements(cardId: string) {
-    return authorizedFetch(`${API_URL}/api/cards/${cardId}/movements`)
+    return authorizedFetch(`${API_URL}/api/cards/${cardId}/get-movements`)
 }
 
 export async function createCardMovement(cardId: string, fromColumn: string, toColumn: string) {
-    return authorizedFetch(`${API_URL}/api/cards/${cardId}/movements`, {
+    return authorizedFetch(`${API_URL}/api/cards/${cardId}/create-movements`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
