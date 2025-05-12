@@ -137,30 +137,75 @@ def send_reset_email(email: str, token: str) -> bool:
             return False
 
         # Create message
-        msg = MIMEMultipart()
+        msg = MIMEMultipart('alternative')
         msg['From'] = SMTP_USERNAME
         msg['To'] = email
-        msg['Subject'] = "Password Reset Request"
+        msg['Subject'] = "Password Reset Confirmation"
 
         reset_link = f"gamatutor.id/reset-password?token={token}"
         
-        # Email body
-        body = f"""
-        Hello,
+        # HTML email body
+        html = f"""
+        <html>
+        <body style="margin: 0; padding: 0; background-color: #f9fafb;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9fafb;">
+                <tr>
+                    <td align="center" style="padding: 40px 0;">
+                        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+                            <tr>
+                                <td style="padding: 40px 30px; text-align: center;">
+                                    <h1 style="color: #2563eb; margin: 0 0 20px 0; font-family: Arial, sans-serif; font-size: 24px;">
+                                        Password Reset Confirmation
+                                    </h1>
+                                    
+                                    <p style="font-family: Arial, sans-serif; font-size: 16px; line-height: 1.5; color: #374151; margin: 0 0 30px 0; font-weight: bold;">
+                                        Please click the button below to proceed with resetting your password:
+                                    </p>
+                                    
+                                    <div style="margin: 30px 0;">
+                                        <a href="{reset_link}" 
+                                           style="background-color: #2563eb; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; font-family: Arial, sans-serif; font-size: 16px; display: inline-block;">
+                                            Reset Password
+                                        </a>
+                                    </div>
+                                    
+                                    <p style="font-family: Arial, sans-serif; font-size: 14px; line-height: 1.5; color: #6b7280; margin: 30px 0 0 0;">
+                                        If you didn't request this change, you can safely ignore this message.
+                                    </p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 20px 30px; text-align: center; border-top: 1px solid #e5e7eb;">
+                                    <a href="https://gamatutor.id" 
+                                       style="color: #2563eb; text-decoration: none; font-family: Arial, sans-serif; font-size: 14px; font-weight: bold;">
+                                        Gamatutor.id
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </body>
+        </html>
+        """
+        
+        # Plain text version for email clients that don't support HTML
+        text = f"""
+        Password Reset Confirmation
 
-        You have requested to reset your password. Click the link below to reset it:
+        Please click the link below to proceed with resetting your password:
 
         {reset_link}
 
-        If you did not request this reset, please ignore this email.
+        If you didn't request this change, you can safely ignore this message.
 
-        This link will expire in 1 hour.
-
-        Best regards,
-        GAMATUTOR.ID Team
+        Gamatutor.id
         """
         
-        msg.attach(MIMEText(body, 'plain'))
+        # Attach both HTML and plain text versions
+        msg.attach(MIMEText(text, 'plain'))
+        msg.attach(MIMEText(html, 'html'))
 
         # Send email
         with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
