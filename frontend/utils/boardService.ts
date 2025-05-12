@@ -32,7 +32,7 @@ export function addCard(
         description: "",
         difficulty,
         priority: "medium",
-        learning_strategy: "Select a Learning Strategy",
+        learning_strategy: "Rehearsal Strategies - Pengulangan Materi",
         created_at: now,
         column_movements: [{
             fromColumn: "initial",

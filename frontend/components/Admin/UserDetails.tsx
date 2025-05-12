@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { AlertCircle, ChevronDown, User, History } from "lucide-react"
+import { AlertCircle, ChevronDown, User, History, Clock } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
@@ -63,6 +63,10 @@ interface CardMovementModalProps {
     board: Board | null
     isOpen: boolean
     onClose: () => void
+}
+
+interface StudySession {
+    total_study_time_minutes: number
 }
 
 function CardMovementModal({ cardId, board, isOpen, onClose }: CardMovementModalProps) {
@@ -273,6 +277,7 @@ export default function UserDetails({ username, onClose }: UserDetailsProps) {
     const [error, setError] = useState<string | null>(null)
     const [expandedLists, setExpandedLists] = useState<{ [key: string]: boolean }>({})
     const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
+    const [studyTimes, setStudyTimes] = useState<{ [key: string]: number }>({})
 
     useEffect(() => {
         const fetchUserDetails = async () => {
@@ -307,12 +312,55 @@ export default function UserDetails({ username, onClose }: UserDetailsProps) {
         fetchUserDetails()
     }, [username])
 
+    // Add new useEffect for fetching study times
+    useEffect(() => {
+        const fetchStudyTimes = async () => {
+            if (!board) return
+
+            const times: { [key: string]: number } = {}
+            const token = localStorage.getItem("token")
+            if (!token) return
+
+            // Fetch study times for all cards
+            for (const list of board.lists) {
+                for (const card of list.cards) {
+                    try {
+                        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/study-sessions/card/${card.id}`, {
+                            headers: {
+                                Authorization: `Bearer ${token}`,
+                            },
+                        })
+
+                        if (!response.ok) continue
+
+                        const data: StudySession = await response.json()
+                        times[card.id] = data.total_study_time_minutes
+                    } catch (error) {
+                        console.error(`Error fetching study time for card ${card.id}:`, error)
+                    }
+                }
+            }
+
+            setStudyTimes(times)
+        }
+
+        if (board) {
+            fetchStudyTimes()
+        }
+    }, [board])
+
     // Toggle function for expanding/collapsing lists
     const toggleList = (listId: string) => {
         setExpandedLists((prev) => ({
             ...prev,
             [listId]: !prev[listId],
         }))
+    }
+
+    // Format time function
+    const formatTime = (minutes: number) => {
+        const formattedMinutes = minutes.toFixed(2)
+        return `${formattedMinutes} minutes`
     }
 
     return (
@@ -420,7 +468,7 @@ export default function UserDetails({ username, onClose }: UserDetailsProps) {
                                                                     <div key={card.id} className="bg-muted/50 p-3 rounded-md">
                                                                         <p className="font-medium">{card.title}</p>
                                                                         <p className="text-sm text-muted-foreground">{card.sub_title}</p>
-                                                                        <div className="flex gap-2 mt-2">
+                                                                        <div className="flex flex-wrap gap-2 mt-2">
                                                                             <Badge variant="outline" className="text-xs">
                                                                                 Difficulty: {card.difficulty}
                                                                             </Badge>
@@ -430,6 +478,12 @@ export default function UserDetails({ username, onClose }: UserDetailsProps) {
                                                                             <Badge variant="outline" className="text-xs">
                                                                                 Created: {new Date(card.created_at).toLocaleDateString()}
                                                                             </Badge>
+                                                                            {studyTimes[card.id] > 0 && (
+                                                                                <Badge variant="outline" className="text-xs flex items-center gap-1">
+                                                                                    <Clock className="h-3 w-3" />
+                                                                                    {formatTime(studyTimes[card.id])}
+                                                                                </Badge>
+                                                                            )}
                                                                         </div>
                                                                         <Button
                                                                             variant="ghost"
