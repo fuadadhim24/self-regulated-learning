@@ -2,10 +2,11 @@ export interface ProgressReport {
     total_cards: number
     done_cards: number
     progress_percentage: number
-    list_report: Record<string, number>
-    strategy_stats: Record<
-        string,
-        {
+    list_report: {
+        [key: string]: number
+    }
+    strategy_stats: {
+        [key: string]: {
             pre_test: {
                 min: number
                 q1: number
@@ -23,10 +24,9 @@ export interface ProgressReport {
                 count: number
             }
         }
-    >
-    course_stats: Record<
-        string,
-        {
+    }
+    course_stats: {
+        [key: string]: {
             pre_test: {
                 avg: number
                 count: number
@@ -36,7 +36,12 @@ export interface ProgressReport {
                 count: number
             }
         }
-    >
+    }
+    top_strategies: {
+        strategy: string
+        count: number
+        most_used_in: string
+    }[]
 }
 
 export interface BoxPlotData {
@@ -64,4 +69,30 @@ export interface ChartBorderColors {
     review: string
     preTest: string
     postTest: string
+}
+
+export interface TaskDistributionProps {
+    listReport: {
+        [key: string]: number
+    }
+    topStrategies: {
+        strategy: string
+        count: number
+        most_used_in: string
+    }[]
+}
+
+export interface CoursePerformanceProps {
+    courseStats: {
+        [key: string]: {
+            pre_test: {
+                avg: number
+                count: number
+            }
+            post_test: {
+                avg: number
+                count: number
+            }
+        }
+    }
 } 

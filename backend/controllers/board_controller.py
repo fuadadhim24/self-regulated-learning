@@ -96,6 +96,7 @@ def get_progress_report():
     report = {}
     strategy_stats = {}
     course_stats = {}  # New dictionary for course statistics
+    strategy_usage = {}  # Track learning strategy usage per course
 
     # Get all active (non-archived, non-deleted) cards
     active_cards = []
@@ -112,7 +113,7 @@ def get_progress_report():
         # Add non-archived, non-deleted cards to active_cards
         active_cards.extend([c for c in cards if not c.get("archived") and not c.get("deleted")])
 
-    # Collect grade statistics for each learning strategy and course
+    # Collect grade statistics and strategy usage
     for card in active_cards:
         strategy = card.get("learning_strategy")
         title_parts = card.get("title", "").split("[")
@@ -120,6 +121,14 @@ def get_progress_report():
             course_name = title_parts[0].strip()
         else:
             continue  # Skip if card title doesn't follow the expected format
+
+        # Track strategy usage per course
+        if strategy and course_name:
+            if strategy not in strategy_usage:
+                strategy_usage[strategy] = {}
+            if course_name not in strategy_usage[strategy]:
+                strategy_usage[strategy][course_name] = 0
+            strategy_usage[strategy][course_name] += 1
 
         # Initialize strategy stats if needed
         if strategy and strategy not in strategy_stats:
@@ -209,11 +218,27 @@ def get_progress_report():
     # Calculate progress percentage
     progress_percentage = (done_cards / total_cards * 100) if total_cards > 0 else 0
 
+    # Get top 3 learning strategies with their most used course
+    top_strategies = []
+    for strategy, courses in strategy_usage.items():
+        total_usage = sum(courses.values())
+        most_used_course = max(courses.items(), key=lambda x: x[1])[0]
+        top_strategies.append({
+            "strategy": strategy,
+            "count": total_usage,
+            "most_used_in": most_used_course
+        })
+    
+    # Sort by count and take top 3
+    top_strategies.sort(key=lambda x: x["count"], reverse=True)
+    top_strategies = top_strategies[:3]
+
     return jsonify({
         "total_cards": total_cards,
         "done_cards": done_cards,
         "progress_percentage": progress_percentage,
         "list_report": report,
         "strategy_stats": strategy_stats,
-        "course_stats": course_stats
+        "course_stats": course_stats,
+        "top_strategies": top_strategies
     }), 200

@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import { BarChart2, PieChart } from "lucide-react"
+import { BarChart2, PieChart, LineChart, BookOpen } from "lucide-react"
 import { Bar, Doughnut } from "react-chartjs-2"
 import {
     Chart as ChartJS,
@@ -14,16 +14,27 @@ import {
     BarElement,
     Title,
 } from "chart.js"
-import type { ProgressReport, ChartColors, ChartBorderColors } from "./types"
+import type { ProgressReport, ChartColors, ChartBorderColors, CoursePerformanceProps } from "./types"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import type { TooltipItem } from "chart.js"
 
 // Register ChartJS components
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title)
 
 interface TaskDistributionProps {
-    progress: ProgressReport
+    listReport: {
+        [key: string]: number
+    }
+    topStrategies: {
+        strategy: string
+        count: number
+        most_used_in: string
+    }[]
+    courseStats: CoursePerformanceProps["courseStats"]
 }
 
-export default function TaskDistribution({ progress }: TaskDistributionProps) {
+export default function TaskDistribution({ listReport, topStrategies, courseStats }: TaskDistributionProps) {
     // Define chart colors with better contrast and visual appeal
     const chartColors: ChartColors = {
         planning: "rgba(56, 189, 248, 0.85)", // Sky blue
@@ -53,206 +64,395 @@ export default function TaskDistribution({ progress }: TaskDistributionProps) {
         }
     }, [])
 
-    return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Doughnut Chart */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700"
-            >
-                <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 flex items-center">
-                        <PieChart className="mr-2 h-5 w-5 text-blue-500" />
-                        Task Status Distribution
-                    </h3>
-                    <div className="bg-slate-100 dark:bg-slate-700 rounded-lg p-1">
-                        <PieChart className="h-4 w-4 text-slate-500 dark:text-slate-400" />
-                    </div>
-                </div>
-                <div className="h-72 flex items-center justify-center">
-                    <Doughnut
-                        data={{
-                            labels: ["Planning", "Monitoring", "Controlling", "Review"],
-                            datasets: [
-                                {
-                                    data: [
-                                        progress.list_report["Planning (To Do)"] || 0,
-                                        progress.list_report["Monitoring (In Progress)"] || 0,
-                                        progress.list_report["Controlling (Review)"] || 0,
-                                        progress.list_report["Reflection (Done)"] || 0,
-                                    ],
-                                    backgroundColor: [
-                                        chartColors.planning,
-                                        chartColors.monitoring,
-                                        chartColors.controlling,
-                                        chartColors.review,
-                                    ],
-                                    borderWidth: 2,
-                                    borderColor: [
-                                        chartBorderColors.planning,
-                                        chartBorderColors.monitoring,
-                                        chartBorderColors.controlling,
-                                        chartBorderColors.review,
-                                    ],
-                                    hoverOffset: 15,
-                                },
-                            ],
-                        }}
-                        options={{
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    position: "bottom",
-                                    labels: {
-                                        padding: 20,
-                                        usePointStyle: true,
-                                        pointStyle: "circle",
-                                        color: document.documentElement.classList.contains("dark") ? "#e2e8f0" : "#334155",
-                                    },
-                                },
-                                tooltip: {
-                                    backgroundColor: document.documentElement.classList.contains("dark")
-                                        ? "rgba(30, 41, 59, 0.9)"
-                                        : "rgba(255, 255, 255, 0.9)",
-                                    titleColor: document.documentElement.classList.contains("dark") ? "#e2e8f0" : "#334155",
-                                    bodyColor: document.documentElement.classList.contains("dark") ? "#e2e8f0" : "#334155",
-                                    borderColor: document.documentElement.classList.contains("dark")
-                                        ? "rgba(100, 116, 139, 0.5)"
-                                        : "rgba(203, 213, 225, 0.5)",
-                                    borderWidth: 1,
-                                    padding: 12,
-                                    cornerRadius: 8,
-                                    callbacks: {
-                                        label: (context) => {
-                                            const value = context.raw as number
-                                            const total = context.dataset.data.reduce((a, b) => a + (b as number), 0)
-                                            const percentage = ((value / total) * 100).toFixed(1)
-                                            return `${context.label}: ${value} (${percentage}%)`
-                                        },
-                                    },
-                                },
-                            },
-                            cutout: "65%",
-                        }}
-                    />
-                </div>
-            </motion.div>
+    // Prepare data for doughnut chart
+    const doughnutData = {
+        labels: Object.keys(listReport),
+        datasets: [
+            {
+                data: Object.values(listReport),
+                backgroundColor: [
+                    chartColors.planning,
+                    chartColors.monitoring,
+                    chartColors.controlling,
+                    chartColors.review,
+                ],
+                borderColor: [
+                    chartBorderColors.planning,
+                    chartBorderColors.monitoring,
+                    chartBorderColors.controlling,
+                    chartBorderColors.review,
+                ],
+                borderWidth: 2,
+            },
+        ],
+    }
 
-            {/* Bar Chart */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700"
-            >
-                <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 flex items-center">
-                        <BarChart2 className="mr-2 h-5 w-5 text-blue-500" />
-                        Cards Per Column
-                    </h3>
-                    <div className="bg-slate-100 dark:bg-slate-700 rounded-lg p-1">
-                        <BarChart2 className="h-4 w-4 text-slate-500 dark:text-slate-400" />
-                    </div>
-                </div>
-                <div className="h-72">
-                    <Bar
-                        data={{
-                            labels: Object.keys(progress.list_report),
-                            datasets: [
-                                {
-                                    label: "Number of Cards",
-                                    data: Object.values(progress.list_report),
-                                    backgroundColor: Object.keys(progress.list_report).map((key) => {
-                                        if (key.includes("Planning")) return chartColors.planning
-                                        if (key.includes("Monitoring")) return chartColors.monitoring
-                                        if (key.includes("Controlling")) return chartColors.controlling
-                                        if (key.includes("Reflection")) return chartColors.review
-                                        return chartColors.planning
-                                    }),
-                                    borderColor: Object.keys(progress.list_report).map((key) => {
-                                        if (key.includes("Planning")) return chartBorderColors.planning
-                                        if (key.includes("Monitoring")) return chartBorderColors.monitoring
-                                        if (key.includes("Controlling")) return chartBorderColors.controlling
-                                        if (key.includes("Reflection")) return chartBorderColors.review
-                                        return chartBorderColors.planning
-                                    }),
-                                    borderWidth: 2,
-                                    borderRadius: 8,
-                                    hoverBackgroundColor: Object.keys(progress.list_report).map((key) => {
-                                        if (key.includes("Planning")) return "rgba(56, 189, 248, 1)"
-                                        if (key.includes("Monitoring")) return "rgba(250, 204, 21, 1)"
-                                        if (key.includes("Controlling")) return "rgba(168, 85, 247, 1)"
-                                        if (key.includes("Reflection")) return "rgba(34, 197, 94, 1)"
-                                        return "rgba(56, 189, 248, 1)"
-                                    }),
-                                },
-                            ],
-                        }}
-                        options={{
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    display: false,
-                                },
-                                tooltip: {
-                                    backgroundColor: document.documentElement.classList.contains("dark")
-                                        ? "rgba(30, 41, 59, 0.9)"
-                                        : "rgba(255, 255, 255, 0.9)",
-                                    titleColor: document.documentElement.classList.contains("dark") ? "#e2e8f0" : "#334155",
-                                    bodyColor: document.documentElement.classList.contains("dark") ? "#e2e8f0" : "#334155",
-                                    borderColor: document.documentElement.classList.contains("dark")
-                                        ? "rgba(100, 116, 139, 0.5)"
-                                        : "rgba(203, 213, 225, 0.5)",
-                                    borderWidth: 1,
-                                    padding: 12,
-                                    cornerRadius: 8,
-                                },
-                            },
-                            scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    ticks: {
-                                        color: document.documentElement.classList.contains("dark") ? "#e2e8f0" : "#334155",
-                                        font: {
-                                            size: 11,
-                                        },
-                                        padding: 8,
+    // Prepare data for bar chart
+    const barData = {
+        labels: topStrategies.map(s => s.strategy),
+        datasets: [
+            {
+                label: "Times Used",
+                data: topStrategies.map(s => s.count),
+                backgroundColor: chartColors.planning,
+                borderColor: chartBorderColors.planning,
+                borderWidth: 2,
+                borderRadius: 8,
+                hoverBackgroundColor: "rgba(56, 189, 248, 1)",
+            },
+        ],
+    }
+
+    const barOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false,
+            },
+            tooltip: {
+                backgroundColor: document.documentElement.classList.contains("dark")
+                    ? "rgba(30, 41, 59, 0.9)"
+                    : "rgba(255, 255, 255, 0.9)",
+                titleColor: document.documentElement.classList.contains("dark") ? "#e2e8f0" : "#334155",
+                bodyColor: document.documentElement.classList.contains("dark") ? "#e2e8f0" : "#334155",
+                borderColor: document.documentElement.classList.contains("dark")
+                    ? "rgba(100, 116, 139, 0.5)"
+                    : "rgba(203, 213, 225, 0.5)",
+                borderWidth: 1,
+                padding: 12,
+                cornerRadius: 8,
+                callbacks: {
+                    label: function (context: any) {
+                        const strategy = topStrategies[context.dataIndex]
+                        return [
+                            `Times Used: ${strategy.count}`,
+                            `Most used in: ${strategy.most_used_in}`
+                        ]
+                    }
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1,
+                    color: document.documentElement.classList.contains("dark") ? "#e2e8f0" : "#334155",
+                    font: {
+                        size: 11,
+                    },
+                    padding: 8,
+                },
+                grid: {
+                    color: document.documentElement.classList.contains("dark")
+                        ? "rgba(255, 255, 255, 0.05)"
+                        : "rgba(0, 0, 0, 0.05)",
+                },
+                border: {
+                    display: false,
+                },
+            },
+            x: {
+                ticks: {
+                    color: document.documentElement.classList.contains("dark") ? "#e2e8f0" : "#334155",
+                    font: {
+                        size: 11,
+                    },
+                    padding: 8,
+                    maxRotation: 45,
+                    minRotation: 45,
+                },
+                grid: {
+                    display: false,
+                },
+                border: {
+                    display: false,
+                },
+            },
+        }
+    }
+
+    const doughnutOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: "bottom" as const,
+                labels: {
+                    padding: 20,
+                    usePointStyle: true,
+                    pointStyle: "circle",
+                    color: document.documentElement.classList.contains("dark") ? "#e2e8f0" : "#334155",
+                },
+            },
+            tooltip: {
+                backgroundColor: document.documentElement.classList.contains("dark")
+                    ? "rgba(30, 41, 59, 0.9)"
+                    : "rgba(255, 255, 255, 0.9)",
+                titleColor: document.documentElement.classList.contains("dark") ? "#e2e8f0" : "#334155",
+                bodyColor: document.documentElement.classList.contains("dark") ? "#e2e8f0" : "#334155",
+                borderColor: document.documentElement.classList.contains("dark")
+                    ? "rgba(100, 116, 139, 0.5)"
+                    : "rgba(203, 213, 225, 0.5)",
+                borderWidth: 1,
+                padding: 12,
+                cornerRadius: 8,
+            },
+        },
+    }
+
+    // Course performance bar options
+    const courseBarOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: "top" as const,
+                labels: {
+                    padding: 20,
+                    usePointStyle: true,
+                    pointStyle: "circle",
+                    color: document.documentElement.classList.contains("dark") ? "#e2e8f0" : "#334155",
+                },
+            },
+            tooltip: {
+                backgroundColor: document.documentElement.classList.contains("dark")
+                    ? "rgba(30, 41, 59, 0.9)"
+                    : "rgba(255, 255, 255, 0.9)",
+                titleColor: document.documentElement.classList.contains("dark") ? "#e2e8f0" : "#334155",
+                bodyColor: document.documentElement.classList.contains("dark") ? "#e2e8f0" : "#334155",
+                borderColor: document.documentElement.classList.contains("dark")
+                    ? "rgba(100, 116, 139, 0.5)"
+                    : "rgba(203, 213, 225, 0.5)",
+                borderWidth: 1,
+                padding: 12,
+                cornerRadius: 8,
+                callbacks: {
+                    label: (context: TooltipItem<"bar">) => {
+                        const stats = Object.values(courseStats)[context.dataIndex]
+                        const statType = context.dataset.label?.includes("Pre-Test") ? "pre_test" : "post_test"
+                        const value = context.raw as number
+                        return [
+                            `${context.dataset.label}: ${value.toFixed(2)}`,
+                            `Sample size: ${stats[statType].count}`
+                        ]
+                    }
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 100,
+                ticks: {
+                    color: document.documentElement.classList.contains("dark") ? "#e2e8f0" : "#334155",
+                    font: {
+                        size: 11,
+                    },
+                    padding: 8,
+                },
+                grid: {
+                    color: document.documentElement.classList.contains("dark")
+                        ? "rgba(255, 255, 255, 0.05)"
+                        : "rgba(0, 0, 0, 0.05)",
+                },
+                border: {
+                    display: false,
+                },
+                title: {
+                    display: true,
+                    text: "Score (%)",
+                    color: document.documentElement.classList.contains("dark") ? "#e2e8f0" : "#334155",
+                    font: {
+                        size: 12,
+                    },
+                }
+            },
+            x: {
+                ticks: {
+                    color: document.documentElement.classList.contains("dark") ? "#e2e8f0" : "#334155",
+                    font: {
+                        size: 11,
+                    },
+                    padding: 8,
+                    maxRotation: 45,
+                    minRotation: 45,
+                },
+                grid: {
+                    display: false,
+                },
+                border: {
+                    display: false,
+                },
+            },
+        }
+    }
+
+    // Calculate top 5 courses by card count
+    const courseCounts = Object.entries(courseStats).map(([course, stats]) => ({
+        course,
+        count: stats.pre_test.count + stats.post_test.count
+    }))
+    courseCounts.sort((a, b) => b.count - a.count)
+    const top5Courses = courseCounts.slice(0, 5)
+
+    // Prepare data for top courses bar chart
+    const topCoursesData = {
+        labels: top5Courses.map(c => c.course),
+        datasets: [
+            {
+                label: "Number of Cards",
+                data: top5Courses.map(c => c.count),
+                backgroundColor: chartColors.controlling,
+                borderColor: chartBorderColors.controlling,
+                borderWidth: 2,
+                borderRadius: 8,
+                hoverBackgroundColor: "rgba(168, 85, 247, 1)",
+            },
+        ],
+    }
+
+    const topCoursesOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false,
+            },
+            tooltip: {
+                backgroundColor: document.documentElement.classList.contains("dark")
+                    ? "rgba(30, 41, 59, 0.9)"
+                    : "rgba(255, 255, 255, 0.9)",
+                titleColor: document.documentElement.classList.contains("dark") ? "#e2e8f0" : "#334155",
+                bodyColor: document.documentElement.classList.contains("dark") ? "#e2e8f0" : "#334155",
+                borderColor: document.documentElement.classList.contains("dark")
+                    ? "rgba(100, 116, 139, 0.5)"
+                    : "rgba(203, 213, 225, 0.5)",
+                borderWidth: 1,
+                padding: 12,
+                cornerRadius: 8,
+                callbacks: {
+                    label: (context: TooltipItem<"bar">) => {
+                        const value = context.raw as number
+                        return `Number of Cards: ${value}`
+                    }
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1,
+                    color: document.documentElement.classList.contains("dark") ? "#e2e8f0" : "#334155",
+                    font: {
+                        size: 11,
+                    },
+                    padding: 8,
+                },
+                grid: {
+                    color: document.documentElement.classList.contains("dark")
+                        ? "rgba(255, 255, 255, 0.05)"
+                        : "rgba(0, 0, 0, 0.05)",
+                },
+                border: {
+                    display: false,
+                },
+                title: {
+                    display: true,
+                    text: "Number of Cards",
+                    color: document.documentElement.classList.contains("dark") ? "#e2e8f0" : "#334155",
+                    font: {
+                        size: 12,
+                    },
+                }
+            },
+            x: {
+                ticks: {
+                    color: document.documentElement.classList.contains("dark") ? "#e2e8f0" : "#334155",
+                    font: {
+                        size: 11,
+                    },
+                    padding: 8,
+                    maxRotation: 45,
+                    minRotation: 45,
+                },
+                grid: {
+                    display: false,
+                },
+                border: {
+                    display: false,
+                },
+            },
+        }
+    }
+
+    return (
+        <Card>
+            <CardHeader className="pb-2">
+                <CardTitle>Learning Analytics</CardTitle>
+                <CardDescription>Track your learning progress and performance</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Tabs defaultValue="tasks" className="w-full">
+                    <TabsList className="grid w-full grid-cols-4 mb-2">
+                        <TabsTrigger value="tasks" className="flex items-center gap-2">
+                            <PieChart className="h-4 w-4" />
+                            Tasks by Stage
+                        </TabsTrigger>
+                        <TabsTrigger value="strategies" className="flex items-center gap-2">
+                            <BarChart2 className="h-4 w-4" />
+                            Top Strategies
+                        </TabsTrigger>
+                        <TabsTrigger value="performance" className="flex items-center gap-2">
+                            <LineChart className="h-4 w-4" />
+                            Course Performance
+                        </TabsTrigger>
+                        <TabsTrigger value="top-courses" className="flex items-center gap-2">
+                            <BookOpen className="h-4 w-4" />
+                            Top Courses
+                        </TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="tasks" className="h-[250px]">
+                        <Doughnut data={doughnutData} options={doughnutOptions} />
+                    </TabsContent>
+                    <TabsContent value="strategies" className="h-[250px]">
+                        <Bar data={barData} options={barOptions} />
+                    </TabsContent>
+                    <TabsContent value="performance" className="h-[250px]">
+                        <Bar
+                            data={{
+                                labels: Object.keys(courseStats),
+                                datasets: [
+                                    {
+                                        label: "Pre-Test Average",
+                                        data: Object.values(courseStats).map((stat) => stat.pre_test.avg),
+                                        backgroundColor: chartColors.preTest,
+                                        borderColor: chartBorderColors.preTest,
+                                        borderWidth: 2,
+                                        borderRadius: 8,
+                                        hoverBackgroundColor: "rgba(59, 130, 246, 1)",
                                     },
-                                    grid: {
-                                        color: document.documentElement.classList.contains("dark")
-                                            ? "rgba(255, 255, 255, 0.05)"
-                                            : "rgba(0, 0, 0, 0.05)",
+                                    {
+                                        label: "Post-Test Average",
+                                        data: Object.values(courseStats).map((stat) => stat.post_test.avg),
+                                        backgroundColor: chartColors.postTest,
+                                        borderColor: chartBorderColors.postTest,
+                                        borderWidth: 2,
+                                        borderRadius: 8,
+                                        hoverBackgroundColor: "rgba(16, 185, 129, 1)",
                                     },
-                                    border: {
-                                        display: false,
-                                    },
-                                },
-                                x: {
-                                    ticks: {
-                                        color: document.documentElement.classList.contains("dark") ? "#e2e8f0" : "#334155",
-                                        font: {
-                                            size: 11,
-                                        },
-                                        padding: 8,
-                                        maxRotation: 45,
-                                        minRotation: 45,
-                                    },
-                                    grid: {
-                                        display: false,
-                                    },
-                                    border: {
-                                        display: false,
-                                    },
-                                },
-                            },
-                        }}
-                    />
-                </div>
-            </motion.div>
-        </div>
+                                ],
+                            }}
+                            options={courseBarOptions}
+                        />
+                    </TabsContent>
+                    <TabsContent value="top-courses" className="h-[250px]">
+                        <Bar data={topCoursesData} options={topCoursesOptions} />
+                    </TabsContent>
+                </Tabs>
+            </CardContent>
+        </Card>
     )
 } 
