@@ -25,6 +25,8 @@ export default function UsersList() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [searchQuery, setSearchQuery] = useState("")
+    const [currentPage, setCurrentPage] = useState(1)
+    const rowsPerPage = 5
 
     useEffect(() => {
         const fetchUsers = async () => {
@@ -63,7 +65,14 @@ export default function UsersList() {
                 ),
             )
         }
+        setCurrentPage(1) // Reset to first page when search changes
     }, [searchQuery, users])
+
+    // Calculate pagination
+    const totalPages = Math.ceil(filteredUsers.length / rowsPerPage)
+    const startIndex = (currentPage - 1) * rowsPerPage
+    const endIndex = startIndex + rowsPerPage
+    const currentUsers = filteredUsers.slice(startIndex, endIndex)
 
     return (
         <div className="space-y-6">
@@ -119,33 +128,62 @@ export default function UsersList() {
                             </p>
                         </div>
                     ) : (
-                        <div className="space-y-3">
-                            {filteredUsers.map((user) => (
-                                <div
-                                    key={user._id}
-                                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-                                >
-                                    <div className="flex items-center space-x-4">
-                                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                                            <User className="h-5 w-5 text-primary" />
-                                        </div>
-                                        <div>
-                                            <p className="font-medium">
-                                                {user.first_name} {user.last_name}
-                                            </p>
-                                            <div className="flex items-center text-sm text-muted-foreground">
-                                                <MailIcon className="mr-1 h-3 w-3" />
-                                                {user.email}
+                        <>
+                            <div className="space-y-3">
+                                {currentUsers.map((user) => (
+                                    <div
+                                        key={user._id}
+                                        className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                                    >
+                                        <div className="flex items-center space-x-4">
+                                            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                                                <User className="h-5 w-5 text-primary" />
+                                            </div>
+                                            <div>
+                                                <p className="font-medium">
+                                                    {user.first_name} {user.last_name}
+                                                </p>
+                                                <div className="flex items-center text-sm text-muted-foreground">
+                                                    <MailIcon className="mr-1 h-3 w-3" />
+                                                    {user.email}
+                                                </div>
                                             </div>
                                         </div>
+                                        <Button variant="outline" size="sm" onClick={() => setSelectedUsername(user.username)}>
+                                            <Eye className="mr-2 h-4 w-4" />
+                                            View Details
+                                        </Button>
                                     </div>
-                                    <Button variant="outline" size="sm" onClick={() => setSelectedUsername(user.username)}>
-                                        <Eye className="mr-2 h-4 w-4" />
-                                        View Details
-                                    </Button>
+                                ))}
+                            </div>
+
+                            {/* Pagination */}
+                            {totalPages > 1 && (
+                                <div className="flex items-center justify-between mt-4">
+                                    <p className="text-sm text-muted-foreground">
+                                        Showing {startIndex + 1}-{Math.min(endIndex, filteredUsers.length)} of {filteredUsers.length} users
+                                    </p>
+                                    <div className="flex items-center space-x-2">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                            disabled={currentPage === 1}
+                                        >
+                                            Previous
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                            disabled={currentPage === totalPages}
+                                        >
+                                            Next
+                                        </Button>
+                                    </div>
                                 </div>
-                            ))}
-                        </div>
+                            )}
+                        </>
                     )}
                 </CardContent>
             </Card>

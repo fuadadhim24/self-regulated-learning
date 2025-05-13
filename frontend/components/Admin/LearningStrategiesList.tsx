@@ -4,11 +4,12 @@ import { useEffect, useState } from "react"
 import LearningStrategyForm from "./LearningStrategiesForm"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Edit, Lightbulb, Loader2, MoreHorizontal, Trash } from "lucide-react"
+import { Edit, Lightbulb, Loader2, MoreHorizontal, Search, Trash } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Skeleton } from "@/components/ui/skeleton"
 import { AlertCircle } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Input } from "@/components/ui/input"
 import { getAllLearningStrategies, deleteLearningStrategy } from "@/utils/api"
 import {
     Dialog,
@@ -27,11 +28,15 @@ interface LearningStrategy {
 
 export default function LearningStrategiesList() {
     const [strategies, setStrategies] = useState<LearningStrategy[]>([])
+    const [filteredStrategies, setFilteredStrategies] = useState<LearningStrategy[]>([])
     const [editingStrategy, setEditingStrategy] = useState<LearningStrategy | null>(null)
     const [deletingStrategy, setDeletingStrategy] = useState<LearningStrategy | null>(null)
     const [loading, setLoading] = useState(true)
     const [deletingId, setDeletingId] = useState<string | null>(null)
     const [error, setError] = useState<string | null>(null)
+    const [searchQuery, setSearchQuery] = useState("")
+    const [currentPage, setCurrentPage] = useState(1)
+    const rowsPerPage = 5
 
     // Fetch strategies from the API
     const fetchStrategies = async () => {
@@ -66,6 +71,7 @@ export default function LearningStrategiesList() {
 
             console.log('Mapped strategies:', mappedStrategies);
             setStrategies(mappedStrategies)
+            setFilteredStrategies(mappedStrategies)
         } catch (err: any) {
             console.error('Error in fetchStrategies:', err);
             setError(err.message || "An error occurred while fetching strategies")
@@ -77,6 +83,22 @@ export default function LearningStrategiesList() {
     useEffect(() => {
         fetchStrategies()
     }, [])
+
+    // Filter strategies based on search query
+    useEffect(() => {
+        const filtered = strategies.filter(strategy =>
+            strategy.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (strategy.description && strategy.description.toLowerCase().includes(searchQuery.toLowerCase()))
+        )
+        setFilteredStrategies(filtered)
+        setCurrentPage(1) // Reset to first page when search changes
+    }, [searchQuery, strategies])
+
+    // Calculate pagination
+    const totalPages = Math.ceil(filteredStrategies.length / rowsPerPage)
+    const startIndex = (currentPage - 1) * rowsPerPage
+    const endIndex = startIndex + rowsPerPage
+    const currentStrategies = filteredStrategies.slice(startIndex, endIndex)
 
     const handleDelete = async (strategy: LearningStrategy) => {
         try {
@@ -193,6 +215,17 @@ export default function LearningStrategiesList() {
                     <CardDescription>Manage your learning strategies</CardDescription>
                 </CardHeader>
                 <CardContent>
+                    {/* Search Bar */}
+                    <div className="relative mb-4">
+                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            placeholder="Search strategies..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="pl-8"
+                        />
+                    </div>
+
                     {loading ? (
                         <div className="space-y-3">
                             {[1, 2, 3].map((i) => (
@@ -202,53 +235,82 @@ export default function LearningStrategiesList() {
                                 </div>
                             ))}
                         </div>
-                    ) : strategies.length === 0 ? (
+                    ) : filteredStrategies.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-8 text-center">
                             <Lightbulb className="h-12 w-12 text-muted-foreground mb-4" />
                             <h3 className="text-lg font-medium">No strategies found</h3>
                             <p className="text-sm text-muted-foreground mt-1">
-                                Add your first learning strategy using the form above.
+                                {searchQuery ? "No strategies match your search." : "Add your first learning strategy using the form above."}
                             </p>
                         </div>
                     ) : (
-                        <div className="space-y-3">
-                            {strategies.map((strategy) => (
-                                <div
-                                    key={strategy.id}
-                                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
-                                >
-                                    <div>
-                                        <p className="font-medium">{strategy.name}</p>
-                                        {strategy.description && (
-                                            <p className="text-sm text-muted-foreground mt-1">{strategy.description}</p>
-                                        )}
+                        <>
+                            <div className="space-y-3">
+                                {currentStrategies.map((strategy) => (
+                                    <div
+                                        key={strategy.id}
+                                        className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                                    >
+                                        <div>
+                                            <p className="font-medium">{strategy.name}</p>
+                                            {strategy.description && (
+                                                <p className="text-sm text-muted-foreground mt-1">{strategy.description}</p>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" size="icon">
+                                                        <MoreHorizontal className="h-4 w-4" />
+                                                        <span className="sr-only">Actions</span>
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    <DropdownMenuItem onClick={() => setEditingStrategy(strategy)}>
+                                                        <Edit className="mr-2 h-4 w-4" />
+                                                        Edit
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        onClick={() => setDeletingStrategy(strategy)}
+                                                        className="text-destructive focus:text-destructive"
+                                                    >
+                                                        <Trash className="mr-2 h-4 w-4" />
+                                                        Delete
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="icon">
-                                                    <MoreHorizontal className="h-4 w-4" />
-                                                    <span className="sr-only">Actions</span>
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
-                                                <DropdownMenuItem onClick={() => setEditingStrategy(strategy)}>
-                                                    <Edit className="mr-2 h-4 w-4" />
-                                                    Edit
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem
-                                                    onClick={() => setDeletingStrategy(strategy)}
-                                                    className="text-destructive focus:text-destructive"
-                                                >
-                                                    <Trash className="mr-2 h-4 w-4" />
-                                                    Delete
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
+                                ))}
+                            </div>
+
+                            {/* Pagination */}
+                            {totalPages > 1 && (
+                                <div className="flex items-center justify-between mt-4">
+                                    <p className="text-sm text-muted-foreground">
+                                        Showing {startIndex + 1}-{Math.min(endIndex, filteredStrategies.length)} of {filteredStrategies.length} strategies
+                                    </p>
+                                    <div className="flex items-center space-x-2">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                            disabled={currentPage === 1}
+                                        >
+                                            Previous
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                            disabled={currentPage === totalPages}
+                                        >
+                                            Next
+                                        </Button>
                                     </div>
                                 </div>
-                            ))}
-                        </div>
+                            )}
+                        </>
                     )}
                 </CardContent>
             </Card>
