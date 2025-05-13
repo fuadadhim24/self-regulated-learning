@@ -162,8 +162,18 @@ export default function StartStopToggle({ cardId, listName, onToggleStateChange 
     }
 
     const formatTime = (minutes: number) => {
-        const formattedMinutes = minutes.toFixed(2) // Format to 2 decimal places
-        return `${formattedMinutes} minutes`
+        const totalSeconds = minutes * 60
+        const days = Math.floor(totalSeconds / (24 * 3600))
+        const hours = Math.floor((totalSeconds % (24 * 3600)) / 3600)
+        const remainingMinutes = Math.floor((totalSeconds % 3600) / 60)
+
+        if (days > 0) {
+            return `${days}d ${hours}h ${remainingMinutes}m`
+        } else if (hours > 0) {
+            return `${hours}h ${remainingMinutes}m`
+        } else {
+            return `${remainingMinutes}m`
+        }
     }
 
     return (

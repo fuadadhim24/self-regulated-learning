@@ -168,14 +168,18 @@ function CardMovementModal({ cardId, board, isOpen, onClose }: CardMovementModal
 
     // Format duration in hours, minutes, seconds
     const formatDuration = (ms: number) => {
-        const seconds = Math.floor(ms / 1000)
-        const minutes = Math.floor(seconds / 60)
-        const hours = Math.floor(minutes / 60)
+        const totalSeconds = Math.floor(ms / 1000)
+        const days = Math.floor(totalSeconds / (24 * 3600))
+        const hours = Math.floor((totalSeconds % (24 * 3600)) / 3600)
+        const minutes = Math.floor((totalSeconds % 3600) / 60)
+        const seconds = totalSeconds % 60
 
-        if (hours > 0) {
-            return `${hours}h ${minutes % 60}m`
+        if (days > 0) {
+            return `${days}d ${hours}h ${minutes}m`
+        } else if (hours > 0) {
+            return `${hours}h ${minutes}m`
         } else if (minutes > 0) {
-            return `${minutes}m ${seconds % 60}s`
+            return `${minutes}m ${seconds}s`
         } else {
             return `${seconds}s`
         }
@@ -359,8 +363,18 @@ export default function UserDetails({ username, onClose }: UserDetailsProps) {
 
     // Format time function
     const formatTime = (minutes: number) => {
-        const formattedMinutes = minutes.toFixed(2)
-        return `${formattedMinutes} minutes`
+        const totalSeconds = minutes * 60
+        const days = Math.floor(totalSeconds / (24 * 3600))
+        const hours = Math.floor((totalSeconds % (24 * 3600)) / 3600)
+        const remainingMinutes = Math.floor((totalSeconds % 3600) / 60)
+
+        if (days > 0) {
+            return `${days}d ${hours}h ${remainingMinutes}m`
+        } else if (hours > 0) {
+            return `${hours}h ${remainingMinutes}m`
+        } else {
+            return `${remainingMinutes}m`
+        }
     }
 
     return (
