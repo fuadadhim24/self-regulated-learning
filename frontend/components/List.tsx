@@ -5,7 +5,7 @@ import { useEffect, useState } from "react"
 import { Droppable } from "react-beautiful-dnd"
 import Card from "./Card"
 import { getCourses } from "../utils/api"
-import { Plus, X, ChevronDown } from "lucide-react"
+import { Plus, X, ChevronDown, AlertCircle } from "lucide-react"
 import type { Card as CardType } from "@/types"
 
 interface ListProps {
@@ -129,18 +129,47 @@ const List = ({ id, title, cards, onAddCard, onCardClick }: ListProps) => {
                             ref={provided.innerRef}
                             className="p-3 space-y-3 min-h-[100px] max-h-[calc(100vh-220px)] overflow-y-auto"
                         >
-                            {cards.map((card, index) => (
-                                <Card
-                                    key={card.id}
-                                    id={card.id}
-                                    title={card.title}
-                                    subTitle={card.sub_title}
-                                    difficulty={card.difficulty}
-                                    priority={card.priority}
-                                    index={index}
-                                    onClick={() => onCardClick(id, card)}
-                                />
-                            ))}
+                            {cards.length > 0 ? (
+                                cards.map((card, index) => (
+                                    <Card
+                                        key={card.id}
+                                        id={card.id}
+                                        title={card.title}
+                                        subTitle={card.sub_title}
+                                        difficulty={card.difficulty}
+                                        priority={card.priority}
+                                        index={index}
+                                        onClick={() => onCardClick(id, card)}
+                                    />
+                                ))
+                            ) : (
+                                <div className={`p-4 rounded-lg border-2 border-dashed shadow-sm transition-all duration-300 hover:shadow-md
+                                    ${title === "Planning (To Do)" ? "bg-blue-50 border-blue-300 dark:bg-blue-900/20 dark:border-blue-700" : ""}
+                                    ${title === "Monitoring (In Progress)" ? "bg-amber-50 border-amber-300 dark:bg-amber-900/20 dark:border-amber-700" : ""}
+                                    ${title === "Controlling (Review)" ? "bg-purple-50 border-purple-300 dark:bg-purple-900/20 dark:border-purple-700" : ""}
+                                    ${title === "Reflection (Done)" ? "bg-green-50 border-green-300 dark:bg-green-900/20 dark:border-green-700" : ""}
+                                `}>
+                                    <div className="flex flex-col items-center gap-2">
+                                        <AlertCircle className={`h-5 w-5 
+                                            ${title === "Planning (To Do)" ? "text-blue-500 dark:text-blue-400" : ""}
+                                            ${title === "Monitoring (In Progress)" ? "text-amber-500 dark:text-amber-400" : ""}
+                                            ${title === "Controlling (Review)" ? "text-purple-500 dark:text-purple-400" : ""}
+                                            ${title === "Reflection (Done)" ? "text-green-500 dark:text-green-400" : ""}
+                                        `} />
+                                        <p className={`text-sm font-medium text-center
+                                            ${title === "Planning (To Do)" ? "text-blue-700 dark:text-blue-300" : ""}
+                                            ${title === "Monitoring (In Progress)" ? "text-amber-700 dark:text-amber-300" : ""}
+                                            ${title === "Controlling (Review)" ? "text-purple-700 dark:text-purple-300" : ""}
+                                            ${title === "Reflection (Done)" ? "text-green-700 dark:text-green-300" : ""}
+                                        `}>
+                                            {title === "Planning (To Do)" && "Planning (To Do) is empty! Do you have any new tasks that you want to create?"}
+                                            {title === "Monitoring (In Progress)" && "Monitoring (In Progress) is empty! Have you started on any tasks in Planning (To Do)?"}
+                                            {title === "Controlling (Review)" && "Controlling (Review) is empty! Have you finished studying any tasks in Monitoring (In Progress)?"}
+                                            {title === "Reflection (Done)" && "Reflection (Done) is empty! Have you finished reviewing any tasks in Controlling (Review)?"}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
                             {provided.placeholder}
                         </div>
                     )}
