@@ -1,12 +1,14 @@
 "use client"
 
-import type React from "react"
+import React from "react"
 import Image from "next/image"
 import { useState, useEffect } from "react"
-import { User, LogOut, Bell, Menu, X, GraduationCap } from "lucide-react"
+import { User, LogOut, Bell, Menu, X, GraduationCap, BookOpen, Lightbulb, Users, ClockIcon } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/router"
 import { getCurrentUser, logout } from "@/utils/api"
+
+export type AdminSection = "courses" | "learningStrategies" | "users" | "logs"
 
 interface NavbarProps {
     variant?: "default" | "admin"
@@ -15,6 +17,8 @@ interface NavbarProps {
     showNotifications?: boolean
     showProfile?: boolean
     customLinks?: React.ReactNode
+    selectedSection?: AdminSection
+    setSelectedSection?: (section: AdminSection) => void
 }
 
 const Navbar = ({
@@ -22,6 +26,8 @@ const Navbar = ({
     title = "GAMATUTOR.ID",
     showProfile = true,
     customLinks,
+    selectedSection,
+    setSelectedSection,
 }: NavbarProps) => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false)
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -119,6 +125,53 @@ const Navbar = ({
                                 {title}
                             </span>
                         </Link>
+
+                        {/* Admin Navigation Menu - Desktop */}
+                        {variant === "admin" && setSelectedSection && (
+                            <div className="hidden md:flex ml-6 space-x-2">
+                                <button
+                                    onClick={() => setSelectedSection("courses")}
+                                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${selectedSection === "courses"
+                                            ? "bg-primary text-primary-foreground"
+                                            : "text-muted-foreground hover:bg-muted"
+                                        }`}
+                                >
+                                    <BookOpen className="h-4 w-4" />
+                                    <span>Courses</span>
+                                </button>
+                                <button
+                                    onClick={() => setSelectedSection("learningStrategies")}
+                                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${selectedSection === "learningStrategies"
+                                            ? "bg-primary text-primary-foreground"
+                                            : "text-muted-foreground hover:bg-muted"
+                                        }`}
+                                >
+                                    <Lightbulb className="h-4 w-4" />
+                                    <span>Learning Strategies</span>
+                                </button>
+                                <button
+                                    onClick={() => setSelectedSection("users")}
+                                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${selectedSection === "users"
+                                            ? "bg-primary text-primary-foreground"
+                                            : "text-muted-foreground hover:bg-muted"
+                                        }`}
+                                >
+                                    <Users className="h-4 w-4" />
+                                    <span>Users & Boards</span>
+                                </button>
+                                <button
+                                    onClick={() => setSelectedSection("logs")}
+                                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${selectedSection === "logs"
+                                            ? "bg-primary text-primary-foreground"
+                                            : "text-muted-foreground hover:bg-muted"
+                                        }`}
+                                >
+                                    <ClockIcon className="h-4 w-4" />
+                                    <span>System Logs</span>
+                                </button>
+                            </div>
+                        )}
+
                         <div className="hidden md:block ml-4">{customLinks}</div>
                     </div>
 
@@ -190,6 +243,64 @@ const Navbar = ({
             {/* Mobile menu */}
             {isMobileMenuOpen && (
                 <div className="md:hidden bg-white dark:bg-slate-800 border-b border-indigo-200 dark:border-indigo-800">
+                    {/* Admin Navigation Menu - Mobile */}
+                    {variant === "admin" && setSelectedSection && (
+                        <div className="px-2 pt-2 pb-3 space-y-1 border-b border-indigo-100 dark:border-indigo-800/50">
+                            <button
+                                onClick={() => {
+                                    setSelectedSection("courses");
+                                    setIsMobileMenuOpen(false);
+                                }}
+                                className={`flex w-full items-center gap-2 px-3 py-2 rounded-lg text-base font-medium transition-colors ${selectedSection === "courses"
+                                        ? "bg-primary text-primary-foreground"
+                                        : "text-muted-foreground hover:bg-muted"
+                                    }`}
+                            >
+                                <BookOpen className="h-5 w-5" />
+                                <span>Courses</span>
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setSelectedSection("learningStrategies");
+                                    setIsMobileMenuOpen(false);
+                                }}
+                                className={`flex w-full items-center gap-2 px-3 py-2 rounded-lg text-base font-medium transition-colors ${selectedSection === "learningStrategies"
+                                        ? "bg-primary text-primary-foreground"
+                                        : "text-muted-foreground hover:bg-muted"
+                                    }`}
+                            >
+                                <Lightbulb className="h-5 w-5" />
+                                <span>Learning Strategies</span>
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setSelectedSection("users");
+                                    setIsMobileMenuOpen(false);
+                                }}
+                                className={`flex w-full items-center gap-2 px-3 py-2 rounded-lg text-base font-medium transition-colors ${selectedSection === "users"
+                                        ? "bg-primary text-primary-foreground"
+                                        : "text-muted-foreground hover:bg-muted"
+                                    }`}
+                            >
+                                <Users className="h-5 w-5" />
+                                <span>Users & Boards</span>
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setSelectedSection("logs");
+                                    setIsMobileMenuOpen(false);
+                                }}
+                                className={`flex w-full items-center gap-2 px-3 py-2 rounded-lg text-base font-medium transition-colors ${selectedSection === "logs"
+                                        ? "bg-primary text-primary-foreground"
+                                        : "text-muted-foreground hover:bg-muted"
+                                    }`}
+                            >
+                                <ClockIcon className="h-5 w-5" />
+                                <span>System Logs</span>
+                            </button>
+                        </div>
+                    )}
+
                     <div className="pt-4 pb-3 border-t border-indigo-200 dark:border-indigo-800">
                         <div className="flex items-center px-3">
                             <div className="flex-shrink-0">

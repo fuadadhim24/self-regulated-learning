@@ -3,19 +3,17 @@
 import type React from "react"
 import Image from "next/image"
 import { useState, useEffect } from "react"
-import { BookOpen, GraduationCap, Lightbulb, Users, ClockIcon, Loader2 } from "lucide-react"
+import { Loader2 } from "lucide-react"
 import CoursesList from "@/components/Admin/CoursesList"
 import LearningStrategiesList from "@/components/Admin/LearningStrategiesList"
 import UsersList from "@/components/Admin/UsersList"
 import LogsList from "@/components/Admin/LogsList"
 import { getCurrentUser } from "@/utils/api"
 import { useRouter } from "next/router"
-import Navbar from "@/components/Navbar"
-
-type Section = "courses" | "learningStrategies" | "users" | "logs"
+import Navbar, { AdminSection } from "@/components/Navbar"
 
 export default function AdminDashboard() {
-    const [selectedSection, setSelectedSection] = useState<Section>("courses")
+    const [selectedSection, setSelectedSection] = useState<AdminSection>("courses")
     const [user, setUser] = useState<{
         first_name: string
         last_name: string
@@ -68,27 +66,6 @@ export default function AdminDashboard() {
         }
     }, [loading, error, router])
 
-    const NavItem = ({
-        title,
-        icon: Icon,
-        value,
-        active,
-    }: {
-        title: string
-        icon: React.ElementType
-        value: Section
-        active: boolean
-    }) => (
-        <button
-            onClick={() => setSelectedSection(value)}
-            className={`flex items-center gap-3 w-full p-3 rounded-lg transition-colors ${active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"
-                }`}
-        >
-            <Icon className="h-5 w-5" />
-            <span className="font-medium">{title}</span>
-        </button>
-    )
-
     if (loading) {
         return (
             <div className="min-h-screen bg-background flex flex-col">
@@ -107,40 +84,27 @@ export default function AdminDashboard() {
         return null
     }
 
-    const userFullName = `${user.first_name} ${user.last_name}`
-    const userInitials = `${user.first_name[0]}${user.last_name[0]}`
-
     return (
         <div className="min-h-screen bg-background flex flex-col">
-            {/* Header */}
-            <Navbar variant="admin" title="Learning Admin" showSearch={true} showNotifications={true} />
+            {/* Header with Navigation */}
+            <Navbar
+                variant="admin"
+                title="Learning Admin"
+                showSearch={true}
+                showNotifications={true}
+                selectedSection={selectedSection}
+                setSelectedSection={setSelectedSection}
+            />
 
-            <div className="flex flex-1 overflow-hidden">
-                {/* Sidebar - Desktop */}
-                <aside className="hidden md:flex w-64 flex-col border-r bg-muted/40">
-                    <nav className="flex-1 p-4 space-y-2">
-                        <NavItem title="Courses" icon={BookOpen} value="courses" active={selectedSection === "courses"} />
-                        <NavItem
-                            title="Learning Strategies"
-                            icon={Lightbulb}
-                            value="learningStrategies"
-                            active={selectedSection === "learningStrategies"}
-                        />
-                        <NavItem title="Users & Boards" icon={Users} value="users" active={selectedSection === "users"} />
-                        <NavItem title="System Logs" icon={ClockIcon} value="logs" active={selectedSection === "logs"} />
-                    </nav>
-                </aside>
-
-                {/* Main Content */}
-                <main className="flex-1 overflow-auto p-6">
-                    <div className="mx-auto max-w-5xl">
-                        {selectedSection === "courses" && <CoursesList />}
-                        {selectedSection === "learningStrategies" && <LearningStrategiesList />}
-                        {selectedSection === "users" && <UsersList />}
-                        {selectedSection === "logs" && <LogsList />}
-                    </div>
-                </main>
-            </div>
+            {/* Main Content */}
+            <main className="flex-1 p-6 min-h-0 pb-12">
+                <div className="mx-auto max-w-5xl mb-12">
+                    {selectedSection === "courses" && <CoursesList />}
+                    {selectedSection === "learningStrategies" && <LearningStrategiesList />}
+                    {selectedSection === "users" && <UsersList />}
+                    {selectedSection === "logs" && <LogsList />}
+                </div>
+            </main>
         </div>
     )
 }
