@@ -41,12 +41,18 @@ def get_all_users():
 
 # Get user by username
 def get_user_by_username(username):
-    user = User.find_user_by_username(username)
-    if not user:
-        return jsonify({"message": "User not found"}), 404
-    user["_id"] = str(user["_id"])  # Convert ObjectId to string
-    user.pop("password", None)  # Exclude password from response
-    return jsonify(user), 200
+    try:
+        # Decode the URL-encoded username
+        decoded_username = request.view_args.get('username')
+        user = User.find_user_by_username(decoded_username)
+        if not user:
+            return jsonify({"message": "User not found"}), 404
+        user["_id"] = str(user["_id"])  # Convert ObjectId to string
+        user.pop("password", None)  # Exclude password from response
+        return jsonify(user), 200
+    except Exception as e:
+        logger.error(f"Error getting user by username: {str(e)}")
+        return jsonify({"message": "An error occurred", "error": str(e)}), 500
 
 # Update user details
 def update_user():

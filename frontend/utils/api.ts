@@ -144,7 +144,8 @@ export async function getAllUsers() {
 }
 
 export async function getUserByUsername(username: string) {
-    return authorizedFetch(`${API_URL}/users/username/${username}`)
+    const encodedUsername = encodeURIComponent(username);
+    return authorizedFetch(`${API_URL}/users/username/${encodedUsername}`);
 }
 
 export async function getAllLearningStrategies() {
