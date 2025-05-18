@@ -38,8 +38,12 @@ export default function UsersList() {
                 if (!response.ok) throw new Error("Failed to fetch users")
 
                 const data: UserType[] = await response.json()
-                setUsers(data)
-                setFilteredUsers(data)
+                // Sort users by creation time (newest first)
+                const sortedData = data.sort((a: any, b: any) => {
+                    return new Date(b.createdAt || b.created_at).getTime() - new Date(a.createdAt || a.created_at).getTime()
+                })
+                setUsers(sortedData)
+                setFilteredUsers(sortedData)
             } catch (err: any) {
                 setError(err.message)
             } finally {

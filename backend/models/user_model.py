@@ -14,7 +14,8 @@ class User:
             "email": email,
             "username": username,
             "password": hashed_password,
-            "role": role
+            "role": role,
+            "created_at": datetime.utcnow()
         }
         user_id = mongo.db.users.insert_one(user_data).inserted_id
         return user_id
@@ -135,4 +136,14 @@ class User:
         except Exception as e:
             logging.error(f"Error updating password: {str(e)}")
             return False
+
+    @staticmethod
+    def update_existing_users():
+        # Update all existing users that don't have created_at
+        current_time = datetime.utcnow()
+        result = mongo.db.users.update_many(
+            {"created_at": {"$exists": False}},
+            {"$set": {"created_at": current_time}}
+        )
+        return result.modified_count
 

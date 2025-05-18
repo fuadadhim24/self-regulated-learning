@@ -50,8 +50,12 @@ export default function CoursesList() {
             if (!response.ok) throw new Error("Failed to fetch courses.")
 
             const data = await response.json()
-            setCourses(data)
-            setFilteredCourses(data)
+            // Sort courses by creation time (newest first)
+            const sortedData = data.sort((a: any, b: any) => {
+                return new Date(b.createdAt || b.created_at).getTime() - new Date(a.createdAt || a.created_at).getTime()
+            })
+            setCourses(sortedData)
+            setFilteredCourses(sortedData)
         } catch (err: any) {
             setError(err.message || "An error occurred.")
         } finally {

@@ -24,6 +24,7 @@ interface LearningStrategy {
     id: string
     name: string
     description?: string
+    createdAt: string
 }
 
 export default function LearningStrategiesList() {
@@ -62,12 +63,15 @@ export default function LearningStrategiesList() {
             const data = await response.json()
             console.log('Fetched strategies data:', data);
 
-            // Map the data to match our interface
+            // Map the data to match our interface and sort by creation time
             const mappedStrategies = data.map((strategy: any) => ({
                 id: strategy._id || strategy.id,
                 name: strategy.learning_strat_name || strategy.name,
-                description: strategy.description
-            }));
+                description: strategy.description,
+                createdAt: strategy.createdAt || strategy.created_at
+            })).sort((a: any, b: any) => {
+                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            });
 
             console.log('Mapped strategies:', mappedStrategies);
             setStrategies(mappedStrategies)
