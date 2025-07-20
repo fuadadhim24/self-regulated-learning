@@ -1,3 +1,4 @@
+import logging
 from flask import Flask, request, make_response
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
@@ -13,6 +14,13 @@ import os
 from utils.db import init_db
 from config import Config
 from dotenv import load_dotenv
+
+# Centralized logging setup
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(name)s %(message)s',
+)
+logger = logging.getLogger(__name__)
 
 # Load environment variables
 load_dotenv()
@@ -37,6 +45,7 @@ app.config.from_object("config.Config")
 # MongoDB configuration - ensure it's set from environment variable
 app.config["MONGO_URI"] = os.getenv("MONGO_URI")
 if not app.config["MONGO_URI"]:
+    logger.error("MONGO_URI environment variable is not set")
     raise ValueError("MONGO_URI environment variable is not set")
 
 # Initialize database
@@ -68,34 +77,30 @@ app.register_blueprint(study_sessions_bp)
 
 @app.before_request
 def handle_all_before_requests():
-    # # Print routes
-    # print("Available Endpoints:")
-    # for rule in app.url_map.iter_rules():
-    #     methods = ','.join(rule.methods)
-    #     print(f"{rule.endpoint}: {rule.rule} [{methods}]")
-
     # Handle preflight (OPTIONS)
     if request.method == "OPTIONS":
         response = make_response()
         origin = request.headers.get("Origin")
-
         allowed_origins = [
             "http://localhost:3000",
             "https://self-regulated-learning.vercel.app",
             "https://gamatutor.id"
         ]
-
         if origin in allowed_origins:
             response.headers.add("Access-Control-Allow-Origin", origin)
             response.headers.add("Vary", "Origin")
         else:
             response.headers.add("Access-Control-Allow-Origin", "null")
-
         response.headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization")
         response.headers.add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
         response.headers.add("Access-Control-Allow-Credentials", "true")
         return response
 
+# Global error handler for uncaught exceptions
+@app.errorhandler(Exception)
+def handle_exception(e):
+    logger.exception(f"Unhandled Exception: {e}")
+    return {"error": "Internal server error"}, 500
 
 if __name__ == "__main__":
     app.run(debug=True)

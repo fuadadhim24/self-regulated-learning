@@ -1,5 +1,4 @@
 from flask import jsonify, request
-from utils.db import mongo
 from services.user import User
 from services.board import Board
 from services.log import Log

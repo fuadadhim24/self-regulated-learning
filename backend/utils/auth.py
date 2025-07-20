@@ -1,30 +1,26 @@
+import logging
 from flask_jwt_extended import decode_token
 from services.user import User
+
+logger = logging.getLogger(__name__)
 
 def get_user_id_from_token(token: str) -> str:
     """Extract user_id from JWT token"""
     try:
-        print(f"Received token: {token[:20]}...")
-        
-        # Remove 'Bearer ' prefix if present
+        logger.debug(f"Received token: {token[:20]}...")
         if token.startswith('Bearer '):
             token = token[7:]
-            print("Removed 'Bearer ' prefix")
-        
-        # Decode the token
-        print("Attempting to decode token...")
+            logger.debug("Removed 'Bearer ' prefix")
+        logger.debug("Attempting to decode token...")
         decoded_token = decode_token(token)
         user_id = decoded_token.get('sub')
-        print(f"Decoded user_id: {user_id}")
-        
-        # Verify user exists
+        logger.debug(f"Decoded user_id: {user_id}")
         user = User.find_user_by_id(user_id)
         if not user:
-            print(f"User not found for id: {user_id}")
+            logger.warning(f"User not found for id: {user_id}")
             return None
-            
-        print(f"User found: {user.get('username')}")
+        logger.info(f"User found: {user.get('username')}")
         return user_id
     except Exception as e:
-        print(f"Error decoding token: {str(e)}")
+        logger.error(f"Error decoding token: {str(e)}")
         return None 

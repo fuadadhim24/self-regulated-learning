@@ -1,6 +1,5 @@
 from flask import jsonify, request
 from bson.objectid import ObjectId
-from utils.db import mongo
 from services.user import User
 from werkzeug.security import generate_password_hash, check_password_hash
 import logging
