@@ -1,5 +1,5 @@
 from flask import jsonify
-from models.log_model import Log
+from services.log import Log
 from flask_jwt_extended import jwt_required
 
 @jwt_required()

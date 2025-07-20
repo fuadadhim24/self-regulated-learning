@@ -147,3 +147,71 @@ class User:
         )
         return result.modified_count
 
+    @staticmethod
+    def get_all_users():
+        users = list(mongo.db.users.find({}, {"password": 0}))
+        for user in users:
+            user["_id"] = str(user["_id"])
+        return users
+
+    @staticmethod
+    def update_user(user_id, user_data):
+        allowed_updates = {"first_name", "last_name", "email", "username"}
+        updates = {key: value for key, value in user_data.items() if key in allowed_updates}
+        result = mongo.db.users.update_one({"_id": ObjectId(user_id)}, {"$set": updates})
+        return result
+
+    @staticmethod
+    def update_user_password(user_id, current_password, new_password):
+        user = mongo.db.users.find_one({"_id": ObjectId(user_id)})
+        if not user:
+            return False, "User not found"
+        if not check_password_hash(user["password"], current_password):
+            return False, "Current password is incorrect"
+        hashed = generate_password_hash(new_password)
+        mongo.db.users.update_one({"_id": ObjectId(user_id)}, {"$set": {"password": hashed}})
+        return True, None
+
+    @staticmethod
+    def delete_user(user_id):
+        result = mongo.db.users.delete_one({"_id": ObjectId(user_id)})
+        return result
+
+    @staticmethod
+    def debug_list_users():
+        users = list(mongo.db.users.find({}, {"password": 0}))
+        for user in users:
+            user["_id"] = str(user["_id"])
+        return users
+
+    @staticmethod
+    def send_reset_email(email: str, token: str, smtp_server, smtp_port, smtp_username, smtp_password, logger):
+        import smtplib
+        from email.mime.text import MIMEText
+        from email.mime.multipart import MIMEMultipart
+        try:
+            if not all([smtp_username, smtp_password]):
+                logger.error("SMTP credentials not configured")
+                return False
+            msg = MIMEMultipart('alternative')
+            msg['From'] = smtp_username
+            msg['To'] = email
+            msg['Subject'] = "Password Reset Confirmation"
+            reset_link = f"gamatutor.id/reset-password?token={token}"
+            html = f"""
+            <html><body>Reset your password: <a href='{reset_link}'>Reset Link</a></body></html>
+            """
+            text = f"Reset your password: {reset_link}"
+            part1 = MIMEText(text, 'plain')
+            part2 = MIMEText(html, 'html')
+            msg.attach(part1)
+            msg.attach(part2)
+            with smtplib.SMTP(smtp_server, smtp_port) as server:
+                server.starttls()
+                server.login(smtp_username, smtp_password)
+                server.sendmail(smtp_username, email, msg.as_string())
+            return True
+        except Exception as e:
+            logger.error(f"Error sending reset email: {str(e)}")
+            return False
+

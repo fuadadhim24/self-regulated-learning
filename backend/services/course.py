@@ -21,9 +21,27 @@ class Course:
         return list(mongo.db.courses.find({}))
 
     @staticmethod
+    def get_course_by_code(course_code):
+        course = mongo.db.courses.find_one({"course_code": course_code})
+        if course:
+            course["_id"] = str(course["_id"])
+        return course
+
+    @staticmethod
+    def get_all_courses():
+        courses = list(mongo.db.courses.find({}))
+        for course in courses:
+            course["_id"] = str(course["_id"])
+        return courses
+
+    @staticmethod
     def update_course(course_code, updates):
-        result = mongo.db.courses.update_one({"course_code": course_code}, {"$set": updates})
-        return result
+        allowed_updates = {"course_code", "course_name", "materials"}
+        filtered_updates = {key: value for key, value in updates.items() if key in allowed_updates}
+        if not filtered_updates:
+            return None, "No valid fields to update"
+        result = mongo.db.courses.update_one({"course_code": course_code}, {"$set": filtered_updates})
+        return result, None
 
     @staticmethod
     def delete_course(course_code):

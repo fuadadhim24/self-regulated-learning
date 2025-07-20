@@ -19,21 +19,30 @@ class LearningStrat:
             object_id = ObjectId(learning_strat_id)
         except:
             return None
-        return mongo.db.learning_strats.find_one({"_id": object_id})
+        strat = mongo.db.learning_strats.find_one({"_id": object_id})
+        if strat:
+            strat["_id"] = str(strat["_id"])
+        return strat
     
     @staticmethod
     def get_all_learning_strats():
-        return list(mongo.db.learning_strats.find({}))
+        strats = list(mongo.db.learning_strats.find({}))
+        for strat in strats:
+            strat["_id"] = str(strat["_id"])
+        return strats
     
     @staticmethod
     def update_learning_strat(learning_strat_id, updates):
         try:
             object_id = ObjectId(learning_strat_id)
         except:
-            return None
-        
-        result = mongo.db.learning_strats.update_one({"_id": object_id}, {"$set": updates})
-        return result
+            return None, "Invalid learning strategy ID"
+        allowed_updates = {"learning_strat_name", "description"}
+        filtered_updates = {key: value for key, value in updates.items() if key in allowed_updates}
+        if not filtered_updates:
+            return None, "No valid fields to update"
+        result = mongo.db.learning_strats.update_one({"_id": object_id}, {"$set": filtered_updates})
+        return result, None
     
     @staticmethod
     def delete_learning_strat(learning_strat_id):

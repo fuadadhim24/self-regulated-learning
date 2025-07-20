@@ -1,8 +1,8 @@
 from flask import jsonify, request
 from utils.db import mongo
-from models.user_model import User
-from models.board_model import Board
-from models.log_model import Log
+from services.user import User
+from services.board import Board
+from services.log import Log
 from flask_jwt_extended import create_access_token, create_refresh_token, set_refresh_cookies, get_jwt_identity, unset_jwt_cookies, jwt_required
 from werkzeug.security import check_password_hash, generate_password_hash
 

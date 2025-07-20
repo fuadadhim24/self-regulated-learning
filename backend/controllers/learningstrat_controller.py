@@ -1,4 +1,4 @@
-from models.learningstrat_model import LearningStrat
+from services.learningstrat import LearningStrat
 from flask import jsonify, request
 
 def add_learning_strat():
@@ -31,16 +31,9 @@ def update_learning_strat(learning_strat_id):
     if not data:
         return jsonify({"message": "No data provided to update"}), 400
 
-    updates = {}
-    if "learning_strat_name" in data:
-        updates["learning_strat_name"] = data["learning_strat_name"]
-    if "description" in data:
-        updates["description"] = data["description"]
-
-    if not updates:
-        return jsonify({"message": "No valid fields to update"}), 400
-
-    result = LearningStrat.update_learning_strat(learning_strat_id, updates)
+    result, error = LearningStrat.update_learning_strat(learning_strat_id, data)
+    if error:
+        return jsonify({"message": error}), 400
 
     # Check if update was successful
     if result is None:
