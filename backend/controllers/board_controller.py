@@ -24,6 +24,7 @@ def get_all_boards():
         for board in boards
     ]), 200
 
+@jwt_required()
 def get_board_by_user_id(user_id):
     board = Board.find_board_by_user_id(user_id)
     if not board:

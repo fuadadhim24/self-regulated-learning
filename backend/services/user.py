@@ -173,6 +173,19 @@ class User:
         return True, None
 
     @staticmethod
+    def make_user_admin(user_id):
+        """Make a user an admin by updating their role."""
+        try:
+            result = mongo.db.users.update_one(
+                {"_id": ObjectId(user_id)},
+                {"$set": {"role": "admin"}}
+            )
+            return result.modified_count > 0
+        except Exception as e:
+            logging.error(f"Error making user admin: {str(e)}")
+            return False
+
+    @staticmethod
     def delete_user(user_id):
         result = mongo.db.users.delete_one({"_id": ObjectId(user_id)})
         return result

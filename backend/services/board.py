@@ -74,11 +74,8 @@ class Board:
             active_cards.extend([c for c in cards if not c.get("archived") and not c.get("deleted")])
         for card in active_cards:
             strategy = card.get("learning_strategy")
-            title_parts = card.get("title", "").split("[")
-            if len(title_parts) >= 2:
-                course_name = title_parts[0].strip()
-            else:
-                continue
+            course_name = card.get("course_name", "").strip()
+            
             if strategy and course_name:
                 if strategy not in strategy_usage:
                     strategy_usage[strategy] = {}

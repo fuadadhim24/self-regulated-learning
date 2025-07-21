@@ -45,9 +45,35 @@ def get_user_by_username(username):
             return jsonify({"message": "User not found"}), 404
         user["_id"] = str(user["_id"])
         user.pop("password", None)
+        # Add is_admin field based on role
+        user["is_admin"] = user.get("role", "user") == "admin"
         return jsonify(user), 200
     except Exception as e:
         logger.error(f"Error getting user by username: {str(e)}")
+        return jsonify({"message": "An error occurred", "error": str(e)}), 500
+
+# Get current user
+def get_current_user():
+    try:
+        auth_header = request.headers.get("Authorization", "")
+        user_id = get_user_id_from_token(auth_header)
+        if not user_id:
+            return jsonify({"message": "Invalid or missing token"}), 401
+        
+        user = User.find_user_by_id(user_id)
+        if not user:
+            return jsonify({"message": "User not found"}), 404
+        
+        # Convert ObjectId to string and remove password
+        user["_id"] = str(user["_id"])
+        user.pop("password", None)
+        
+        # Add is_admin field based on role
+        user["is_admin"] = user.get("role", "user") == "admin"
+        
+        return jsonify(user), 200
+    except Exception as e:
+        logger.error(f"Error getting current user: {str(e)}")
         return jsonify({"message": "An error occurred", "error": str(e)}), 500
 
 # Update user details
@@ -96,8 +122,22 @@ def get_user_by_id(user_id):
             return jsonify({"message": "User not found"}), 404
         user["_id"] = str(user["_id"])
         user.pop("password", None)
+        # Add is_admin field based on role
+        user["is_admin"] = user.get("role", "user") == "admin"
         return jsonify(user), 200
     except Exception as e:
+        return jsonify({"message": "An error occurred", "error": str(e)}), 500
+
+def make_user_admin(user_id):
+    """Make a user an admin."""
+    try:
+        success = User.make_user_admin(user_id)
+        if success:
+            return jsonify({"message": "User role updated to admin successfully"}), 200
+        else:
+            return jsonify({"message": "Failed to update user role"}), 400
+    except Exception as e:
+        logger.error(f"Error making user admin: {str(e)}")
         return jsonify({"message": "An error occurred", "error": str(e)}), 500
 
 def debug_list_users():

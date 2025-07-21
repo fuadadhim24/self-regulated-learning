@@ -10,7 +10,9 @@ def add_learning_strat():
         return jsonify({"message": "All fields (learning_strat_name) are required"}), 400
 
     learning_strat_id = LearningStrat.add_learning_strat(learning_strat_name, description)
-    return jsonify({"message": "Learning strategy added successfully", "learning_strat_id": str(learning_strat_id)}), 201
+    # Return the created learning strategy object
+    learning_strat = LearningStrat.get_learning_strat(str(learning_strat_id))
+    return jsonify(learning_strat), 201
 
 def get_learning_strat(learning_strat_id):
     learning_strat = LearningStrat.get_learning_strat(learning_strat_id)
@@ -45,7 +47,9 @@ def update_learning_strat(learning_strat_id):
     if result.modified_count == 0:
         return jsonify({"message": "No changes were made (same value as before)"}), 200
 
-    return jsonify({"message": "Learning strategy updated successfully"}), 200
+    # Return the updated learning strategy object
+    learning_strat = LearningStrat.get_learning_strat(learning_strat_id)
+    return jsonify(learning_strat), 200
 
 def delete_learning_strat(learning_strat_id):
     result = LearningStrat.delete_learning_strat(learning_strat_id)
