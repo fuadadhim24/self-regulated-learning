@@ -2,25 +2,27 @@
 
 import { useState, useRef, useEffect } from "react"
 import { ChevronDown, BookOpen, FileText, Network, Brain, Clock, Users, Loader2 } from "lucide-react"
-import { getAllLearningStrategies } from "@/utils/api"
-import type { LearningStrategy } from "@/types"
+import { learningStrategyAPI } from "@/utils/apiClient"
+import type { LearningStrategy as ApiLearningStrategy } from "@/types/api"
+import { useToast } from "@/hooks/use-toast"
 
 interface LearningStrategiesDropdownProps {
-    strategy: string
-    onChange: (newStrategy: string) => void
+    selectedStrategy: string
+    onStrategyChange: (newStrategy: string) => void
 }
 
-export default function LearningStrategiesDropdown({ strategy, onChange }: LearningStrategiesDropdownProps) {
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-    const [strategies, setStrategies] = useState<LearningStrategy[]>([])
+export default function LearningStrategiesDropdown({ selectedStrategy, onStrategyChange }: LearningStrategiesDropdownProps) {
+    const [strategies, setStrategies] = useState<ApiLearningStrategy[]>([])
+    const [isOpen, setIsOpen] = useState(false)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const dropdownRef = useRef<HTMLDivElement>(null)
+    const { toast } = useToast()
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                setIsDropdownOpen(false)
+                setIsOpen(false)
             }
         }
 
@@ -34,28 +36,10 @@ export default function LearningStrategiesDropdown({ strategy, onChange }: Learn
         const fetchStrategies = async () => {
             try {
                 setLoading(true)
-                setError(null)
-                const token = localStorage.getItem("token")
-                if (!token) {
-                    setError("No token found. Please log in.")
-                    return
-                }
-
-                const response = await getAllLearningStrategies()
-                if (!response.ok) {
-                    throw new Error(`Failed to fetch learning strategies: ${response.status} ${response.statusText}`)
-                }
-
-                const data = await response.json()
-                const mappedStrategies = data.map((strategy: any) => ({
-                    id: strategy._id || strategy.id,
-                    name: strategy.learning_strat_name || strategy.name,
-                    description: strategy.description,
-                }))
-                setStrategies(mappedStrategies)
+                const data = await learningStrategyAPI.getAllStrategies()
+                setStrategies(data)
             } catch (err: any) {
-                console.error("Error fetching strategies:", err)
-                setError(err.message || "An error occurred while fetching strategies")
+                setError(err.message || "Failed to fetch learning strategies")
             } finally {
                 setLoading(false)
             }
@@ -64,7 +48,7 @@ export default function LearningStrategiesDropdown({ strategy, onChange }: Learn
         fetchStrategies()
     }, [])
 
-    const selectedStrategy = strategies.find((s) => s.name === strategy) || strategies[0]
+    const selectedStrategyData = strategies.find(s => s._id === selectedStrategy)
 
     const getStrategyIcon = (name: string) => {
         const lowerName = name.toLowerCase()
@@ -94,25 +78,25 @@ export default function LearningStrategiesDropdown({ strategy, onChange }: Learn
                 Learning Strategy
             </label>
             <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                onClick={() => setIsOpen(!isOpen)}
                 className="w-full flex items-center justify-between p-2.5 rounded-md border border-indigo-300 dark:border-indigo-700 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm hover:border-indigo-400 dark:hover:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors shadow-sm"
                 aria-haspopup="true"
-                aria-expanded={isDropdownOpen}
-                aria-label={`Current learning strategy: ${strategy}`}
+                aria-expanded={isOpen}
+                aria-label={`Current learning strategy: ${selectedStrategyData?.learning_strat_name || "Select a strategy"}`}
             >
                 <div className="flex items-center">
                     {loading ? (
                         <Loader2 className="h-4 w-4 animate-spin text-indigo-500" />
-                    ) : selectedStrategy ? (
+                    ) : selectedStrategyData ? (
                         <>
-                            <div className={`p-1.5 rounded-md ${getStrategyColor(selectedStrategy.name)}`}>
-                                {getStrategyIcon(selectedStrategy.name)}
+                            <div className={`p-1.5 rounded-md ${getStrategyColor(selectedStrategyData.learning_strat_name)}`}>
+                                {getStrategyIcon(selectedStrategyData.learning_strat_name)}
                             </div>
                             <div className="ml-2 text-left">
-                                <div className="font-medium text-sm">{selectedStrategy.name}</div>
-                                {selectedStrategy.description && (
+                                <div className="font-medium text-sm">{selectedStrategyData.learning_strat_name}</div>
+                                {selectedStrategyData.description && (
                                     <div className="text-xs text-indigo-600 dark:text-indigo-400 truncate max-w-[200px]">
-                                        {selectedStrategy.description}
+                                        {selectedStrategyData.description}
                                     </div>
                                 )}
                             </div>
@@ -122,11 +106,11 @@ export default function LearningStrategiesDropdown({ strategy, onChange }: Learn
                     )}
                 </div>
                 <ChevronDown
-                    className={`h-4 w-4 text-indigo-500 transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`}
+                    className={`h-4 w-4 text-indigo-500 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
                 />
             </button>
 
-            {isDropdownOpen && (
+            {isOpen && (
                 <div className="absolute z-20 mt-1 w-full bg-white dark:bg-slate-800 border border-indigo-200 dark:border-indigo-800 rounded-md shadow-lg overflow-hidden">
                     <div className="py-1 max-h-[300px] overflow-y-auto">
                         {loading ? (
@@ -138,23 +122,23 @@ export default function LearningStrategiesDropdown({ strategy, onChange }: Learn
                         ) : strategies.length === 0 ? (
                             <div className="px-3 py-2 text-sm text-indigo-500 dark:text-indigo-400">No strategies available</div>
                         ) : (
-                            strategies.map((strat) => (
+                            strategies.map((strategy) => (
                                 <button
-                                    key={strat.id}
-                                    className={`flex items-center w-full px-3 py-2 text-left hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors ${strategy === strat.name ? "bg-indigo-50 dark:bg-indigo-900/30" : ""}`}
+                                    key={strategy._id}
+                                    className={`flex items-center w-full px-3 py-2 text-left hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors ${selectedStrategy === strategy._id ? "bg-indigo-50 dark:bg-indigo-900/30" : ""}`}
                                     onClick={() => {
-                                        onChange(strat.name)
-                                        setIsDropdownOpen(false)
+                                        onStrategyChange(strategy._id)
+                                        setIsOpen(false)
                                     }}
-                                    aria-label={`Set learning strategy to ${strat.name}`}
+                                    aria-label={`Set learning strategy to ${strategy.learning_strat_name}`}
                                 >
-                                    <div className={`p-1.5 rounded-md ${getStrategyColor(strat.name)}`}>
-                                        {getStrategyIcon(strat.name)}
+                                    <div className={`p-1.5 rounded-md ${getStrategyColor(strategy.learning_strat_name)}`}>
+                                        {getStrategyIcon(strategy.learning_strat_name)}
                                     </div>
                                     <div className="ml-2 text-left">
-                                        <div className="font-medium text-sm">{strat.name}</div>
-                                        {strat.description && (
-                                            <div className="text-xs text-indigo-600 dark:text-indigo-400">{strat.description}</div>
+                                        <div className="font-medium text-sm">{strategy.learning_strat_name}</div>
+                                        {strategy.description && (
+                                            <div className="text-xs text-indigo-600 dark:text-indigo-400">{strategy.description}</div>
                                         )}
                                     </div>
                                 </button>

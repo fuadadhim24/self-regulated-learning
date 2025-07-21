@@ -8,17 +8,20 @@ import CoursesList from "@/components/Admin/CoursesList"
 import LearningStrategiesList from "@/components/Admin/LearningStrategiesList"
 import UsersList from "@/components/Admin/UsersList"
 import LogsList from "@/components/Admin/LogsList"
-import { getCurrentUser } from "@/utils/api"
+import { userAPI } from "@/utils/apiClient"
 import { useRouter } from "next/router"
 import Navbar, { AdminSection } from "@/components/Navbar"
+import { useToast } from "@/hooks/use-toast"
 
 export default function AdminDashboard() {
+    const { toast } = useToast();
     const [selectedSection, setSelectedSection] = useState<AdminSection>("courses")
     const [user, setUser] = useState<{
         first_name: string
         last_name: string
         email: string
         username: string
+        is_admin: boolean
     } | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
@@ -40,16 +43,29 @@ export default function AdminDashboard() {
                 }
 
                 try {
-                    const userData = await getCurrentUser()
+                    const userData = await userAPI.getCurrentUser()
+                    console.log("Admin user data:", userData)
+
+                    if (!userData.is_admin) {
+                        toast({
+                            title: "Access Denied",
+                            description: "You don't have admin privileges.",
+                            variant: "destructive"
+                        })
+                        router.push("/board")
+                        return
+                    }
                     setUser(userData)
                 } catch (error: any) {
-                    console.error("Error fetching user:", error)
-                    // If token is invalid, clear it
-                    localStorage.removeItem("token")
-                    setError(error.message || "Failed to fetch user data")
+                    console.error("Error fetching user data:", error)
+                    toast({ title: "Error", description: "Error fetching user data. Please login again.", variant: "destructive" })
+                    router.push("/login")
+                } finally {
+                    setLoading(false)
                 }
             } catch (error: any) {
-                console.error("Error in auth check:", error)
+                console.error("Authentication error:", error)
+                toast({ title: "Error", description: error.message || "Authentication error", variant: "destructive" })
                 setError(error.message || "Authentication error")
             } finally {
                 setLoading(false)
@@ -57,7 +73,7 @@ export default function AdminDashboard() {
         }
 
         checkAuth()
-    }, [])
+    }, [router, toast])
 
     // Redirect to login if there's an error and we're not loading
     useEffect(() => {

@@ -6,7 +6,7 @@ import { useState } from "react"
 import { useRouter } from "next/router"
 import Link from "next/link"
 import Player from "@/components/LottiePlayer"
-import { register } from "@/utils/api"
+import { authAPI } from "@/utils/apiClient"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -30,16 +30,16 @@ export default function Register() {
         setError(null)
 
         try {
-            const response = await register(firstName, lastName, email, username, password)
-
-            if (response.ok) {
-                router.push("/login?registered=true")
-            } else {
-                const data = await response.json().catch(() => ({}))
-                setError(data.message || "Registration failed. Please try again.")
-            }
-        } catch (err) {
-            setError("Connection error. Please try again.")
+            await authAPI.register({
+                firstName,
+                lastName,
+                email,
+                username,
+                password
+            })
+            router.push("/login?registered=true")
+        } catch (err: any) {
+            setError(err.message || "Registration failed. Please try again.")
         } finally {
             setLoading(false)
         }

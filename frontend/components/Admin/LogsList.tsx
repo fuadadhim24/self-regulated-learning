@@ -8,15 +8,10 @@ import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
-import { getAllLogs } from "@/utils/api"
-
-interface Log {
-    id: string
-    description: string
-    created_at: string
-    action_type: "login" | "logout"
-    username: string
-}
+import { logAPI } from "@/utils/apiClient"
+import type { Log } from "@/types/api"
+import { usePagination } from "@/hooks/usePagination"
+import { Pagination } from "@/components/ui/Pagination"
 
 export default function LogsList() {
     const [logs, setLogs] = useState<Log[]>([])
@@ -24,8 +19,22 @@ export default function LogsList() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [searchQuery, setSearchQuery] = useState("")
-    const [currentPage, setCurrentPage] = useState(1)
-    const logsPerPage = 10
+    const rowsPerPageOptions = [10, 25, 50, 100]
+
+    const {
+        currentPage,
+        totalPages,
+        pageSize,
+        setCurrentPage,
+        setPageSize,
+        paginatedData: currentLogs,
+        startIndex,
+        endIndex
+    } = usePagination(filteredLogs, {
+        totalItems: filteredLogs.length,
+        initialPage: 1,
+        pageSize: 10
+    })
 
     useEffect(() => {
         const fetchLogs = async () => {
@@ -37,10 +46,7 @@ export default function LogsList() {
                     return
                 }
 
-                const response = await getAllLogs()
-                if (!response.ok) throw new Error("Failed to fetch logs")
-
-                const data = await response.json()
+                const data = await logAPI.getAllLogs()
                 setLogs(data)
                 setFilteredLogs(data)
             } catch (err: any) {
@@ -75,23 +81,6 @@ export default function LogsList() {
             return format(date, "MMM dd, yyyy HH:mm:ss")
         } catch (error) {
             return dateString
-        }
-    }
-
-    // Paginate logs based on current page
-    const indexOfLastLog = currentPage * logsPerPage
-    const indexOfFirstLog = indexOfLastLog - logsPerPage
-    const currentLogs = filteredLogs.slice(indexOfFirstLog, indexOfLastLog)
-
-    const handleNextPage = () => {
-        if (currentPage < Math.ceil(filteredLogs.length / logsPerPage)) {
-            setCurrentPage(currentPage + 1)
-        }
-    }
-
-    const handlePrevPage = () => {
-        if (currentPage > 1) {
-            setCurrentPage(currentPage - 1)
         }
     }
 
@@ -158,8 +147,8 @@ export default function LogsList() {
                                 </thead>
                                 <tbody>
                                     {currentLogs.map((log, index) => (
-                                        <tr key={log.id} className="border-b hover:bg-muted/50 transition-colors">
-                                            <td className="py-3 px-4">{indexOfFirstLog + index + 1}</td> {/* Adjusted index */}
+                                        <tr key={log._id} className="border-b hover:bg-muted/50 transition-colors">
+                                            <td className="py-3 px-4">{startIndex + index + 1}</td> {/* Adjusted index */}
                                             <td className="py-3 px-4">{log.description}</td>
                                             <td className="py-3 px-4">
                                                 <Badge variant={log.action_type === "login" ? "default" : "secondary"} className="font-normal">
@@ -182,25 +171,16 @@ export default function LogsList() {
             </Card>
 
             {/* Pagination controls */}
-            <div className="flex justify-between items-center mt-4">
-                <button
-                    onClick={handlePrevPage}
-                    disabled={currentPage === 1}
-                    className="py-2 px-4 text-white bg-blue-500 rounded disabled:bg-gray-300"
-                >
-                    Previous
-                </button>
-                <span>
-                    Page {currentPage} of {Math.ceil(filteredLogs.length / logsPerPage)}
-                </span>
-                <button
-                    onClick={handleNextPage}
-                    disabled={currentPage === Math.ceil(filteredLogs.length / logsPerPage)}
-                    className="py-2 px-4 text-white bg-blue-500 rounded disabled:bg-gray-300"
-                >
-                    Next
-                </button>
-            </div>
+            {totalPages > 1 && (
+                <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    pageSize={pageSize}
+                    pageSizeOptions={rowsPerPageOptions}
+                    onPageChange={setCurrentPage}
+                    onPageSizeChange={setPageSize}
+                />
+            )}
         </div>
     )
 }

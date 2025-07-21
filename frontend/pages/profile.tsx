@@ -13,10 +13,12 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
 import { AlertCircle, User, Lock, Loader2, CheckCircle2, UserRound, AtSign, ArrowLeft } from "lucide-react"
-import { getCurrentUser, updateProfile, updatePassword } from "@/utils/api"
+import { userAPI } from "@/utils/apiClient"
+import { useToast } from "@/hooks/use-toast"
 
 export default function ProfilePage() {
     const router = useRouter()
+    const { toast } = useToast();
     const [user, setUser] = useState<{
         first_name: string
         last_name: string
@@ -55,7 +57,14 @@ export default function ProfilePage() {
                     return
                 }
 
-                const userData = await getCurrentUser()
+                const userData = await userAPI.getCurrentUser() as {
+                    first_name: string
+                    last_name: string
+                    email: string
+                    username: string
+                    role: string
+                }
+
                 setUser(userData)
                 setFormData({
                     firstName: userData.first_name,
@@ -63,8 +72,9 @@ export default function ProfilePage() {
                     email: userData.email,
                     username: userData.username,
                 })
-            } catch (error) {
-                console.error("Error fetching user:", error)
+            } catch (error: any) {
+                console.error("Error fetching user data:", error)
+                toast({ title: "Error", description: "Error fetching user data. Please try again.", variant: "destructive" })
                 router.push("/login")
             } finally {
                 setLoading(false)
@@ -72,7 +82,7 @@ export default function ProfilePage() {
         }
 
         fetchUser()
-    }, [router])
+    }, [router, toast])
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target
@@ -97,24 +107,23 @@ export default function ProfilePage() {
         setSuccess(null)
 
         try {
-            const response = await updateProfile({
+            const userData = await userAPI.updateProfile({
                 first_name: formData.firstName,
                 last_name: formData.lastName,
                 email: formData.email,
                 username: formData.username,
-            })
-
-            if (response.ok) {
-                setSuccess("Profile updated successfully")
-                // Update the user state with new data
-                const userData = await response.json()
-                setUser(userData)
-            } else {
-                const errorData = await response.json()
-                setError(errorData.message || "Failed to update profile")
+            }) as {
+                first_name: string
+                last_name: string
+                email: string
+                username: string
+                role: string
             }
-        } catch (err) {
-            setError("An error occurred while updating your profile")
+
+            setSuccess("Profile updated successfully")
+            setUser(userData)
+        } catch (err: any) {
+            setError(err.message || "Failed to update profile")
         } finally {
             setUpdating(false)
         }
@@ -133,21 +142,19 @@ export default function ProfilePage() {
         }
 
         try {
-            const response = await updatePassword(passwordData.currentPassword, passwordData.newPassword)
+            await userAPI.updatePassword({
+                current_password: passwordData.currentPassword,
+                new_password: passwordData.newPassword
+            })
 
-            if (response.ok) {
-                setPasswordSuccess("Password updated successfully")
-                setPasswordData({
-                    currentPassword: "",
-                    newPassword: "",
-                    confirmPassword: "",
-                })
-            } else {
-                const errorData = await response.json()
-                setPasswordError(errorData.message || "Failed to update password")
-            }
-        } catch (err) {
-            setPasswordError("An error occurred while updating your password")
+            setPasswordSuccess("Password updated successfully")
+            setPasswordData({
+                currentPassword: "",
+                newPassword: "",
+                confirmPassword: "",
+            })
+        } catch (err: any) {
+            setPasswordError(err.message || "Failed to update password")
         } finally {
             setChangingPassword(false)
         }

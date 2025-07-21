@@ -2,18 +2,13 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
-import { addCourse, updateCourse } from "@/utils/api"
+import { courseAPI } from "@/utils/apiClient"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { AlertCircle, Loader2 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-
-interface Course {
-    id: string
-    course_code: string
-    course_name: string
-}
+import type { Course } from "@/types/api"
 
 interface CourseFormProps {
     course?: Course
@@ -41,34 +36,17 @@ export default function CourseForm({ course, onCourseSaved, onCancel, isModal = 
         setError(null)
 
         try {
-            const token = localStorage.getItem("token")
-            if (!token) {
-                setError("No token found. Please log in.")
-                return
-            }
-
             if (course) {
-                // Update existing course
-                const response = await updateCourse(course.course_code, {
+                await courseAPI.updateCourse(course.course_code, {
                     course_code: courseCode,
                     course_name: courseName
                 })
-
-                if (!response.ok) {
-                    throw new Error("Failed to update course.")
-                }
             } else {
-                // Create new course
-                const response = await addCourse({
+                await courseAPI.addCourse({
                     course_code: courseCode,
                     course_name: courseName
                 })
-
-                if (!response.ok) {
-                    throw new Error("Failed to add course.")
-                }
             }
-
             onCourseSaved()
             if (!course) {
                 setCourseCode("")

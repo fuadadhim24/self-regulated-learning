@@ -4,7 +4,7 @@ import type React from "react"
 import { useEffect, useState } from "react"
 import { Droppable } from "react-beautiful-dnd"
 import Card from "./Card"
-import { getCourses } from "../utils/api"
+import { courseAPI } from "@/utils/apiClient"
 import { Plus, X, ChevronDown, AlertCircle } from "lucide-react"
 import type { Card as CardType } from "@/types"
 
@@ -31,20 +31,23 @@ const List = ({ id, title, cards, onAddCard, onCardClick }: ListProps) => {
     const [material, setMaterial] = useState("")
     const [courses, setCourses] = useState<{ course_code: string; course_name: string }[]>([])
     const [isCollapsed, setIsCollapsed] = useState(false)
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
-        const fetchData = async () => {
-            const token = localStorage.getItem("token")
-            if (token) {
-                const response = await getCourses()
-                if (response.ok) {
-                    const data = await response.json()
-                    setCourses(data) // Store courses
-                }
+        const fetchCourses = async () => {
+            try {
+                setLoading(true)
+                const data = await courseAPI.getCourses()
+                setCourses(data)
+            } catch (err: any) {
+                setError(err.message || "Failed to fetch courses")
+            } finally {
+                setLoading(false)
             }
         }
 
-        fetchData()
+        fetchCourses()
     }, [])
 
     const handleCourseChange = (event: React.ChangeEvent<HTMLSelectElement>) => {

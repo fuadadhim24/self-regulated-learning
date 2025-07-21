@@ -4,39 +4,32 @@ import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/router"
 import Link from "next/link"
-import { Player } from "@lottiefiles/react-lottie-player"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle, AtSign, GraduationCap, Loader2 } from "lucide-react"
-import { requestReset } from "@/utils/api"
+import { apiClient } from "@/utils/apiClient"
 
 export default function ForgotPassword() {
     const [email, setEmail] = useState("")
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
-    const [success, setSuccess] = useState(false)
+    const [success, setSuccess] = useState<string | null>(null)
     const router = useRouter()
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
         setError(null)
-        setSuccess(false)
+        setSuccess(null)
 
         try {
-            const response = await requestReset(email)
-
-            if (response.ok) {
-                setSuccess(true)
-            } else {
-                const data = await response.json()
-                setError(data.error || "Failed to request password reset")
-            }
-        } catch (err) {
-            setError("Connection error. Please try again.")
+            await apiClient.post("/api/request-reset", { email })
+            setSuccess("Password reset link has been sent to your email")
+        } catch (err: any) {
+            setError(err.message || "Failed to send reset link")
         } finally {
             setLoading(false)
         }
@@ -61,7 +54,7 @@ export default function ForgotPassword() {
                             {success && (
                                 <Alert className="text-sm">
                                     <AlertDescription>
-                                        If an account exists with this email, you will receive a password reset link shortly.
+                                        {success}
                                     </AlertDescription>
                                 </Alert>
                             )}

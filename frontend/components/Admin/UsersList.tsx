@@ -1,51 +1,58 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { getAllUsers } from "@/utils/api"
+import { userAPI } from "@/utils/apiClient"
+import type { User } from "@/types/api"
 import UserDetails from "./UserDetails"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { AlertCircle, Eye, MailIcon, Search, User, Users } from "lucide-react"
+import { AlertCircle, Eye, MailIcon, Search, User as UserIcon, Users } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
-
-interface UserType {
-    _id: string
-    username: string
-    first_name: string
-    last_name: string
-    email: string
-}
+import { usePagination } from "@/hooks/usePagination"
+import { Pagination } from "@/components/ui/Pagination"
 
 export default function UsersList() {
-    const [users, setUsers] = useState<UserType[]>([])
-    const [filteredUsers, setFilteredUsers] = useState<UserType[]>([])
+    const [users, setUsers] = useState<User[]>([])
+    const [filteredUsers, setFilteredUsers] = useState<User[]>([])
     const [selectedUsername, setSelectedUsername] = useState<string | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [searchQuery, setSearchQuery] = useState("")
-    const [currentPage, setCurrentPage] = useState(1)
-    const rowsPerPage = 5
+    const rowsPerPageOptions = [10, 25, 50, 100]
 
+    const {
+        currentPage,
+        totalPages,
+        pageSize,
+        setCurrentPage,
+        setPageSize,
+        paginatedData: currentUsers,
+        startIndex,
+        endIndex
+    } = usePagination(filteredUsers, {
+        totalItems: filteredUsers.length,
+        initialPage: 1,
+        pageSize: 5
+    })
+
+    // Fetch users from the API
     useEffect(() => {
         const fetchUsers = async () => {
             try {
+                setLoading(true)
                 const token = localStorage.getItem("token")
-                if (!token) throw new Error("User not authenticated")
+                if (!token) {
+                    setError("No token found. Please log in.")
+                    return
+                }
 
-                const response = await getAllUsers()
-                if (!response.ok) throw new Error("Failed to fetch users")
-
-                const data: UserType[] = await response.json()
-                // Sort users by creation time (newest first)
-                const sortedData = data.sort((a: any, b: any) => {
-                    return new Date(b.createdAt || b.created_at).getTime() - new Date(a.createdAt || a.created_at).getTime()
-                })
-                setUsers(sortedData)
-                setFilteredUsers(sortedData)
+                const data = await userAPI.getAllUsers()
+                setUsers(data)
+                setFilteredUsers(data)
             } catch (err: any) {
-                setError(err.message)
+                setError(err.message || "An error occurred")
             } finally {
                 setLoading(false)
             }
@@ -71,12 +78,6 @@ export default function UsersList() {
         }
         setCurrentPage(1) // Reset to first page when search changes
     }, [searchQuery, users])
-
-    // Calculate pagination
-    const totalPages = Math.ceil(filteredUsers.length / rowsPerPage)
-    const startIndex = (currentPage - 1) * rowsPerPage
-    const endIndex = startIndex + rowsPerPage
-    const currentUsers = filteredUsers.slice(startIndex, endIndex)
 
     return (
         <div className="space-y-6 pb-8">
@@ -137,11 +138,12 @@ export default function UsersList() {
                                 {currentUsers.map((user) => (
                                     <div
                                         key={user._id}
-                                        className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                                        className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                                        onClick={() => setSelectedUsername(user.username)}
                                     >
                                         <div className="flex items-center space-x-4">
                                             <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                                                <User className="h-5 w-5 text-primary" />
+                                                <UserIcon className="h-5 w-5 text-primary" />
                                             </div>
                                             <div>
                                                 <p className="font-medium">
@@ -163,29 +165,14 @@ export default function UsersList() {
 
                             {/* Pagination */}
                             {totalPages > 1 && (
-                                <div className="flex items-center justify-between mt-4">
-                                    <p className="text-sm text-muted-foreground">
-                                        Showing {startIndex + 1}-{Math.min(endIndex, filteredUsers.length)} of {filteredUsers.length} users
-                                    </p>
-                                    <div className="flex items-center space-x-2">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                                            disabled={currentPage === 1}
-                                        >
-                                            Previous
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                                            disabled={currentPage === totalPages}
-                                        >
-                                            Next
-                                        </Button>
-                                    </div>
-                                </div>
+                                <Pagination
+                                    currentPage={currentPage}
+                                    totalPages={totalPages}
+                                    pageSize={pageSize}
+                                    pageSizeOptions={rowsPerPageOptions}
+                                    onPageChange={setCurrentPage}
+                                    onPageSizeChange={setPageSize}
+                                />
                             )}
                         </>
                     )}

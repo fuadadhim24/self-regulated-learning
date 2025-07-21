@@ -7,6 +7,7 @@ import { User, LogOut, Bell, Menu, X, GraduationCap, BookOpen, Lightbulb, Users,
 import Link from "next/link"
 import { useRouter } from "next/router"
 import { getCurrentUser, logout } from "@/utils/api"
+import { useToast } from "@/hooks/use-toast"
 
 export type AdminSection = "courses" | "learningStrategies" | "users" | "logs"
 
@@ -29,6 +30,7 @@ const Navbar = ({
     selectedSection,
     setSelectedSection,
 }: NavbarProps) => {
+    const { toast } = useToast();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false)
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
     const [user, setUser] = useState<{
@@ -49,26 +51,22 @@ const Navbar = ({
                     router.push("/login")
                     return
                 }
-
                 const userData = await getCurrentUser()
-                console.log("User data:", userData)
                 setUser(userData)
             } catch (error) {
-                console.error("Error fetching user:", error)
+                toast({ title: "Error", description: "Error fetching user. Please login again.", variant: "destructive" })
                 router.push("/login")
             } finally {
                 setLoading(false)
             }
         }
-
         fetchUser()
     }, [router])
-
     const handleLogout = async () => {
         try {
             await logout() // call your API logout
         } catch (error) {
-            console.error("Error during logout:", error)
+            toast({ title: "Error", description: "Error during logout.", variant: "destructive" })
         } finally {
             localStorage.removeItem("token")
             router.push("/login")
@@ -132,8 +130,8 @@ const Navbar = ({
                                 <button
                                     onClick={() => setSelectedSection("courses")}
                                     className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${selectedSection === "courses"
-                                            ? "bg-primary text-primary-foreground"
-                                            : "text-muted-foreground hover:bg-muted"
+                                        ? "bg-primary text-primary-foreground"
+                                        : "text-muted-foreground hover:bg-muted"
                                         }`}
                                 >
                                     <BookOpen className="h-4 w-4" />
@@ -142,8 +140,8 @@ const Navbar = ({
                                 <button
                                     onClick={() => setSelectedSection("learningStrategies")}
                                     className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${selectedSection === "learningStrategies"
-                                            ? "bg-primary text-primary-foreground"
-                                            : "text-muted-foreground hover:bg-muted"
+                                        ? "bg-primary text-primary-foreground"
+                                        : "text-muted-foreground hover:bg-muted"
                                         }`}
                                 >
                                     <Lightbulb className="h-4 w-4" />
@@ -152,8 +150,8 @@ const Navbar = ({
                                 <button
                                     onClick={() => setSelectedSection("users")}
                                     className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${selectedSection === "users"
-                                            ? "bg-primary text-primary-foreground"
-                                            : "text-muted-foreground hover:bg-muted"
+                                        ? "bg-primary text-primary-foreground"
+                                        : "text-muted-foreground hover:bg-muted"
                                         }`}
                                 >
                                     <Users className="h-4 w-4" />
@@ -162,8 +160,8 @@ const Navbar = ({
                                 <button
                                     onClick={() => setSelectedSection("logs")}
                                     className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${selectedSection === "logs"
-                                            ? "bg-primary text-primary-foreground"
-                                            : "text-muted-foreground hover:bg-muted"
+                                        ? "bg-primary text-primary-foreground"
+                                        : "text-muted-foreground hover:bg-muted"
                                         }`}
                                 >
                                     <ClockIcon className="h-4 w-4" />
@@ -252,8 +250,8 @@ const Navbar = ({
                                     setIsMobileMenuOpen(false);
                                 }}
                                 className={`flex w-full items-center gap-2 px-3 py-2 rounded-lg text-base font-medium transition-colors ${selectedSection === "courses"
-                                        ? "bg-primary text-primary-foreground"
-                                        : "text-muted-foreground hover:bg-muted"
+                                    ? "bg-primary text-primary-foreground"
+                                    : "text-muted-foreground hover:bg-muted"
                                     }`}
                             >
                                 <BookOpen className="h-5 w-5" />
@@ -265,8 +263,8 @@ const Navbar = ({
                                     setIsMobileMenuOpen(false);
                                 }}
                                 className={`flex w-full items-center gap-2 px-3 py-2 rounded-lg text-base font-medium transition-colors ${selectedSection === "learningStrategies"
-                                        ? "bg-primary text-primary-foreground"
-                                        : "text-muted-foreground hover:bg-muted"
+                                    ? "bg-primary text-primary-foreground"
+                                    : "text-muted-foreground hover:bg-muted"
                                     }`}
                             >
                                 <Lightbulb className="h-5 w-5" />
@@ -278,8 +276,8 @@ const Navbar = ({
                                     setIsMobileMenuOpen(false);
                                 }}
                                 className={`flex w-full items-center gap-2 px-3 py-2 rounded-lg text-base font-medium transition-colors ${selectedSection === "users"
-                                        ? "bg-primary text-primary-foreground"
-                                        : "text-muted-foreground hover:bg-muted"
+                                    ? "bg-primary text-primary-foreground"
+                                    : "text-muted-foreground hover:bg-muted"
                                     }`}
                             >
                                 <Users className="h-5 w-5" />
@@ -291,8 +289,8 @@ const Navbar = ({
                                     setIsMobileMenuOpen(false);
                                 }}
                                 className={`flex w-full items-center gap-2 px-3 py-2 rounded-lg text-base font-medium transition-colors ${selectedSection === "logs"
-                                        ? "bg-primary text-primary-foreground"
-                                        : "text-muted-foreground hover:bg-muted"
+                                    ? "bg-primary text-primary-foreground"
+                                    : "text-muted-foreground hover:bg-muted"
                                     }`}
                             >
                                 <ClockIcon className="h-5 w-5" />

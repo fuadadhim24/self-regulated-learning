@@ -3,6 +3,7 @@
 import type React from "react"
 import { useState, useRef, useEffect } from "react"
 import { Upload, X, File, Check, AlertCircle } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 interface FileUploadProps {
     boardId: string
@@ -21,6 +22,7 @@ interface Attachment {
 }
 
 export default function FileUpload({ boardId, cardId, onUploadComplete }: FileUploadProps) {
+    const { toast } = useToast();
     const [showUpload, setShowUpload] = useState(false)
     const [files, setFiles] = useState<File[]>([])
     const [isDragging, setIsDragging] = useState(false)
@@ -36,31 +38,25 @@ export default function FileUpload({ boardId, cardId, onUploadComplete }: FileUp
     const fetchAttachments = async () => {
         try {
             const token = localStorage.getItem("token")
-            console.log('Token from localStorage:', token ? token.substring(0, 20) + '...' : 'No token found')
-
             if (!token) {
                 setError("No token found. Please log in.")
+                toast({ title: "Error", description: "No token found. Please log in.", variant: "destructive" })
                 return
             }
-
-            console.log('Making request to:', `${process.env.NEXT_PUBLIC_API_URL}/api/attachments/card/${cardId}`)
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/attachments/card/${cardId}`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
             })
-
             if (!response.ok) {
                 const errorData = await response.json()
-                console.error('Error response:', errorData)
+                toast({ title: "Error", description: errorData.error || "Failed to fetch attachments", variant: "destructive" })
                 throw new Error(errorData.error || "Failed to fetch attachments")
             }
-
             const data = await response.json()
-            console.log('Successfully fetched attachments:', data)
             setAttachments(data)
         } catch (err: any) {
-            console.error('Error fetching attachments:', err)
+            toast({ title: "Error", description: err.message, variant: "destructive" })
             setError(err.message)
         }
     }
@@ -139,7 +135,7 @@ export default function FileUpload({ boardId, cardId, onUploadComplete }: FileUp
                 setUploadStatus("idle")
             }, 1500)
         } catch (err: any) {
-            console.error('Error uploading file:', err)
+            toast({ title: "Error", description: err.message || "An error occurred while uploading the file", variant: "destructive" })
             setError(err.message || "An error occurred while uploading the file")
             setUploadStatus("error")
         }
@@ -169,8 +165,7 @@ export default function FileUpload({ boardId, cardId, onUploadComplete }: FileUp
                 onUploadComplete()
             }
         } catch (err: any) {
-            console.error('Error deleting file:', err)
-            setError(err.message || "An error occurred while deleting the file")
+            toast({ title: "Error", description: err.message || "An error occurred while deleting the file", variant: "destructive" })
         }
     }
 
@@ -202,8 +197,7 @@ export default function FileUpload({ boardId, cardId, onUploadComplete }: FileUp
             window.URL.revokeObjectURL(url)
             document.body.removeChild(a)
         } catch (err: any) {
-            console.error('Error downloading file:', err)
-            setError(err.message || "An error occurred while downloading the file")
+            toast({ title: "Error", description: err.message || "An error occurred while downloading the file", variant: "destructive" })
         }
     }
 

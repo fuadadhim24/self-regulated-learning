@@ -2,6 +2,7 @@
 
 import { Clock, Pause } from "lucide-react"
 import { useState, useEffect } from "react"
+import { useToast } from "@/hooks/use-toast"
 
 interface StartStopToggleProps {
     cardId: string
@@ -10,6 +11,7 @@ interface StartStopToggleProps {
 }
 
 export default function StartStopToggle({ cardId, listName, onToggleStateChange }: StartStopToggleProps) {
+    const { toast } = useToast();
     const [isToggleOn, setIsToggleOn] = useState(false)
     const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
     const [totalStudyTime, setTotalStudyTime] = useState<number>(0)
@@ -24,8 +26,32 @@ export default function StartStopToggle({ cardId, listName, onToggleStateChange 
 
     // Check if there's an active session when component mounts
     useEffect(() => {
-        checkActiveSession()
-        fetchStudySessions()
+        const token = localStorage.getItem("token")
+        if (!token) return
+
+        const checkActiveSession = async () => {
+            try {
+                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/study-sessions/active/${cardId}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                })
+                if (!response.ok) {
+                    toast({ title: "Error", description: "Failed to fetch study sessions", variant: "destructive" })
+                    return
+                }
+                const data = await response.json()
+                setIsToggleOn(data.is_active)
+                if (data.is_active) {
+                    setStartTime(data.start_time)
+                }
+            } catch (error: any) {
+                toast({ title: "Error", description: `Error checking active session: ${error.message}`, variant: "destructive" })
+            }
+        }
+        if (token) {
+            checkActiveSession()
+        }
     }, [cardId])
 
     // Timer effect
@@ -47,43 +73,6 @@ export default function StartStopToggle({ cardId, listName, onToggleStateChange 
         }
     }, [isToggleOn, startTime])
 
-    const checkActiveSession = async () => {
-        try {
-            const token = localStorage.getItem("token")
-            if (!token) return
-
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/study-sessions/card/${cardId}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            })
-
-            if (!response.ok) {
-                console.error("Failed to fetch study sessions")
-                return
-            }
-
-            const data = await response.json()
-
-            // Check if there's an active session (one without end_time)
-            const activeSession = data.sessions.find((session: any) => !session.end_time)
-
-            if (activeSession) {
-                setIsToggleOn(true)
-                setCurrentSessionId(activeSession._id)
-                setStartTime(new Date(activeSession.start_time))
-
-                // Calculate elapsed time
-                const now = new Date()
-                const start = new Date(activeSession.start_time)
-                const elapsed = Math.floor((now.getTime() - start.getTime()) / 1000 / 60)
-                setElapsedTime(elapsed)
-            }
-        } catch (error) {
-            console.error("Error checking active session:", error)
-        }
-    }
-
     const fetchStudySessions = async () => {
         try {
             const token = localStorage.getItem("token")
@@ -96,68 +85,87 @@ export default function StartStopToggle({ cardId, listName, onToggleStateChange 
             })
 
             if (!response.ok) {
-                console.error("Failed to fetch study sessions")
+                toast({ title: "Error", description: "Failed to fetch study sessions", variant: "destructive" })
                 return
             }
 
             const data = await response.json()
-            setTotalStudyTime(data.total_study_time_minutes)
-        } catch (error) {
-            console.error("Error fetching study sessions:", error)
+            setTotalStudyTime(data.total_study_time_minutes || 0)
+        } catch (error: any) {
+            toast({ title: "Error", description: `Error fetching study sessions: ${error.message}`, variant: "destructive" })
         }
     }
 
-    const handleToggle = async () => {
+    const handleStartSession = async () => {
         try {
             const token = localStorage.getItem("token")
             if (!token) return
 
-            if (!isToggleOn) {
-                // Start new session
-                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/study-sessions/start`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/study-sessions/start`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ card_id: cardId }),
+            })
+
+            if (!response.ok) {
+                toast({ title: "Error", description: "Failed to start study session", variant: "destructive" })
+                return
+            }
+
+            const data = await response.json()
+            setCurrentSessionId(data._id)
+            setStartTime(new Date())
+            setIsToggleOn(true)
+            toast({ title: "Success", description: "Study session started!", variant: "default" })
+        } catch (error: any) {
+            toast({ title: "Error", description: `Error starting session: ${error.message}`, variant: "destructive" })
+        }
+    }
+
+    const handleStopSession = async () => {
+        try {
+            const token = localStorage.getItem("token")
+            if (!token) return
+
+            if (currentSessionId) {
+                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/study-sessions/end`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
                         Authorization: `Bearer ${token}`,
                     },
-                    body: JSON.stringify({ card_id: cardId }),
+                    body: JSON.stringify({ session_id: currentSessionId }),
                 })
 
                 if (!response.ok) {
-                    console.error("Failed to start study session")
+                    toast({ title: "Error", description: "Failed to end study session", variant: "destructive" })
                     return
                 }
 
-                const data = await response.json()
-                setCurrentSessionId(data._id)
-                setStartTime(new Date())
-                setIsToggleOn(true)
-            } else {
-                // End current session
-                if (currentSessionId) {
-                    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/study-sessions/end`, {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${token}`,
-                        },
-                        body: JSON.stringify({ session_id: currentSessionId }),
-                    })
-
-                    if (!response.ok) {
-                        console.error("Failed to end study session")
-                        return
-                    }
-
-                    setCurrentSessionId(null)
-                    setStartTime(null)
-                    setIsToggleOn(false)
-                    setElapsedTime(0)
-                    fetchStudySessions() // Refresh total study time
-                }
+                setCurrentSessionId(null)
+                setStartTime(null)
+                setIsToggleOn(false)
+                setElapsedTime(0)
+                fetchStudySessions() // Refresh total study time
+                toast({ title: "Success", description: "Study session ended!", variant: "default" })
             }
-        } catch (error) {
-            console.error("Error handling study session:", error)
+        } catch (error: any) {
+            toast({ title: "Error", description: `Error ending session: ${error.message}`, variant: "destructive" })
+        }
+    }
+
+    const handleToggle = async () => {
+        try {
+            if (isToggleOn) {
+                await handleStopSession()
+            } else {
+                await handleStartSession()
+            }
+        } catch (error: any) {
+            toast({ title: "Error", description: `Error handling study session: ${error.message}`, variant: "destructive" })
         }
     }
 

@@ -7,8 +7,9 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2, AlertCircle } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import type { LearningStrategy } from "../../types"
-import { addLearningStrategy, updateLearningStrategy } from "../../utils/api"
+import type { LearningStrategy } from "@/types/api"
+import { learningStrategyAPI } from "@/utils/apiClient"
+import { useToast } from "@/hooks/use-toast"
 
 interface LearningStrategyFormProps {
     strategy?: LearningStrategy // If provided, we're editing
@@ -18,14 +19,15 @@ interface LearningStrategyFormProps {
 }
 
 export default function LearningStrategyForm({ strategy, onStrategySaved, onCancel, isModal = false }: LearningStrategyFormProps) {
-    const [name, setName] = useState(strategy?.name || "")
+    const { toast } = useToast();
+    const [name, setName] = useState(strategy?.learning_strat_name || "")
     const [description, setDescription] = useState(strategy?.description || "")
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
         if (strategy) {
-            setName(strategy.name)
+            setName(strategy.learning_strat_name)
             setDescription(strategy.description || "")
         }
     }, [strategy])
@@ -36,69 +38,24 @@ export default function LearningStrategyForm({ strategy, onStrategySaved, onCanc
         setError(null)
 
         try {
-            const token = localStorage.getItem("token")
-            if (!token) {
-                setError("No token found. Please log in.")
-                return
-            }
-
-            console.log('Submitting strategy with token:', token.substring(0, 10) + '...');
             if (strategy) {
-                // Update existing strategy
-                const updateData = {
-                    name,
-                    description: description.trim() || null
-                };
-                console.log('Updating strategy:', {
-                    id: strategy.id,
-                    ...updateData
-                });
-                const response = await updateLearningStrategy(strategy.id, updateData)
-                console.log('Update response status:', response.status);
-
-                if (!response.ok) {
-                    const errorData = await response.text();
-                    console.error('Error response:', errorData);
-                    throw new Error(`Failed to update learning strategy: ${response.status} ${response.statusText}`);
-                }
-
-                try {
-                    const responseData = await response.json();
-                    console.log('Update response data:', responseData);
-                } catch (e) {
-                    console.log('No response data to parse');
-                }
+                await learningStrategyAPI.updateStrategy(strategy._id, {
+                    learning_strat_name: name,
+                    description: description.trim() || undefined
+                })
             } else {
-                // Create new strategy
-                const createData = {
-                    name,
-                    description: description.trim() || null
-                };
-                console.log('Creating new strategy:', createData);
-                const response = await addLearningStrategy(createData)
-                console.log('Create response status:', response.status);
-
-                if (!response.ok) {
-                    const errorData = await response.text();
-                    console.error('Error response:', errorData);
-                    throw new Error(`Failed to add learning strategy: ${response.status} ${response.statusText}`);
-                }
-
-                try {
-                    const responseData = await response.json();
-                    console.log('Create response data:', responseData);
-                } catch (e) {
-                    console.log('No response data to parse');
-                }
+                await learningStrategyAPI.addStrategy({
+                    learning_strat_name: name,
+                    description: description.trim() || undefined
+                })
             }
-
             onStrategySaved()
             if (!strategy) {
                 setName("")
                 setDescription("")
             }
         } catch (err: any) {
-            console.error('Error in handleSubmit:', err);
+            toast({ title: "Error", description: err.message || "An error occurred while saving the strategy", variant: "destructive" })
             setError(err.message || "An error occurred while saving the strategy")
         } finally {
             setLoading(false)

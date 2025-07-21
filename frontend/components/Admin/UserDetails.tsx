@@ -1,13 +1,13 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { getUserByUsername, getBoardByUser, getCardMovements } from "@/utils/api"
+import { userAPI, boardAPI, studySessionAPI } from "@/utils/apiClient"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { AlertCircle, ChevronDown, User, History, Clock } from "lucide-react"
+import { AlertCircle, ChevronDown, User, History, Clock, Move } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
@@ -19,6 +19,10 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import { useToast } from "@/hooks/use-toast"
+import { usePagination } from "@/hooks/usePagination"
+import { Pagination } from "@/components/ui/Pagination"
+import type { Board } from "@/types/api"
 
 interface UserDetails {
     _id: string
@@ -27,24 +31,6 @@ interface UserDetails {
     last_name: string
     email: string
     role?: string
-}
-
-interface Board {
-    id: string
-    name: string
-    lists: {
-        id: string
-        title: string
-        cards: {
-            id: string
-            title: string
-            sub_title: string
-            difficulty: string
-            priority: string
-            created_at: string
-            column_movements?: CardMovement[]
-        }[]
-    }[]
 }
 
 interface UserDetailsProps {
@@ -73,9 +59,24 @@ function CardMovementModal({ cardId, board, isOpen, onClose }: CardMovementModal
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [movements, setMovements] = useState<CardMovement[]>([])
-    const [currentPage, setCurrentPage] = useState(1)
+    const [cardTitle, setCardTitle] = useState<string>("")
+    const rowsPerPageOptions = [5, 10, 20, 50]
+    const {
+        currentPage,
+        totalPages,
+        pageSize,
+        setCurrentPage,
+        setPageSize,
+        paginatedData: currentMovements,
+        startIndex,
+        endIndex
+    } = usePagination(movements, {
+        totalItems: movements.length,
+        initialPage: 1,
+        pageSize: 5
+    })
     const [columnTimes, setColumnTimes] = useState<{ [key: string]: number }>({})
-    const rowsPerPage = 5
+    const { toast } = useToast();
 
     // Map list titles to column names
     const columnNameMap: { [key: string]: string } = {
@@ -99,14 +100,27 @@ function CardMovementModal({ cardId, board, isOpen, onClose }: CardMovementModal
         try {
             // Find the card in the board data
             let cardMovements: CardMovement[] = []
+            let foundCardTitle = ""
+
             for (const list of board.lists) {
-                const card = list.cards.find(c => c.id === cardId)
-                if (card?.column_movements) {
-                    cardMovements = card.column_movements
+                const card = list.cards.find(c => c._id === cardId || (c as any).id === cardId)
+                if (card) {
+                    // Try different possible field names for movements
+                    if (card.column_movements && Array.isArray(card.column_movements)) {
+                        cardMovements = card.column_movements
+                    } else if ((card as any).movements && Array.isArray((card as any).movements)) {
+                        cardMovements = (card as any).movements
+                    } else if ((card as any).card_movements && Array.isArray((card as any).card_movements)) {
+                        cardMovements = (card as any).card_movements
+                    }
+
+                    foundCardTitle = card.title || "Untitled Card"
                     break
                 }
             }
+
             setMovements(cardMovements)
+            setCardTitle(foundCardTitle)
 
             // Calculate time spent in each column
             const times: { [key: string]: number } = {}
@@ -143,10 +157,9 @@ function CardMovementModal({ cardId, board, isOpen, onClose }: CardMovementModal
                 }
             }
 
-            console.log('Column times:', times) // Debug log
             setColumnTimes(times)
         } catch (err: any) {
-            console.error('Error calculating times:', err) // Debug log
+            toast({ title: "Error", description: err.message || "Error calculating times", variant: "destructive" })
             setError(err.message)
         } finally {
             setLoading(false)
@@ -159,12 +172,6 @@ function CardMovementModal({ cardId, board, isOpen, onClose }: CardMovementModal
             setCurrentPage(1)
         }
     }, [isOpen])
-
-    // Calculate pagination
-    const totalPages = Math.ceil(movements.length / rowsPerPage)
-    const startIndex = (currentPage - 1) * rowsPerPage
-    const endIndex = startIndex + rowsPerPage
-    const currentMovements = movements.slice(startIndex, endIndex)
 
     // Format duration in hours, minutes, seconds
     const formatDuration = (ms: number) => {
@@ -186,10 +193,13 @@ function CardMovementModal({ cardId, board, isOpen, onClose }: CardMovementModal
     }
 
     return (
-        <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="sm:max-w-[600px]">
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto" aria-describedby="card-movement-description">
                 <DialogHeader>
-                    <DialogTitle>Card Movement History</DialogTitle>
+                    <DialogTitle>Card Movement History - {cardTitle}</DialogTitle>
+                    <div id="card-movement-description" className="sr-only">
+                        Detailed view of card movement history including time spent in each column and movement timeline.
+                    </div>
                 </DialogHeader>
 
                 {error ? (
@@ -202,18 +212,39 @@ function CardMovementModal({ cardId, board, isOpen, onClose }: CardMovementModal
                         <Skeleton className="h-[200px] w-full" />
                     </div>
                 ) : movements.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-4">No movement history available</p>
+                    <div className="space-y-4">
+                        <Card>
+                            <CardHeader className="py-3">
+                                <CardTitle className="text-sm font-medium">Time Spent in Each Column</CardTitle>
+                                <CardDescription>Total time: 0s</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="grid grid-cols-2 gap-4">
+                                    {board?.lists.map(list => (
+                                        <div key={list._id} className="flex items-center justify-between p-2 bg-muted/50 rounded-md">
+                                            <span className="text-sm font-medium">{list.title}</span>
+                                            <span className="text-sm text-muted-foreground">0s</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </CardContent>
+                        </Card>
+                        <p className="text-center text-muted-foreground py-4">No movement history available for this card</p>
+                    </div>
                 ) : (
                     <div className="space-y-4">
                         {/* Time Summary */}
                         <Card>
                             <CardHeader className="py-3">
                                 <CardTitle className="text-sm font-medium">Time Spent in Each Column</CardTitle>
+                                <CardDescription>
+                                    Total time: {formatDuration(Object.values(columnTimes).reduce((sum, time) => sum + time, 0))}
+                                </CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <div className="grid grid-cols-2 gap-4">
                                     {board?.lists.map(list => (
-                                        <div key={list.id} className="flex items-center justify-between p-2 bg-muted/50 rounded-md">
+                                        <div key={list._id} className="flex items-center justify-between p-2 bg-muted/50 rounded-md">
                                             <span className="text-sm font-medium">{list.title}</span>
                                             <span className="text-sm text-muted-foreground">
                                                 {formatDuration(columnTimes[list.title] || 0)}
@@ -233,8 +264,8 @@ function CardMovementModal({ cardId, board, isOpen, onClose }: CardMovementModal
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {currentMovements.map((movement, index) => (
-                                    <TableRow key={index}>
+                                {currentMovements.map((movement) => (
+                                    <TableRow key={(movement as any)._id || `${movement.timestamp}-${movement.fromColumn}-${movement.toColumn}`}>
                                         <TableCell>{new Date(movement.timestamp).toLocaleString()}</TableCell>
                                         <TableCell>{displayNameMap[movement.fromColumn] || movement.fromColumn}</TableCell>
                                         <TableCell>{displayNameMap[movement.toColumn] || movement.toColumn}</TableCell>
@@ -244,29 +275,16 @@ function CardMovementModal({ cardId, board, isOpen, onClose }: CardMovementModal
                         </Table>
 
                         {/* Pagination Controls */}
-                        <div className="flex items-center justify-between">
-                            <p className="text-sm text-muted-foreground">
-                                Showing {startIndex + 1}-{Math.min(endIndex, movements.length)} of {movements.length} movements
-                            </p>
-                            <div className="flex items-center space-x-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                                    disabled={currentPage === 1}
-                                >
-                                    Previous
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                                    disabled={currentPage === totalPages}
-                                >
-                                    Next
-                                </Button>
-                            </div>
-                        </div>
+                        {totalPages > 1 && (
+                            <Pagination
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                pageSize={pageSize}
+                                pageSizeOptions={rowsPerPageOptions}
+                                onPageChange={setCurrentPage}
+                                onPageSizeChange={setPageSize}
+                            />
+                        )}
                     </div>
                 )}
             </DialogContent>
@@ -281,33 +299,45 @@ export default function UserDetails({ username, onClose }: UserDetailsProps) {
     const [error, setError] = useState<string | null>(null)
     const [expandedLists, setExpandedLists] = useState<{ [key: string]: boolean }>({})
     const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
-    const [studyTimes, setStudyTimes] = useState<{ [key: string]: number }>({})
+    const [cardStudyTimes, setCardStudyTimes] = useState<Map<string, number>>(new Map())
+    const [updatingAdmin, setUpdatingAdmin] = useState(false)
+    const { toast } = useToast();
 
     useEffect(() => {
         const fetchUserDetails = async () => {
             try {
                 setLoading(true)
-                const token = localStorage.getItem("token")
-                if (!token) {
-                    setError("User not authenticated")
-                    return
-                }
+                setError(null)
 
-                // Fetch user details by username
-                const userRes = await getUserByUsername(username)
-                if (!userRes.ok) throw new Error("Failed to fetch user details")
-
-                const foundUser = await userRes.json()
+                const foundUser = await userAPI.getUserByUsername(username)
                 setUser(foundUser)
 
-                // Fetch board using the user's ID
-                const boardRes = await getBoardByUser(foundUser._id)
-                if (!boardRes.ok) throw new Error("Failed to fetch user's board")
-
-                const boardData = await boardRes.json()
+                const boardData = await boardAPI.getBoardByUser(foundUser._id)
                 setBoard(boardData)
+
+                // Fetch study time for each card
+                const studyTimePromises = boardData.lists.flatMap((list: any) =>
+                    list.cards.map(async (card: any) => {
+                        try {
+                            const studyData = await studySessionAPI.getCardSessions(card._id)
+                            // Calculate total study time from sessions array
+                            const totalTime = Array.isArray(studyData)
+                                ? studyData.reduce((total: number, session: any) => total + (session.total_study_time_minutes || 0), 0)
+                                : 0
+                            return { cardId: card._id, studyTime: totalTime }
+                        } catch (error: any) {
+                            toast({ title: "Error", description: `Error fetching study time for card ${card._id}: ${error.message}`, variant: "destructive" })
+                            return { cardId: card._id, studyTime: 0 }
+                        }
+                    })
+                )
+
+                const studyTimes = await Promise.all(studyTimePromises)
+                const studyTimeMap = new Map<string, number>(studyTimes.map((st: any) => [st.cardId, st.studyTime]))
+                setCardStudyTimes(studyTimeMap)
+
             } catch (err: any) {
-                setError(err.message)
+                setError(err.message || "Failed to fetch user details")
             } finally {
                 setLoading(false)
             }
@@ -316,42 +346,32 @@ export default function UserDetails({ username, onClose }: UserDetailsProps) {
         fetchUserDetails()
     }, [username])
 
-    // Add new useEffect for fetching study times
-    useEffect(() => {
-        const fetchStudyTimes = async () => {
-            if (!board) return
+    // Function to toggle admin status
+    const toggleAdminStatus = async () => {
+        if (!user) return
 
-            const times: { [key: string]: number } = {}
-            const token = localStorage.getItem("token")
-            if (!token) return
+        try {
+            setUpdatingAdmin(true)
+            await userAPI.makeUserAdmin(user._id)
 
-            // Fetch study times for all cards
-            for (const list of board.lists) {
-                for (const card of list.cards) {
-                    try {
-                        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/study-sessions/card/${card.id}`, {
-                            headers: {
-                                Authorization: `Bearer ${token}`,
-                            },
-                        })
+            // Update local state
+            setUser(prev => prev ? { ...prev, role: prev.role === "admin" ? "user" : "admin" } : null)
 
-                        if (!response.ok) continue
-
-                        const data: StudySession = await response.json()
-                        times[card.id] = data.total_study_time_minutes
-                    } catch (error) {
-                        console.error(`Error fetching study time for card ${card.id}:`, error)
-                    }
-                }
-            }
-
-            setStudyTimes(times)
+            toast({
+                title: "Success",
+                description: `User role updated to ${user.role === "admin" ? "user" : "admin"}`,
+                variant: "default"
+            })
+        } catch (error: any) {
+            toast({
+                title: "Error",
+                description: error.message || "Failed to update user role",
+                variant: "destructive"
+            })
+        } finally {
+            setUpdatingAdmin(false)
         }
-
-        if (board) {
-            fetchStudyTimes()
-        }
-    }, [board])
+    }
 
     // Toggle function for expanding/collapsing lists
     const toggleList = (listId: string) => {
@@ -378,151 +398,189 @@ export default function UserDetails({ username, onClose }: UserDetailsProps) {
     }
 
     return (
-        <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                    <DialogTitle>User Details</DialogTitle>
-                </DialogHeader>
+        <>
+            <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+                <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle>User Details</DialogTitle>
+                    </DialogHeader>
 
-                {error ? (
-                    <Alert variant="destructive">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertDescription>{error}</AlertDescription>
-                    </Alert>
-                ) : loading ? (
-                    <div className="space-y-4">
-                        <div className="flex items-center space-x-4">
-                            <Skeleton className="h-12 w-12 rounded-full" />
-                            <div className="space-y-2">
-                                <Skeleton className="h-4 w-[250px]" />
+                    {error ? (
+                        <Alert variant="destructive">
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertDescription>{error}</AlertDescription>
+                        </Alert>
+                    ) : loading ? (
+                        <div className="space-y-4">
+                            <div className="flex items-center space-x-4">
+                                <Skeleton className="h-12 w-12 rounded-full" />
+                                <div className="space-y-2">
+                                    <Skeleton className="h-4 w-[250px]" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Skeleton className="h-4 w-[250px]" />
+                                    <Skeleton className="h-4 w-[200px]" />
+                                </div>
                             </div>
-                            <div className="space-y-2">
-                                <Skeleton className="h-4 w-[250px]" />
-                                <Skeleton className="h-4 w-[200px]" />
-                            </div>
+                            <Skeleton className="h-[200px] w-full rounded-lg" />
                         </div>
-                        <Skeleton className="h-[200px] w-full rounded-lg" />
-                    </div>
-                ) : (
-                    <Tabs defaultValue="profile">
-                        <TabsList className="grid w-full grid-cols-2">
-                            <TabsTrigger value="profile">Profile</TabsTrigger>
-                            <TabsTrigger value="board">Board</TabsTrigger>
-                        </TabsList>
+                    ) : (
+                        <Tabs defaultValue="profile">
+                            <TabsList className="grid w-full grid-cols-2">
+                                <TabsTrigger value="profile">Profile</TabsTrigger>
+                                <TabsTrigger value="board">Board</TabsTrigger>
+                            </TabsList>
 
-                        <TabsContent value="profile" className="space-y-4 pt-4">
-                            <Card>
-                                <CardHeader className="pb-2">
-                                    <CardTitle>User Information</CardTitle>
-                                    <CardDescription>Personal details and account information</CardDescription>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div className="flex items-center space-x-4">
-                                        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                                            <User className="h-6 w-6 text-primary" />
-                                        </div>
-                                        <div>
-                                            <h3 className="font-medium">
-                                                {user?.first_name} {user?.last_name}
-                                            </h3>
-                                            <p className="text-sm text-muted-foreground">{user?.email}</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <p className="text-sm font-medium text-muted-foreground">Username</p>
-                                            <p>{user?.username}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-medium text-muted-foreground">Role</p>
-                                            <Badge variant="outline">{user?.role || "User"}</Badge>
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </TabsContent>
-
-                        <TabsContent value="board" className="space-y-4 pt-4">
-                            {!board ? (
+                            <TabsContent value="profile" className="space-y-4 pt-4">
                                 <Card>
-                                    <CardHeader>
-                                        <CardTitle>No Board Available</CardTitle>
-                                        <CardDescription>This user doesn't have any boards yet</CardDescription>
+                                    <CardHeader className="pb-2">
+                                        <CardTitle>User Information</CardTitle>
+                                        <CardDescription>Personal details and account information</CardDescription>
                                     </CardHeader>
-                                </Card>
-                            ) : (
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle>{board.name}</CardTitle>
-                                        <CardDescription>{board.lists.length} columns</CardDescription>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="space-y-3">
-                                            {board.lists.map((list) => (
-                                                <Collapsible
-                                                    key={list.id}
-                                                    open={expandedLists[list.id]}
-                                                    onOpenChange={() => toggleList(list.id)}
-                                                    className="border rounded-lg"
+                                    <CardContent className="space-y-4">
+                                        <div className="flex items-center space-x-4">
+                                            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                                                <User className="h-6 w-6 text-primary" />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-medium">
+                                                    {user?.first_name} {user?.last_name}
+                                                </h3>
+                                                <p className="text-sm text-muted-foreground">{user?.email}</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <p className="text-sm font-medium text-muted-foreground">Username</p>
+                                                <p>{user?.username}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-medium text-muted-foreground">Role</p>
+                                                <Badge variant="outline">{user?.role || "User"}</Badge>
+                                            </div>
+                                        </div>
+
+                                        {/* Admin Toggle */}
+                                        <div className="pt-4 border-t">
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <p className="text-sm font-medium">Admin Privileges</p>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        {user?.role === "admin"
+                                                            ? "This user has admin privileges"
+                                                            : "Grant admin privileges to this user"
+                                                        }
+                                                    </p>
+                                                </div>
+                                                <Button
+                                                    onClick={toggleAdminStatus}
+                                                    disabled={updatingAdmin}
+                                                    variant={user?.role === "admin" ? "destructive" : "default"}
+                                                    size="sm"
                                                 >
-                                                    <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50 rounded-lg">
-                                                        <h3 className="font-medium">{list.title}</h3>
-                                                        <Badge variant="outline">{list.cards.length} cards</Badge>
-                                                        <ChevronDown
-                                                            className={`h-4 w-4 transition-transform ${expandedLists[list.id] ? "transform rotate-180" : ""}`}
-                                                        />
-                                                    </CollapsibleTrigger>
-                                                    <CollapsibleContent className="px-3 pb-3">
-                                                        {list.cards.length === 0 ? (
-                                                            <p className="text-sm text-muted-foreground py-2">No cards in this list.</p>
-                                                        ) : (
-                                                            <div className="space-y-2 mt-2">
-                                                                {list.cards.map((card) => (
-                                                                    <div key={card.id} className="bg-muted/50 p-3 rounded-md">
-                                                                        <p className="font-medium">{card.title}</p>
-                                                                        <p className="text-sm text-muted-foreground">{card.sub_title}</p>
-                                                                        <div className="flex flex-wrap gap-2 mt-2">
-                                                                            <Badge variant="outline" className="text-xs">
-                                                                                Difficulty: {card.difficulty}
-                                                                            </Badge>
-                                                                            <Badge variant="outline" className="text-xs">
-                                                                                Priority: {card.priority}
-                                                                            </Badge>
-                                                                            <Badge variant="outline" className="text-xs">
-                                                                                Created: {new Date(card.created_at).toLocaleDateString()}
-                                                                            </Badge>
-                                                                            {studyTimes[card.id] > 0 && (
-                                                                                <Badge variant="outline" className="text-xs flex items-center gap-1">
-                                                                                    <Clock className="h-3 w-3" />
-                                                                                    {formatTime(studyTimes[card.id])}
-                                                                                </Badge>
-                                                                            )}
-                                                                        </div>
-                                                                        <Button
-                                                                            variant="ghost"
-                                                                            size="sm"
-                                                                            className="mt-2"
-                                                                            onClick={() => setSelectedCardId(card.id)}
-                                                                        >
-                                                                            <History className="h-4 w-4 mr-2" />
-                                                                            View Card Movement
-                                                                        </Button>
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        )}
-                                                    </CollapsibleContent>
-                                                </Collapsible>
-                                            ))}
+                                                    {updatingAdmin ? "Updating..." : user?.role === "admin" ? "Remove Admin" : "Make Admin"}
+                                                </Button>
+                                            </div>
                                         </div>
                                     </CardContent>
                                 </Card>
-                            )}
-                        </TabsContent>
-                    </Tabs>
-                )}
-            </DialogContent>
+                            </TabsContent>
+
+                            <TabsContent value="board" className="space-y-4 pt-4">
+                                {!board ? (
+                                    <Card>
+                                        <CardHeader>
+                                            <CardTitle>No Board Available</CardTitle>
+                                            <CardDescription>This user doesn't have any boards yet</CardDescription>
+                                        </CardHeader>
+                                    </Card>
+                                ) : (
+                                    <Card>
+                                        <CardHeader>
+                                            <CardTitle>{board.name}</CardTitle>
+                                            <CardDescription>{board.lists.length} columns</CardDescription>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <div className="space-y-3">
+                                                {board.lists.map((list) => (
+                                                    <Collapsible
+                                                        key={list._id}
+                                                        open={expandedLists[list._id]}
+                                                        onOpenChange={() => toggleList(list._id)}
+                                                        className="border rounded-lg"
+                                                    >
+                                                        <CollapsibleTrigger asChild>
+                                                            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg cursor-pointer hover:bg-muted/75 transition-colors">
+                                                                <div className="flex items-center space-x-2">
+                                                                    <ChevronDown
+                                                                        className={`h-4 w-4 transition-transform ${expandedLists[list._id] ? "rotate-180" : ""
+                                                                            }`}
+                                                                    />
+                                                                    <h3 className="font-medium">{list.title}</h3>
+                                                                    <Badge variant="secondary">{list.cards.length} cards</Badge>
+                                                                </div>
+                                                            </div>
+                                                        </CollapsibleTrigger>
+                                                        <CollapsibleContent className="mt-2 space-y-2">
+                                                            {list.cards.map((card) => (
+                                                                <div
+                                                                    key={card._id}
+                                                                    className="p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                                                                >
+                                                                    <div className="flex items-start justify-between">
+                                                                        <div className="flex-1">
+                                                                            <h4 className="font-medium">{card.title}</h4>
+                                                                            <p className="text-sm text-muted-foreground mt-1">{card.sub_title}</p>
+                                                                            <div className="flex items-center gap-2 mt-2">
+                                                                                <Badge variant="outline" className="text-xs">
+                                                                                    {card.difficulty}
+                                                                                </Badge>
+                                                                                <Badge variant="outline" className="text-xs">
+                                                                                    {card.priority}
+                                                                                </Badge>
+                                                                                <Badge variant="outline" className="text-xs">
+                                                                                    Created: {new Date(card.created_at).toLocaleDateString()}
+                                                                                </Badge>
+                                                                                {cardStudyTimes.get(card._id) && cardStudyTimes.get(card._id)! > 0 && (
+                                                                                    <Badge variant="outline" className="text-xs flex items-center gap-1">
+                                                                                        <Clock className="h-3 w-3" />
+                                                                                        {formatTime(cardStudyTimes.get(card._id) || 0)}
+                                                                                    </Badge>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className="flex items-center gap-2 ml-4">
+                                                                            <Button
+                                                                                variant="outline"
+                                                                                size="sm"
+                                                                                onClick={() => {
+                                                                                    const cardId = card._id || (card as any).id
+                                                                                    setSelectedCardId(cardId)
+                                                                                }}
+                                                                                className="flex items-center gap-1"
+                                                                            >
+                                                                                <Move className="h-3 w-3" />
+                                                                                View Movements {card.column_movements && card.column_movements.length > 0 && `(${card.column_movements.length})`}
+                                                                            </Button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </CollapsibleContent>
+                                                    </Collapsible>
+                                                ))}
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                )}
+                            </TabsContent>
+                        </Tabs>
+                    )}
+                </DialogContent>
+            </Dialog>
+
+            {/* Separate CardMovementModal */}
             {selectedCardId && (
                 <CardMovementModal
                     cardId={selectedCardId}
@@ -531,7 +589,7 @@ export default function UserDetails({ username, onClose }: UserDetailsProps) {
                     onClose={() => setSelectedCardId(null)}
                 />
             )}
-        </Dialog>
+        </>
     )
 }
 

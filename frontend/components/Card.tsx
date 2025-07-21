@@ -110,8 +110,8 @@ export default function Card({ id, title, subTitle, difficulty, priority, grade,
                     <div className="flex flex-col space-y-3">
                         {/* Title and subtitle */}
                         <div>
-                            <h3 className="font-semibold text-gray-900 dark:text-gray-100 line-clamp-2">{subTitle}</h3>
-                            <p className="text-sm text-gray-600 dark:text-indigo-400 mt-1 line-clamp-1">{title}</p>
+                            <h3 className="font-semibold text-gray-900 dark:text-gray-100 line-clamp-2">{title}</h3>
+                            <p className="text-sm text-gray-600 dark:text-indigo-400 mt-1 line-clamp-1">{subTitle}</p>
                         </div>
 
                         {/* Tags */}

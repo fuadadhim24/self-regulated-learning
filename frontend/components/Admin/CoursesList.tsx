@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { getCourses, deleteCourse } from "@/utils/api"
+import { courseAPI } from "@/utils/apiClient"
+import type { Course } from "@/types/api"
 import CourseForm from "./CoursesForm"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -18,12 +19,8 @@ import {
     DialogTitle,
     DialogFooter,
 } from "@/components/ui/dialog"
-
-interface Course {
-    id: string
-    course_code: string
-    course_name: string
-}
+import { usePagination } from "@/hooks/usePagination"
+import { Pagination } from "@/components/ui/Pagination"
 
 export default function CoursesList() {
     const [courses, setCourses] = useState<Course[]>([])
@@ -34,30 +31,38 @@ export default function CoursesList() {
     const [error, setError] = useState<string | null>(null)
     const [deletingId, setDeletingId] = useState<string | null>(null)
     const [searchQuery, setSearchQuery] = useState("")
-    const [currentPage, setCurrentPage] = useState(1)
-    const rowsPerPage = 5
+    const rowsPerPageOptions = [5, 10, 20, 50]
+
+    const {
+        currentPage,
+        totalPages,
+        pageSize,
+        setCurrentPage,
+        setPageSize,
+        paginatedData: currentCourses,
+        startIndex,
+        endIndex
+    } = usePagination(filteredCourses, {
+        totalItems: filteredCourses.length,
+        initialPage: 1,
+        pageSize: 5
+    })
 
     const fetchCourses = async () => {
         try {
             setLoading(true)
             const token = localStorage.getItem("token")
-            if (!token) {
-                setError("No token found. Please log in.")
-                return
-            }
+            if (!token) throw new Error("User not authenticated")
 
-            const response = await getCourses()
-            if (!response.ok) throw new Error("Failed to fetch courses.")
-
-            const data = await response.json()
+            const data = await courseAPI.getCourses()
             // Sort courses by creation time (newest first)
-            const sortedData = data.sort((a: any, b: any) => {
-                return new Date(b.createdAt || b.created_at).getTime() - new Date(a.createdAt || a.created_at).getTime()
+            const sortedData = data.sort((a, b) => {
+                return new Date(b.createdAt || b.updatedAt).getTime() - new Date(a.createdAt || a.updatedAt).getTime()
             })
             setCourses(sortedData)
             setFilteredCourses(sortedData)
         } catch (err: any) {
-            setError(err.message || "An error occurred.")
+            setError(err.message)
         } finally {
             setLoading(false)
         }
@@ -77,30 +82,16 @@ export default function CoursesList() {
         setCurrentPage(1) // Reset to first page when search changes
     }, [searchQuery, courses])
 
-    // Calculate pagination
-    const totalPages = Math.ceil(filteredCourses.length / rowsPerPage)
-    const startIndex = (currentPage - 1) * rowsPerPage
-    const endIndex = startIndex + rowsPerPage
-    const currentCourses = filteredCourses.slice(startIndex, endIndex)
-
     const handleDeleteCourse = async (course: Course) => {
         try {
-            setDeletingId(course.course_code)
-            const token = localStorage.getItem("token")
-            if (!token) {
-                setError("No token found. Please log in.")
-                return
-            }
-
-            const response = await deleteCourse(course.course_code)
-            if (!response.ok) throw new Error("Failed to delete course.")
-
-            fetchCourses()
+            setDeletingId(course._id)
+            await courseAPI.deleteCourse(course.course_code)
+            setCourses((prev) => prev.filter((c) => c._id !== course._id))
+            setFilteredCourses((prev) => prev.filter((c) => c._id !== course._id))
         } catch (err: any) {
-            setError(err.message || "An error occurred.")
+            setError(err.message)
         } finally {
             setDeletingId(null)
-            setDeletingCourse(null)
         }
     }
 
@@ -117,7 +108,7 @@ export default function CoursesList() {
                 </Alert>
             )}
 
-            <CourseForm onCourseSaved={() => fetchCourses()} />
+            <CourseForm onCourseSaved={fetchCourses} />
 
             {/* Edit Modal */}
             <Dialog open={!!editingCourse} onOpenChange={() => setEditingCourse(null)}>
@@ -223,7 +214,7 @@ export default function CoursesList() {
                             <div className="space-y-3">
                                 {currentCourses.map((course) => (
                                     <div
-                                        key={course.id}
+                                        key={course._id}
                                         className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
                                     >
                                         <div>
@@ -259,29 +250,14 @@ export default function CoursesList() {
 
                             {/* Pagination */}
                             {totalPages > 1 && (
-                                <div className="flex items-center justify-between mt-4">
-                                    <p className="text-sm text-muted-foreground">
-                                        Showing {startIndex + 1}-{Math.min(endIndex, filteredCourses.length)} of {filteredCourses.length} courses
-                                    </p>
-                                    <div className="flex items-center space-x-2">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                                            disabled={currentPage === 1}
-                                        >
-                                            Previous
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                                            disabled={currentPage === totalPages}
-                                        >
-                                            Next
-                                        </Button>
-                                    </div>
-                                </div>
+                                <Pagination
+                                    currentPage={currentPage}
+                                    totalPages={totalPages}
+                                    pageSize={pageSize}
+                                    pageSizeOptions={rowsPerPageOptions}
+                                    onPageChange={setCurrentPage}
+                                    onPageSizeChange={setPageSize}
+                                />
                             )}
                         </>
                     )}

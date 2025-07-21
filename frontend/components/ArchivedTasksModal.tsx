@@ -22,9 +22,9 @@ export default function ArchivedTasksModal({ archivedTasks, onClose, onRestore, 
     // Filter tasks based on search term and filters
     const filteredTasks = archivedTasks.filter((task) => {
         const matchesSearch =
-            task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            task.sub_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (task.description && task.description.toLowerCase().includes(searchTerm.toLowerCase()))
+            (task.title?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+            (task.sub_title?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+            (task.description?.toLowerCase() || "").includes(searchTerm.toLowerCase())
 
         const matchesPriority = filters.priority.length === 0 || filters.priority.includes(task.priority)
         const matchesDifficulty = filters.difficulty.length === 0 || filters.difficulty.includes(task.difficulty)
@@ -205,21 +205,21 @@ export default function ArchivedTasksModal({ archivedTasks, onClose, onRestore, 
                                     <div className="p-4">
                                         {/* Header */}
                                         <div className="mb-3">
-                                            <h3 className="font-semibold text-gray-900">{task.title}</h3>
+                                            <h3 className="font-semibold text-gray-900">{task.title || "Untitled Task"}</h3>
                                             {task.sub_title && <p className="text-sm text-gray-600">{task.sub_title}</p>}
                                         </div>
 
                                         {/* Tags */}
                                         <div className="flex flex-wrap gap-2 mb-3">
                                             <span
-                                                className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(task.priority)}`}
+                                                className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(task.priority || "medium")}`}
                                             >
-                                                {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)} Priority
+                                                {(task.priority || "medium").charAt(0).toUpperCase() + (task.priority || "medium").slice(1)} Priority
                                             </span>
                                             <span
-                                                className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(task.difficulty)}`}
+                                                className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(task.difficulty || "easy")}`}
                                             >
-                                                {task.difficulty.charAt(0).toUpperCase() + task.difficulty.slice(1)} Difficulty
+                                                {(task.difficulty || "easy").charAt(0).toUpperCase() + (task.difficulty || "easy").slice(1)} Difficulty
                                             </span>
                                             {task.rating !== undefined && (
                                                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border-yellow-200">

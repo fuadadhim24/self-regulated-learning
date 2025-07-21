@@ -230,7 +230,7 @@ export default function TaskDetails({
                                 <div className="space-y-4">
                                     <PriorityDropdown priority={priority} onChange={handlePriorityChange} />
                                     <DifficultyDropdown difficulty={difficulty} onChange={handleDifficultyChange} />
-                                    <LearningStrategiesDropdown strategy={learningStrategy} onChange={handleLearningStrategyChange} />
+                                    <LearningStrategiesDropdown selectedStrategy={learningStrategy} onStrategyChange={handleLearningStrategyChange} />
                                 </div>
                             </div>
 

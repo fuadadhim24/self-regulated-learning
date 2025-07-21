@@ -10,7 +10,8 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { AlertCircle } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Input } from "@/components/ui/input"
-import { getAllLearningStrategies, deleteLearningStrategy } from "@/utils/api"
+import { learningStrategyAPI } from "@/utils/apiClient"
+import type { LearningStrategy } from "@/types/api"
 import {
     Dialog,
     DialogContent,
@@ -19,66 +20,34 @@ import {
     DialogTitle,
     DialogFooter,
 } from "@/components/ui/dialog"
-
-interface LearningStrategy {
-    id: string
-    name: string
-    description?: string
-    createdAt: string
-}
+import { useToast } from "@/hooks/use-toast"
+import { usePagination } from "@/hooks/usePagination"
+import { Pagination } from "@/components/ui/Pagination"
 
 export default function LearningStrategiesList() {
+    const { toast } = useToast();
     const [strategies, setStrategies] = useState<LearningStrategy[]>([])
     const [filteredStrategies, setFilteredStrategies] = useState<LearningStrategy[]>([])
+    const [showAddForm, setShowAddForm] = useState(false)
     const [editingStrategy, setEditingStrategy] = useState<LearningStrategy | null>(null)
     const [deletingStrategy, setDeletingStrategy] = useState<LearningStrategy | null>(null)
-    const [loading, setLoading] = useState(true)
     const [deletingId, setDeletingId] = useState<string | null>(null)
+    const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [searchQuery, setSearchQuery] = useState("")
-    const [currentPage, setCurrentPage] = useState(1)
-    const rowsPerPage = 5
+    const rowsPerPageOptions = [5, 10, 20, 50]
 
-    // Fetch strategies from the API
     const fetchStrategies = async () => {
         try {
             setLoading(true)
-            setError(null)
             const token = localStorage.getItem("token")
-            if (!token) {
-                setError("No token found. Please log in.")
-                return
-            }
+            if (!token) throw new Error("User not authenticated")
 
-            console.log('Fetching strategies with token:', token.substring(0, 10) + '...');
-            const response = await getAllLearningStrategies()
-            console.log('Response status:', response.status);
-
-            if (!response.ok) {
-                const errorData = await response.text();
-                console.error('Error response:', errorData);
-                throw new Error(`Failed to fetch learning strategies: ${response.status} ${response.statusText}`);
-            }
-
-            const data = await response.json()
-            console.log('Fetched strategies data:', data);
-
-            // Map the data to match our interface and sort by creation time
-            const mappedStrategies = data.map((strategy: any) => ({
-                id: strategy._id || strategy.id,
-                name: strategy.learning_strat_name || strategy.name,
-                description: strategy.description,
-                createdAt: strategy.createdAt || strategy.created_at
-            })).sort((a: any, b: any) => {
-                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-            });
-
-            console.log('Mapped strategies:', mappedStrategies);
-            setStrategies(mappedStrategies)
-            setFilteredStrategies(mappedStrategies)
+            const data = await learningStrategyAPI.getAllStrategies()
+            setStrategies(data)
+            setFilteredStrategies(data)
         } catch (err: any) {
-            console.error('Error in fetchStrategies:', err);
-            setError(err.message || "An error occurred while fetching strategies")
+            setError(err.message)
         } finally {
             setLoading(false)
         }
@@ -91,41 +60,38 @@ export default function LearningStrategiesList() {
     // Filter strategies based on search query
     useEffect(() => {
         const filtered = strategies.filter(strategy =>
-            strategy.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            strategy.learning_strat_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             (strategy.description && strategy.description.toLowerCase().includes(searchQuery.toLowerCase()))
         )
         setFilteredStrategies(filtered)
         setCurrentPage(1) // Reset to first page when search changes
     }, [searchQuery, strategies])
 
-    // Calculate pagination
-    const totalPages = Math.ceil(filteredStrategies.length / rowsPerPage)
-    const startIndex = (currentPage - 1) * rowsPerPage
-    const endIndex = startIndex + rowsPerPage
-    const currentStrategies = filteredStrategies.slice(startIndex, endIndex)
+    const {
+        currentPage,
+        totalPages,
+        pageSize,
+        setCurrentPage,
+        setPageSize,
+        paginatedData: currentStrategies,
+        startIndex,
+        endIndex
+    } = usePagination(filteredStrategies, {
+        totalItems: filteredStrategies.length,
+        initialPage: 1,
+        pageSize: 5
+    })
 
     const handleDelete = async (strategy: LearningStrategy) => {
         try {
-            setDeletingId(strategy.id)
-            setError(null)
-            const token = localStorage.getItem("token")
-            if (!token) {
-                setError("No token found. Please log in.")
-                return
-            }
-
-            const response = await deleteLearningStrategy(strategy.id)
-            if (!response.ok) {
-                throw new Error("Failed to delete learning strategy")
-            }
-
-            // Refresh the list after successful deletion
-            fetchStrategies()
+            setDeletingId(strategy._id)
+            await learningStrategyAPI.deleteStrategy(strategy._id)
+            setStrategies((prev) => prev.filter((s) => s._id !== strategy._id))
+            setFilteredStrategies((prev) => prev.filter((s) => s._id !== strategy._id))
         } catch (err: any) {
-            setError(err.message || "An error occurred while deleting the strategy")
+            setError(err.message)
         } finally {
             setDeletingId(null)
-            setDeletingStrategy(null)
         }
     }
 
@@ -144,9 +110,7 @@ export default function LearningStrategiesList() {
 
             {/* Form for adding a new strategy */}
             <LearningStrategyForm
-                onStrategySaved={() => {
-                    fetchStrategies()
-                }}
+                onStrategySaved={fetchStrategies}
             />
 
             {/* Edit Modal */}
@@ -184,7 +148,7 @@ export default function LearningStrategiesList() {
                     {deletingStrategy && (
                         <div className="py-4">
                             <div className="space-y-2">
-                                <p className="font-medium">{deletingStrategy.name}</p>
+                                <p className="font-medium">{deletingStrategy.learning_strat_name}</p>
                                 {deletingStrategy.description && (
                                     <p className="text-sm text-muted-foreground">{deletingStrategy.description}</p>
                                 )}
@@ -252,11 +216,11 @@ export default function LearningStrategiesList() {
                             <div className="space-y-3">
                                 {currentStrategies.map((strategy) => (
                                     <div
-                                        key={strategy.id}
+                                        key={strategy._id}
                                         className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
                                     >
                                         <div>
-                                            <p className="font-medium">{strategy.name}</p>
+                                            <p className="font-medium">{strategy.learning_strat_name}</p>
                                             {strategy.description && (
                                                 <p className="text-sm text-muted-foreground mt-1">{strategy.description}</p>
                                             )}
@@ -290,29 +254,14 @@ export default function LearningStrategiesList() {
 
                             {/* Pagination */}
                             {totalPages > 1 && (
-                                <div className="flex items-center justify-between mt-4">
-                                    <p className="text-sm text-muted-foreground">
-                                        Showing {startIndex + 1}-{Math.min(endIndex, filteredStrategies.length)} of {filteredStrategies.length} strategies
-                                    </p>
-                                    <div className="flex items-center space-x-2">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                                            disabled={currentPage === 1}
-                                        >
-                                            Previous
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                                            disabled={currentPage === totalPages}
-                                        >
-                                            Next
-                                        </Button>
-                                    </div>
-                                </div>
+                                <Pagination
+                                    currentPage={currentPage}
+                                    totalPages={totalPages}
+                                    pageSize={pageSize}
+                                    pageSizeOptions={rowsPerPageOptions}
+                                    onPageChange={setCurrentPage}
+                                    onPageSizeChange={setPageSize}
+                                />
                             )}
                         </>
                     )}
