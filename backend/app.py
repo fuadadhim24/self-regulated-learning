@@ -9,6 +9,7 @@ from routes.course_routes import course_bp
 from routes.learningstrat_routes import learningstrat_bp
 from routes.attachments import attachments_bp
 from routes.study_sessions import study_sessions_bp
+from routes.chatbot_routes import chatbot_bp
 import os
 from utils.db import init_db
 from config import Config
@@ -22,7 +23,7 @@ app = Flask(__name__)
 # Configure CORS
 CORS(app, resources={
     r"/*": {  # Allow all routes, not just /api/*
-        "origins": ["https://self-regulated-learning.vercel.app", "http://localhost:3000", "https://gamatutor.id"],
+        "origins": ["https://self-regulated-learning.vercel.app", "http://localhost:3000", "http://localhost:1213", "https://gamatutor.id"],
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization", "Access-Control-Allow-Origin", "Access-Control-Allow-Headers", "Access-Control-Allow-Methods"],
         "expose_headers": ["Content-Type", "Authorization"],
@@ -65,6 +66,7 @@ app.register_blueprint(course_bp)
 app.register_blueprint(learningstrat_bp)
 app.register_blueprint(attachments_bp)
 app.register_blueprint(study_sessions_bp)
+app.register_blueprint(chatbot_bp)
 
 @app.before_request
 def handle_all_before_requests():
