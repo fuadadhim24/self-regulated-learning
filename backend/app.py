@@ -23,7 +23,7 @@ app = Flask(__name__)
 # Configure CORS
 CORS(app, resources={
     r"/*": {  # Allow all routes, not just /api/*
-        "origins": ["https://self-regulated-learning.vercel.app", "http://localhost:3000", "http://localhost:1213", "https://gamatutor.id", "https://self-regulated-learning-rose.vercel.app", "https://self-regulated-learning-rose.vercel.app"],
+        "origins": ["https://self-regulated-learning.vercel.app", "http://localhost:3000", "http://localhost:1213", "https://gamatutor.id", "https://self-regulated-learning-rose.vercel.app", "https://self-regulated-learning-production.up.railway.app"],
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization", "Access-Control-Allow-Origin", "Access-Control-Allow-Headers", "Access-Control-Allow-Methods"],
         "expose_headers": ["Content-Type", "Authorization"],
