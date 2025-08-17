@@ -84,7 +84,9 @@ def handle_all_before_requests():
         allowed_origins = [
             "http://localhost:3000",
             "https://self-regulated-learning.vercel.app",
-            "https://gamatutor.id"
+            "https://self-regulated-learning-rose.vercel.app",
+            "https://gamatutor.id",
+            "https://self-regulated-learning-production.up.railway.app"
         ]
 
         if origin in allowed_origins:
