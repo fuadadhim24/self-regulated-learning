@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'; // adjust as needed
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'; // adjust as needed
 
 let accessToken: string | null = null;
 

@@ -102,7 +102,8 @@ export default function Chatbot() {
             console.log(input)
 
 
-            const res = await fetch("http://localhost:5000/api/chatbot/message", {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001"
+            const res = await fetch(`${apiUrl}/api/chatbot/message`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ message: input, userId, userName }),
