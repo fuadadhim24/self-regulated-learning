@@ -1,0 +1,5 @@
+pandas
+pymongo
+openpyxl
+pytz
+python-dotenv

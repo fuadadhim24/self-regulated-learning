@@ -12,21 +12,72 @@ export default function Chatbot() {
 
     const toggleChat = () => {
         setIsOpen(!isOpen)
+        if (!isOpen) {
+            try {
+                const user = await getCurrentUser()
+                const fullName = [user.first_name, user.last_name].filter(Boolean).join(" ") || "there"
+                setMessages((prev) => [
+                    ...prev,
+                    { sender: "bot", text: `Hello ${fullName}! How can i help you today? 😊` },
+                ])
+            } catch (error) {
+                console.error("Error fetching user:", error)
+                setMessages((prev) => [
+                    ...prev,
+                    { sender: "bot", text: "Hello! How can I assist you today?" },
+                ])
+            }
+        }
     }
 
-    const handleSendMessage = () => {
-        if (input.trim() === "") return
+    const handleSendMessage = async () => {
+        if (!input.trim()) return;
 
-        const userMessage = { sender: "user", text: input }
-        setMessages((prev) => [...prev, userMessage])
+        const userMessage = { sender: "user", text: input };
+        setMessages((prev) => [...prev, userMessage]);
+        setInput("");
 
-        setTimeout(() => {
-            const botResponse = { sender: "bot", text: "This is a placeholder response." }
-            setMessages((prev) => [...prev, botResponse])
-        }, 500)
+        const startTime = Date.now();
 
-        setInput("")
-    }
+        try {
+            const user = await getCurrentUser();
+            const userId = user._id || user.username;
+            const userName = [user.first_name, user.last_name].filter(Boolean).join(" ") || user.username;
+            console.log(input);
+
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+            const res = await fetch(`${apiUrl}/api/chatbot/message`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: input, userId, userName }),
+            });
+
+            console.log("Response status:", input, userId, userName, res.status);
+
+            if (!res.ok) throw new Error("Failed to get response");
+
+            const data = await res.json();
+            const rawText = data.reply || "I didn't understand that.";
+            const formattedText = formatMessageText(rawText);
+
+            const endTime = Date.now();
+            const responseTime = endTime - startTime;
+
+            const precision = `${responseTime}ms`;
+
+            console.log("Response time:", precision);
+            const botMessage = { sender: "bot", text: formattedText }
+
+            setMessages((prev) => [...prev, botMessage]);
+        } catch (error) {
+            console.error("Chat error:", error);
+            setMessages((prev) => [
+                ...prev,
+                { sender: "bot", text: "Sorry, I can't respond right now." },
+            ]);
+        }
+    };
+
 
     const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter") {

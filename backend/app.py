@@ -22,7 +22,7 @@ app = Flask(__name__)
 # Configure CORS
 CORS(app, resources={
     r"/*": {  # Allow all routes, not just /api/*
-        "origins": ["https://self-regulated-learning.vercel.app", "http://localhost:3000", "https://gamatutor.id"],
+        "origins": ["https://self-regulated-learning.vercel.app", "http://localhost:3000", "http://localhost:1213", "https://gamatutor.id", "https://self-regulated-learning-rose.vercel.app", "https://self-regulated-learning-production.up.railway.app", "http://127.0.0.1:5001","http://localhost:5001","http://127.0.0.1:3000", "http://localhost:1213"],
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization", "Access-Control-Allow-Origin", "Access-Control-Allow-Headers", "Access-Control-Allow-Methods"],
         "expose_headers": ["Content-Type", "Authorization"],
@@ -82,7 +82,10 @@ def handle_all_before_requests():
         allowed_origins = [
             "http://localhost:3000",
             "https://self-regulated-learning.vercel.app",
-            "https://gamatutor.id"
+            "https://self-regulated-learning-rose.vercel.app",
+            "https://gamatutor.id",
+            "https://self-regulated-learning-production.up.railway.app",
+            "http://127.0.0.1:5001", "http://localhost:5001", "http://127.0.0.1:3000", "http://localhost:1213"
         ]
 
         if origin in allowed_origins:
