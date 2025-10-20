@@ -86,7 +86,8 @@ def handle_all_before_requests():
             "https://self-regulated-learning.vercel.app",
             "https://self-regulated-learning-rose.vercel.app",
             "https://gamatutor.id",
-            "https://self-regulated-learning-production.up.railway.app"
+            "https://self-regulated-learning-production.up.railway.app",
+            "https://self-regulated-learning-mu.vercel.app"
         ]
 
         if origin in allowed_origins:
