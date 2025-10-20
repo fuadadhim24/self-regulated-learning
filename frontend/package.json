@@ -23,6 +23,7 @@
     "@radix-ui/react-tooltip": "^1.2.6",
     "@types/react-beautiful-dnd": "^13.1.8",
     "@types/recharts": "^2.0.1",
+    "@vercel/speed-insights": "^1.2.0",
     "chart.js": "^4.4.7",
     "chartjs-chart-box-and-violin-plot": "^4.0.0",
     "class-variance-authority": "^0.7.1",
