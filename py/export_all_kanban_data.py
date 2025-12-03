@@ -28,9 +28,10 @@ def main():
     
     export_scripts = [
         "export_users.py",
-        "export_student_grades.py", 
+        "export_student_grades.py",
         "export_difficulty_ratings.py",
-        "export_course_ratings.py"
+        "export_course_ratings.py",
+        "export_card_activities.py"
     ]
     
     for script in export_scripts:

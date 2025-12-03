@@ -69,9 +69,58 @@ Folder ini berisi script-script untuk mengekspor data dari sistem Kanban Self-Re
   - `learning_strategy`: Strategi belajar yang digunakan
   - `difficulty`: Level difficulty
 
-### 5. export_all_kanban_data.py
+### 5. export_card_activities.py
+- **Deskripsi**: Mengekspor data aktivitas kartu dan riwayat perpindahan kartu dari masing-masing user
+- **Output**: `export_card_activities_[timestamp].csv` dan `export_card_movements_[timestamp].csv`
+- **Kolom yang diekspor (Card Activities)**:
+  - `user_id`: ID user
+  - `username`: Username user
+  - `first_name`: Nama depan
+  - `last_name`: Nama belakang
+  - `email`: Email user
+  - `card_id`: ID card/tugas
+  - `card_title`: Judul lengkap tugas
+  - `card_subtitle`: Subtitle tugas
+  - `card_description`: Deskripsi tugas
+  - `course_name`: Nama mata kuliah
+  - `current_list`: List/kolom saat ini
+  - `current_list_id`: ID list/kolom saat ini
+  - `difficulty`: Level difficulty (easy/medium/hard)
+  - `priority`: Prioritas tugas
+  - `learning_strategy`: Strategi belajar yang digunakan
+  - `pre_test_grade`: Nilai pre-test
+  - `post_test_grade`: Nilai post-test
+  - `rating`: Rating (1-5)
+  - `notes`: Catatan/refleksi
+  - `created_at`: Tanggal pembuatan kartu
+  - `total_movements`: Jumlah total perpindahan kartu
+  - `has_checklist`: Apakah memiliki checklist
+  - `checklist_count`: Jumlah checklist
+  - `has_links`: Apakah memiliki links
+  - `links_count`: Jumlah links
+  - `completed_checklist_items`: Jumlah checklist yang completed
+- **Kolom yang diekspor (Card Movements)**:
+  - `user_id`: ID user
+  - `username`: Username user
+  - `first_name`: Nama depan
+  - `last_name`: Nama belakang
+  - `email`: Email user
+  - `card_id`: ID card/tugas
+  - `card_title`: Judul lengkap tugas
+  - `course_name`: Nama mata kuliah
+  - `movement_number`: Nomor urut perpindahan
+  - `from_column`: ID kolom asal
+  - `from_column_name`: Nama kolom asal
+  - `to_column`: ID kolom tujuan
+  - `to_column_name`: Nama kolom tujuan
+  - `movement_timestamp`: Timestamp perpindahan (ISO format)
+  - `movement_date`: Tanggal perpindahan (format YYYY-MM-DD HH:MM:SS)
+  - `is_initial_movement`: Apakah perpindahan awal (dari "initial")
+  - `is_to_reflection`: Apakah perpindahan ke kolom Reflection (Done)
+
+### 6. export_all_kanban_data.py
 - **Deskripsi**: Script utama yang menjalankan semua script ekspor sekaligus
-- **Output**: Menjalankan keempat script di atas dan menghasilkan 4 file CSV
+- **Output**: Menjalankan kelima script di atas dan menghasilkan 6 file CSV
 
 ## Cara Penggunaan
 
@@ -93,6 +142,7 @@ python export_users.py
 python export_student_grades.py
 python export_difficulty_ratings.py
 python export_course_ratings.py
+python export_card_activities.py
 ```
 
 ### Menjalankan Semua Script Sekaligus
@@ -122,6 +172,8 @@ Setiap script akan menghasilkan file CSV dengan format nama:
 - `export_student_grades_[YYYYMMDD_HHMMSS].csv`
 - `export_difficulty_ratings_[YYYYMMDD_HHMMSS].csv`
 - `export_course_ratings_[YYYYMMDD_HHMMSS].csv`
+- `export_card_activities_[YYYYMMDD_HHMMSS].csv`
+- `export_card_movements_[YYYYMMDD_HHMMSS].csv`
 
 Timestamp pada nama file menunjukkan waktu pembuatan file.
 
@@ -147,6 +199,17 @@ Setiap script akan menampilkan statistik ringkas di terminal:
    - Distribusi rating (1-5 bintang)
    - Rata-rata rating per mata kuliah
    - Analisis rating berdasarkan difficulty
+5. **export_card_activities.py**:
+   - Total kartu
+   - Jumlah user
+   - Jumlah mata kuliah
+   - Distribusi kartu per list
+   - Distribusi difficulty level
+   - Top 10 user dengan kartu terbanyak
+   - Total perpindahan kartu
+   - Distribusi perpindahan per kolom tujuan
+   - Hari paling aktif
+   - Top 10 user dengan perpindahan terbanyak
 
 ## Catatan
 
@@ -154,4 +217,6 @@ Setiap script akan menampilkan statistik ringkas di terminal:
 - Untuk data nilai, hanya card yang memiliki nilai post-test yang akan diekspor
 - Untuk data difficulty, hanya card yang memiliki pengaturan difficulty yang akan diekspor
 - Untuk data rating, hanya card yang memiliki rating (> 0) yang akan diekspor
+- Untuk data aktivitas kartu, filter berdasarkan tanggal 20 Agustus - 25 November 2024
+- Data perpindahan kartu diambil dari array `column_movements` pada setiap card
 - Nama mata kuliah diekstrak dari judul card dengan format "Nama MK [Detail Tugas]"
