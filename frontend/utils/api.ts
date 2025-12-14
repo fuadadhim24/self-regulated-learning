@@ -276,26 +276,75 @@ export async function createCardMovement(
 
 // Chatbot Card Movement Functions
 export async function triggerChatbotCardMovement(
-  boardId: string,
+  userId: string,
   cardId: string,
   fromColumn: string,
-  toColumn: string
+  toColumn: string,
+  title?: string,
+  subtitle?: string,
+  difficulty?: string,
+  priority?: string,
+  learningStrategy?: string,
+  preTestGrade?: number,
+  postTestGrade?: number,
+  rating?: number,
+  mode: "notification" | "asking" = "notification"
 ) {
   const n8nWebhookUrl =
     process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL ||
     "http://localhost:5678/webhook/d71e87c6-e1a3-4205-9dcc-81c8ce50f3bb";
 
   try {
+    // Create optimized payload based on mode
+    let payload: any;
+
+    if (mode === "notification") {
+      // Simplified payload for notification mode to reduce size
+      payload = {
+        userId,
+        cardId,
+        fromColumn,
+        toColumn,
+        type: "card_movement",
+        mode: "notification",
+        // Only include essential data for notifications
+        cardData: {
+          title: title || "",
+          subtitle: subtitle || "",
+          difficulty: difficulty || "medium",
+          priority: priority || "medium",
+          learningStrategy: learningStrategy || "",
+          preTestGrade: preTestGrade || null,
+          postTestGrade: postTestGrade || null,
+          rating: rating || null,
+        },
+      };
+    } else {
+      // Full payload for asking mode
+      payload = {
+        userId,
+        cardId,
+        fromColumn,
+        toColumn,
+        type: "card_movement",
+        mode: "asking",
+        cardData: {
+          title,
+          subtitle,
+          difficulty,
+          priority,
+          learningStrategy: learningStrategy,
+          preTestGrade: preTestGrade,
+          postTestGrade: postTestGrade,
+          rating,
+        },
+      };
+    }
+
     return fetch(n8nWebhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        board_id: boardId,
-        card_id: cardId,
-        from_column: fromColumn,
-        to_column: toColumn,
-        type: "card_movement",
-      }),
+      body: JSON.stringify(payload),
     });
   } catch (error) {
     console.error("Error triggering chatbot card movement:", error);

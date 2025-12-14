@@ -153,9 +153,8 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
         process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL ||
         "http://localhost:5678/webhook/d71e87c6-e1a3-4205-9dcc-81c8ce50f3bb";
 
-      // Add timeout to fetch request
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
 
       try {
         const res = await fetch(n8nWebhookUrl, {
@@ -167,8 +166,8 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
             message: input,
             userId,
             userName,
-            chatId: "68a451b666cd00b1c3e9d958", // ID chat yang tetap
             type: "message",
+            mode: "asking", // Use asking mode for direct user messages
           }),
           signal: controller.signal,
         });
@@ -285,11 +284,22 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
       if (!isOpen) {
         setHasNewMessage(true);
         setUnreadCount((prev) => prev + 1);
-        setNotificationMessage(
+
+        // Create a more informative notification message based on card movement
+        let notificationText = "Card movement detected";
+        if (
+          message.type === "card_movement" &&
           typeof message.text === "string"
-            ? message.text
-            : "Card movement detected"
-        );
+        ) {
+          // Extract a brief summary for the notification
+          if (message.text.length > 100) {
+            notificationText = message.text.substring(0, 100) + "...";
+          } else {
+            notificationText = message.text;
+          }
+        }
+
+        setNotificationMessage(notificationText);
         setNotificationVisible(true);
 
         // Auto-hide notification after 5 seconds

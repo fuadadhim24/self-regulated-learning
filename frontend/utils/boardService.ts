@@ -1,5 +1,10 @@
 import type { ListType, Card } from "@/types";
-import { getBoard, updateBoard, triggerChatbotCardMovement } from "@/utils/api";
+import {
+  getBoard,
+  updateBoard,
+  triggerChatbotCardMovement,
+  getCurrentUser,
+} from "@/utils/api";
 import { NextRouter } from "next/router";
 
 export async function updateBoardState(
@@ -149,12 +154,29 @@ export async function moveCard(
         const destColumnName =
           lists.find((list) => list.id === destList.id)?.title || destList.id;
 
+        // Get current user ID
+        const user = await getCurrentUser();
+        const userId = user._id || user.username;
+
         // Call triggerChatbotCardMovement and handle the response
         triggerChatbotCardMovement(
-          boardId,
+          userId,
           movedCard.id,
           sourceColumnName,
-          destColumnName
+          destColumnName,
+          movedCard.title,
+          movedCard.sub_title,
+          movedCard.difficulty,
+          movedCard.priority,
+          movedCard.learning_strategy,
+          movedCard.pre_test_grade
+            ? Number(movedCard.pre_test_grade)
+            : undefined,
+          movedCard.post_test_grade
+            ? Number(movedCard.post_test_grade)
+            : undefined,
+          movedCard.rating,
+          "notification" // Use notification mode for card movements
         )
           .then(async (response) => {
             if (response.ok) {
