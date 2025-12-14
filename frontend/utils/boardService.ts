@@ -138,7 +138,6 @@ export async function moveCard(
         },
       ];
 
-      // Trigger chatbot response (this will also record the movement in the backend)
       if (boardId) {
         console.log("Calling triggerChatbotCardMovement with:", {
           boardId,
@@ -147,18 +146,15 @@ export async function moveCard(
           toColumn: destList.id,
         });
 
-        // Get column names for better user experience
         const sourceColumnName =
           lists.find((list) => list.id === sourceList.id)?.title ||
           sourceList.id;
         const destColumnName =
           lists.find((list) => list.id === destList.id)?.title || destList.id;
 
-        // Get current user ID
         const user = await getCurrentUser();
         const userId = user._id || user.username;
 
-        // Call triggerChatbotCardMovement and handle the response
         triggerChatbotCardMovement(
           userId,
           movedCard.id,
@@ -176,7 +172,8 @@ export async function moveCard(
             ? Number(movedCard.post_test_grade)
             : undefined,
           movedCard.rating,
-          "notification" // Use notification mode for card movements
+          "notification",
+          false
         )
           .then(async (response) => {
             if (response.ok) {
@@ -219,7 +216,6 @@ export async function moveCard(
             console.error("Failed to trigger chatbot response:", error);
           });
 
-        // Call onCardMove callback if provided
         if (onCardMove) {
           onCardMove();
         }
@@ -229,7 +225,6 @@ export async function moveCard(
     }
   }
 
-  // Update board state in the background
   updateBoardState(boardId, updatedLists).catch((error) => {
     console.error("Failed to update board state:", error);
   });

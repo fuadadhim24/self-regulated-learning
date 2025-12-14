@@ -274,7 +274,6 @@ export async function createCardMovement(
   });
 }
 
-// Chatbot Card Movement Functions
 export async function triggerChatbotCardMovement(
   userId: string,
   cardId: string,
@@ -288,18 +287,17 @@ export async function triggerChatbotCardMovement(
   preTestGrade?: number,
   postTestGrade?: number,
   rating?: number,
-  mode: "notification" | "asking" = "notification"
+  mode: "notification" | "asking" = "notification",
+  deep: boolean = false
 ) {
   const n8nWebhookUrl =
     process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL ||
     "http://localhost:5678/webhook/d71e87c6-e1a3-4205-9dcc-81c8ce50f3bb";
 
   try {
-    // Create optimized payload based on mode
     let payload: any;
 
     if (mode === "notification") {
-      // Simplified payload for notification mode to reduce size
       payload = {
         userId,
         cardId,
@@ -307,7 +305,7 @@ export async function triggerChatbotCardMovement(
         toColumn,
         type: "card_movement",
         mode: "notification",
-        // Only include essential data for notifications
+        deep: deep, // Add deep context flag
         cardData: {
           title: title || "",
           subtitle: subtitle || "",
@@ -320,7 +318,6 @@ export async function triggerChatbotCardMovement(
         },
       };
     } else {
-      // Full payload for asking mode
       payload = {
         userId,
         cardId,
@@ -328,6 +325,7 @@ export async function triggerChatbotCardMovement(
         toColumn,
         type: "card_movement",
         mode: "asking",
+        deep: deep, // Add deep context flag
         cardData: {
           title,
           subtitle,
@@ -348,7 +346,6 @@ export async function triggerChatbotCardMovement(
     });
   } catch (error) {
     console.error("Error triggering chatbot card movement:", error);
-    // Return empty response as fallback
     return new Response(JSON.stringify({}), {
       status: 200,
       headers: { "Content-Type": "application/json" },

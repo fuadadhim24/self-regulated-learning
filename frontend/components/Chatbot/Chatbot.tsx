@@ -7,7 +7,7 @@ import {
   forwardRef,
   useImperativeHandle,
 } from "react";
-import { Send, X, MessageSquare, Bell, Sparkles } from "lucide-react";
+import { Send, X, MessageSquare, Bell, Sparkles, Brain } from "lucide-react";
 import { getCurrentUser } from "@/utils/api";
 
 interface ChatbotProps {
@@ -31,6 +31,7 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
   const [unreadCount, setUnreadCount] = useState(0);
   const [notificationVisible, setNotificationVisible] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState("");
+  const [deepContext, setDeepContext] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   type Task = {
@@ -103,9 +104,8 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
     setHasNewMessage(false);
     setUnreadCount(0);
     setNotificationVisible(false);
-    setMessages([]); // Clear messages when opening chat
+    setMessages([]);
 
-    // Welcome message
     try {
       const user = await getCurrentUser();
       const fullName =
@@ -126,7 +126,6 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
     }
   };
 
-  // Expose openChat function to parent component
   useImperativeHandle(ref, () => ({
     openChat: () => {
       setIsOpen(true);
@@ -167,7 +166,8 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
             userId,
             userName,
             type: "message",
-            mode: "asking", // Use asking mode for direct user messages
+            mode: "asking",
+            deep: deepContext,
           }),
           signal: controller.signal,
         });
@@ -178,7 +178,7 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
         if (!res.ok) throw new Error("Failed to get response");
 
         const data = await res.json();
-        console.log("Response data:", data); // Tambahkan log untuk debugging
+        console.log("Response data:", data);
         const rawText =
           data.output || data.reply || "I didn't understand that.";
         const formattedText = formatMessageText(rawText);
@@ -201,7 +201,7 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
             },
           ]);
         } else {
-          throw fetchError; // Re-throw to be caught by the outer catch
+          throw fetchError;
         }
       }
     } catch (error) {
@@ -230,13 +230,11 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
   useEffect(() => {
     if (forceOpen && !isOpen) {
       setIsOpen(true);
-      // Initialize chat with welcome message
       setHasNewMessage(false);
       setUnreadCount(0);
       setNotificationVisible(false);
-      setMessages([]); // Clear messages when opening chat
+      setMessages([]);
 
-      // Welcome message
       const initializeChat = async () => {
         try {
           const user = await getCurrentUser();
@@ -263,13 +261,11 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
     }
   }, [forceOpen, isOpen]);
 
-  // Listen for chatbot messages from card movements
   useEffect(() => {
     const handleChatbotMessage = (event: CustomEvent) => {
       const message = event.detail;
       console.log("Received chatbot message:", message);
 
-      // Add the message to the chat
       setMessages((prev) => [
         ...prev,
         {
@@ -280,18 +276,15 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
         },
       ]);
 
-      // Show notification if chat is not open
       if (!isOpen) {
         setHasNewMessage(true);
         setUnreadCount((prev) => prev + 1);
 
-        // Create a more informative notification message based on card movement
         let notificationText = "Card movement detected";
         if (
           message.type === "card_movement" &&
           typeof message.text === "string"
         ) {
-          // Extract a brief summary for the notification
           if (message.text.length > 100) {
             notificationText = message.text.substring(0, 100) + "...";
           } else {
@@ -302,14 +295,12 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
         setNotificationMessage(notificationText);
         setNotificationVisible(true);
 
-        // Auto-hide notification after 5 seconds
         setTimeout(() => {
           setNotificationVisible(false);
         }, 5000);
       }
     };
 
-    // Check for stored messages in localStorage
     const storedMessages = JSON.parse(
       localStorage.getItem("chatbotMessages") || "[]"
     );
@@ -326,17 +317,14 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
         ]);
       });
 
-      // Clear stored messages
       localStorage.removeItem("chatbotMessages");
     }
 
-    // Add event listener
     window.addEventListener(
       "chatbot-message",
       handleChatbotMessage as EventListener
     );
 
-    // Cleanup
     return () => {
       window.removeEventListener(
         "chatbot-message",
@@ -347,7 +335,6 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
 
   return (
     <div className="fixed bottom-6 right-6 z-[1000]">
-      {/* Notifikasi Chatbot */}
       {notificationVisible && (
         <div className="absolute bottom-16 right-0 bg-white dark:bg-slate-800 border border-blue-300 dark:border-blue-700 rounded-lg shadow-lg p-4 mb-2 w-72 animate-fadeIn">
           <div className="flex items-start">
@@ -385,7 +372,6 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
         </div>
       )}
 
-      {/* Tombol Chat */}
       <button
         onClick={toggleChat}
         className={`absolute bottom-0 right-0 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-all duration-200 hover:scale-105 ${
@@ -409,7 +395,6 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
         )}
       </button>
 
-      {/* Jendela Chat */}
       <div
         className={`bg-white dark:bg-slate-800 rounded-lg shadow-xl transition-all duration-300 overflow-hidden ${
           isOpen
@@ -423,17 +408,47 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
           visibility: isOpen ? "visible" : "hidden",
         }}
       >
-        {/* Header */}
         {isOpen && (
-          <div className="bg-blue-600 text-white px-4 py-3 flex justify-between items-center">
-            <span className="font-medium">Learning Assistant</span>
-            <button onClick={toggleChat} className="hover:text-blue-100">
-              <X size={20} />
-            </button>
+          <div className="bg-blue-600 text-white px-4 py-3 flex flex-col">
+            <div className="flex justify-between items-center">
+              <span className="font-medium">Learning Assistant</span>
+              <button onClick={toggleChat} className="hover:text-blue-100">
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between mt-2 text-xs">
+              <div className="flex items-center">
+                <Brain size={14} className="mr-1" />
+                <span>Analisis Mendalam</span>
+              </div>
+              <div className="relative inline-block w-10 h-5">
+                <input
+                  type="checkbox"
+                  className="sr-only"
+                  id="deep-context-toggle"
+                  checked={deepContext}
+                  onChange={() => setDeepContext(!deepContext)}
+                />
+                <label
+                  htmlFor="deep-context-toggle"
+                  className={`absolute cursor-pointer top-0 left-0 right-0 bottom-0 transition-colors duration-200 rounded-full ${
+                    deepContext ? "bg-blue-400" : "bg-gray-400"
+                  }`}
+                >
+                  <span
+                    className={`absolute h-4 w-4 bg-white rounded-full transition-transform duration-200 ${
+                      deepContext
+                        ? "transform translate-x-5"
+                        : "transform translate-x-0.5"
+                    } top-0.5`}
+                  ></span>
+                </label>
+              </div>
+            </div>
           </div>
         )}
 
-        {/* Pesan */}
         {isOpen && (
           <div className="h-80 overflow-y-auto p-4 bg-slate-50 dark:bg-slate-900">
             {messages.length === 0 ? (
@@ -485,9 +500,17 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
           </div>
         )}
 
-        {/* Input */}
         {isOpen && (
           <div className="border-t border-slate-200 dark:border-slate-700 p-3 bg-white dark:bg-slate-800">
+            <div className="mb-2 text-xs text-slate-500 dark:text-slate-400 flex items-center">
+              <Brain size={12} className="mr-1" />
+              <span>
+                Mode:{" "}
+                {deepContext
+                  ? "Analisis Mendalam (dengan pola masa lalu)"
+                  : "Cepat (tanpa riwayat)"}
+              </span>
+            </div>
             <div className="flex">
               <input
                 type="text"

@@ -1,12 +1,5 @@
 import { triggerChatbotCardMovement } from "./api";
 
-/**
- * Fungsi untuk menguji respons chatbot untuk berbagai skenario perpindahan card
- * Ini akan membantu memvalidasi bahwa sistem prompting yang baru berfungsi dengan baik
- * dengan fokus pada perpindahan card spesifik tanpa merangkum semua data
- */
-
-// Skenario 1: Perpindahan dari Planning ke Monitoring dengan materi critical dan hard
 export async function testPlanningToMonitoringCriticalHard() {
   console.log(
     "Testing Planning to Monitoring movement with critical priority and hard difficulty..."
@@ -26,7 +19,8 @@ export async function testPlanningToMonitoringCriticalHard() {
       30,
       undefined,
       undefined,
-      "notification"
+      "notification",
+      false
     );
 
     const data = await response.json();
@@ -41,7 +35,6 @@ export async function testPlanningToMonitoringCriticalHard() {
   }
 }
 
-// Skenario 2: Perpindahan dari Planning ke Monitoring dengan materi expert dan critical
 export async function testPlanningToMonitoringExpertCritical() {
   console.log(
     "Testing Planning to Monitoring movement with expert difficulty and critical priority..."
@@ -61,7 +54,8 @@ export async function testPlanningToMonitoringExpertCritical() {
       20,
       undefined,
       undefined,
-      "notification"
+      "notification",
+      false
     );
 
     const data = await response.json();
@@ -76,7 +70,6 @@ export async function testPlanningToMonitoringExpertCritical() {
   }
 }
 
-// Skenario 3: Perpindahan dari Monitoring ke Controlling dengan pre-test sedang
 export async function testMonitoringToControllingMediumPreTest() {
   console.log(
     "Testing Monitoring to Controlling movement with medium pre-test grade..."
@@ -96,7 +89,8 @@ export async function testMonitoringToControllingMediumPreTest() {
       50,
       undefined,
       undefined,
-      "notification"
+      "notification",
+      false
     );
 
     const data = await response.json();
@@ -111,7 +105,6 @@ export async function testMonitoringToControllingMediumPreTest() {
   }
 }
 
-// Skenario 4: Perpindahan dari Controlling ke Reflection tanpa post-test
 export async function testControllingToReflectionNoPostTest() {
   console.log(
     "Testing Controlling to Reflection movement without post-test grade..."
@@ -131,7 +124,8 @@ export async function testControllingToReflectionNoPostTest() {
       undefined,
       undefined,
       undefined,
-      "notification"
+      "notification",
+      false
     );
 
     const data = await response.json();
@@ -146,7 +140,6 @@ export async function testControllingToReflectionNoPostTest() {
   }
 }
 
-// Skenario 5: Perpindahan dari Controlling ke Reflection dengan post-test rendah
 export async function testControllingToReflectionLowPostTest() {
   console.log(
     "Testing Controlling to Reflection movement with low post-test grade..."
@@ -166,7 +159,8 @@ export async function testControllingToReflectionLowPostTest() {
       40,
       50,
       undefined,
-      "notification"
+      "notification",
+      false
     );
 
     const data = await response.json();
@@ -181,7 +175,6 @@ export async function testControllingToReflectionLowPostTest() {
   }
 }
 
-// Skenario 6: Perpindahan dari Controlling ke Reflection tanpa nilai test tapi dengan rating
 export async function testControllingToReflectionWithRating() {
   console.log(
     "Testing Controlling to Reflection movement with rating but no test grades..."
@@ -201,7 +194,8 @@ export async function testControllingToReflectionWithRating() {
       undefined,
       undefined,
       3,
-      "notification"
+      "notification",
+      false
     );
 
     const data = await response.json();
@@ -216,7 +210,6 @@ export async function testControllingToReflectionWithRating() {
   }
 }
 
-// Skenario 7: Perpindahan dengan peningkatan signifikan (pre-test ke post-test)
 export async function testSignificantImprovement() {
   console.log(
     "Testing movement with significant improvement from pre-test to post-test..."
@@ -236,7 +229,8 @@ export async function testSignificantImprovement() {
       30,
       70,
       undefined,
-      "notification"
+      "notification",
+      false
     );
 
     const data = await response.json();
@@ -248,7 +242,6 @@ export async function testSignificantImprovement() {
   }
 }
 
-// Skenario 8: Perpindahan dengan peningkatan minimal (pre-test ke post-test)
 export async function testMinimalImprovement() {
   console.log(
     "Testing movement with minimal improvement from pre-test to post-test..."
@@ -268,7 +261,8 @@ export async function testMinimalImprovement() {
       20,
       25,
       undefined,
-      "notification"
+      "notification",
+      false
     );
 
     const data = await response.json();
@@ -280,7 +274,6 @@ export async function testMinimalImprovement() {
   }
 }
 
-// Fungsi untuk menjalankan semua tes
 export async function runAllTests() {
   console.log("Running all card movement scenario tests...");
 
