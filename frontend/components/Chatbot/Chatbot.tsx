@@ -24,7 +24,13 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
 ) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<
-    { sender: string; text: React.ReactNode; timestamp?: Date; type?: string }[]
+    {
+      sender: string;
+      text: React.ReactNode;
+      timestamp?: Date;
+      type?: string;
+      isTyping?: boolean;
+    }[]
   >([]);
   const [input, setInput] = useState("");
   const [hasNewMessage, setHasNewMessage] = useState(false);
@@ -32,6 +38,7 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
   const [notificationVisible, setNotificationVisible] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState("");
   const [deepContext, setDeepContext] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   type Task = {
@@ -72,7 +79,7 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
             `- *${task.title}* – ${task.course} (Prioritas: ${task.priority})`
           );
         });
-        lines.push(""); // newline antar section
+        lines.push("");
       });
 
       text = lines.join("\n");
@@ -93,6 +100,44 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
     });
   }
 
+  const typeMessage = (
+    messageIndex: number,
+    fullText: string,
+    callback: () => void
+  ) => {
+    let currentIndex = 0;
+    const typingSpeed = 20;
+
+    const interval = setInterval(() => {
+      if (currentIndex <= fullText.length) {
+        const partialText = fullText.substring(0, currentIndex);
+
+        setMessages((prev) => {
+          if (messageIndex >= prev.length) {
+            clearInterval(interval);
+            callback();
+            return prev;
+          }
+
+          const newMessages = [...prev];
+          if (newMessages[messageIndex]) {
+            newMessages[messageIndex] = {
+              ...newMessages[messageIndex],
+              text: formatMessageText(partialText),
+              isTyping: currentIndex < fullText.length,
+            };
+          }
+          return newMessages;
+        });
+
+        currentIndex++;
+      } else {
+        clearInterval(interval);
+        callback();
+      }
+    }, typingSpeed);
+  };
+
   const toggleChat = async () => {
     setIsOpen(!isOpen);
     if (!isOpen) {
@@ -104,32 +149,36 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
     setHasNewMessage(false);
     setUnreadCount(0);
     setNotificationVisible(false);
-    setMessages([]);
 
-    try {
-      const user = await getCurrentUser();
-      const fullName =
-        [user.first_name, user.last_name].filter(Boolean).join(" ") || "there";
-      setMessages((prev) => [
-        ...prev,
-        {
-          sender: "bot",
-          text: `Hello ${fullName}! Bagaimana saya dapat membantu anda hari ini? 😊`,
-        },
-      ]);
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      setMessages((prev) => [
-        ...prev,
-        { sender: "bot", text: "Hello! How can I assist you today?" },
-      ]);
+    if (messages.length === 0) {
+      try {
+        const user = await getCurrentUser();
+        const fullName =
+          [user.first_name, user.last_name].filter(Boolean).join(" ") ||
+          "there";
+        setMessages((prev) => [
+          ...prev,
+          {
+            sender: "bot",
+            text: `Hello ${fullName}! Bagaimana saya dapat membantu anda hari ini? 😊`,
+          },
+        ]);
+      } catch (error) {
+        console.error("Error fetching user:", error);
+        setMessages((prev) => [
+          ...prev,
+          { sender: "bot", text: "Hello! How can I assist you today?" },
+        ]);
+      }
     }
   };
 
   useImperativeHandle(ref, () => ({
     openChat: () => {
       setIsOpen(true);
-      openChatInternal();
+      if (messages.length === 0) {
+        openChatInternal();
+      }
     },
   }));
 
@@ -139,6 +188,7 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
     const userMessage = { sender: "user", text: input };
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
+    setIsLoading(true);
 
     try {
       const user = await getCurrentUser();
@@ -153,7 +203,7 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
         "http://localhost:5678/webhook/d71e87c6-e1a3-4205-9dcc-81c8ce50f3bb";
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000);
+      const timeoutId = setTimeout(() => controller.abort(), 120000);
 
       try {
         const res = await fetch(n8nWebhookUrl, {
@@ -181,38 +231,75 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
         console.log("Response data:", data);
         const rawText =
           data.output || data.reply || "I didn't understand that.";
-        const formattedText = formatMessageText(rawText);
 
-        const botMessage = {
-          sender: "bot",
-          text: formattedText,
-          timestamp: new Date(),
-        };
-        setMessages((prev) => [...prev, botMessage]);
+        setMessages((prev) => {
+          const newMessages = [
+            ...prev,
+            {
+              sender: "bot",
+              text: "",
+              timestamp: new Date(),
+              isTyping: true,
+            },
+          ];
+
+          const messageIndex = newMessages.length - 1;
+          typeMessage(messageIndex, rawText, () => {
+            setIsLoading(false);
+          });
+
+          return newMessages;
+        });
       } catch (fetchError) {
         clearTimeout(timeoutId);
         if (fetchError instanceof Error && fetchError.name === "AbortError") {
           console.error("Request timeout:", fetchError);
-          setMessages((prev) => [
-            ...prev,
-            {
-              sender: "bot",
-              text: "Sorry, the request took too long. Please try again.",
-            },
-          ]);
+          const errorMessage =
+            "Sorry, the request took too long. Please try again.";
+          setMessages((prev) => {
+            const newMessages = [
+              ...prev,
+              {
+                sender: "bot",
+                text: "",
+                timestamp: new Date(),
+                isTyping: true,
+              },
+            ];
+
+            const messageIndex = newMessages.length - 1;
+            typeMessage(messageIndex, errorMessage, () => {
+              setIsLoading(false);
+            });
+
+            return newMessages;
+          });
         } else {
           throw fetchError;
         }
       }
     } catch (error) {
       console.error("Chat error:", error);
-      setMessages((prev) => [
-        ...prev,
-        {
-          sender: "bot",
-          text: "Sorry, I can't respond right now. Please check if the n8n server is running.",
-        },
-      ]);
+      const errorMessage =
+        "Sorry, I can't respond right now. Please check if the n8n server is running.";
+      setMessages((prev) => {
+        const newMessages = [
+          ...prev,
+          {
+            sender: "bot",
+            text: "",
+            timestamp: new Date(),
+            isTyping: true,
+          },
+        ];
+
+        const messageIndex = newMessages.length - 1;
+        typeMessage(messageIndex, errorMessage, () => {
+          setIsLoading(false);
+        });
+
+        return newMessages;
+      });
     }
   };
 
@@ -226,55 +313,90 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
     }
   }, [messages]);
 
-  // Handle forceOpen prop
   useEffect(() => {
     if (forceOpen && !isOpen) {
       setIsOpen(true);
       setHasNewMessage(false);
       setUnreadCount(0);
       setNotificationVisible(false);
-      setMessages([]);
 
-      const initializeChat = async () => {
-        try {
-          const user = await getCurrentUser();
-          const fullName =
-            [user.first_name, user.last_name].filter(Boolean).join(" ") ||
-            "there";
-          setMessages((prev) => [
-            ...prev,
-            {
-              sender: "bot",
-              text: `Hello ${fullName}! Bagaimana saya dapat membantu anda hari ini? 😊`,
-            },
-          ]);
-        } catch (error) {
-          console.error("Error fetching user:", error);
-          setMessages((prev) => [
-            ...prev,
-            { sender: "bot", text: "Hello! How can I assist you today?" },
-          ]);
-        }
-      };
+      if (messages.length === 0) {
+        const initializeChat = async () => {
+          try {
+            const user = await getCurrentUser();
+            const fullName =
+              [user.first_name, user.last_name].filter(Boolean).join(" ") ||
+              "there";
+            setMessages((prev) => [
+              ...prev,
+              {
+                sender: "bot",
+                text: `Hello ${fullName}! Bagaimana saya dapat membantu anda hari ini? 😊`,
+              },
+            ]);
+          } catch (error) {
+            console.error("Error fetching user:", error);
+            setMessages((prev) => [
+              ...prev,
+              { sender: "bot", text: "Hello! How can I assist you today?" },
+            ]);
+          }
+        };
 
-      initializeChat();
+        initializeChat();
+      }
     }
-  }, [forceOpen, isOpen]);
+  }, [forceOpen, isOpen, messages.length]);
 
   useEffect(() => {
     const handleChatbotMessage = (event: CustomEvent) => {
       const message = event.detail;
       console.log("Received chatbot message:", message);
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          sender: message.sender,
-          text: formatMessageText(message.text),
-          timestamp: new Date(message.timestamp),
-          type: message.type,
-        },
-      ]);
+      const messageId = `${message.type}-${message.timestamp}-${
+        typeof message.text === "string"
+          ? message.text.substring(0, 50)
+          : JSON.stringify(message.text).substring(0, 50)
+      }`;
+
+      setMessages((prev) => {
+        const isDuplicate = prev.some((msg) => {
+          const existingMessageId = `${msg.type}-${msg.timestamp}-${
+            typeof msg.text === "string"
+              ? msg.text.toString().substring(0, 50)
+              : JSON.stringify(msg.text).substring(0, 50)
+          }`;
+          return existingMessageId === messageId;
+        });
+
+        if (isDuplicate) {
+          console.log("Duplicate message detected, skipping:", message);
+          return prev;
+        }
+
+        const newMessages = [
+          ...prev,
+          {
+            sender: message.sender,
+            text: "",
+            timestamp: new Date(message.timestamp),
+            type: message.type,
+            isTyping: true,
+          },
+        ];
+
+        const messageIndex = newMessages.length - 1;
+        const messageText =
+          typeof message.text === "string"
+            ? message.text
+            : JSON.stringify(message.text);
+
+        setTimeout(() => {
+          typeMessage(messageIndex, messageText, () => {});
+        }, 100);
+
+        return newMessages;
+      });
 
       if (!isOpen) {
         setHasNewMessage(true);
@@ -301,25 +423,6 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
       }
     };
 
-    const storedMessages = JSON.parse(
-      localStorage.getItem("chatbotMessages") || "[]"
-    );
-    if (storedMessages.length > 0) {
-      storedMessages.forEach((message: any) => {
-        setMessages((prev) => [
-          ...prev,
-          {
-            sender: message.sender,
-            text: formatMessageText(message.text),
-            timestamp: new Date(message.timestamp),
-            type: message.type,
-          },
-        ]);
-      });
-
-      localStorage.removeItem("chatbotMessages");
-    }
-
     window.addEventListener(
       "chatbot-message",
       handleChatbotMessage as EventListener
@@ -331,7 +434,7 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
         handleChatbotMessage as EventListener
       );
     };
-  }, [isOpen]);
+  }, [isOpen, formatMessageText]);
 
   return (
     <div className="fixed bottom-6 right-6 z-[1000]">
@@ -412,7 +515,11 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
           <div className="bg-blue-600 text-white px-4 py-3 flex flex-col">
             <div className="flex justify-between items-center">
               <span className="font-medium">Learning Assistant</span>
-              <button onClick={toggleChat} className="hover:text-blue-100">
+              <button
+                onClick={() => setIsOpen(false)}
+                className="hover:text-blue-100"
+                aria-label="Close chat"
+              >
                 <X size={20} />
               </button>
             </div>
@@ -495,6 +602,18 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
                   )}
                 </div>
               ))
+            )}
+            {isLoading && (
+              <div className="flex items-center my-2">
+                <div className="flex space-x-1 mr-2">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce delay-75"></div>
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce delay-150"></div>
+                </div>
+                <span className="text-xs text-slate-500 dark:text-slate-400">
+                  Mengetik... {deepContext && "(estimasi 25-120 detik)"}
+                </span>
+              </div>
             )}
             <div ref={messagesEndRef} />
           </div>

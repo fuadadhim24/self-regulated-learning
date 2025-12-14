@@ -108,27 +108,22 @@ export async function moveCard(
   const movedCard = sourceList.cards[sourceIndex];
   if (!movedCard) return;
 
-  // Remove card from source list
   sourceList.cards.splice(sourceIndex, 1);
 
-  // Add card to destination list
   if (sourceList.id === destList.id) {
     sourceList.cards.splice(destinationIndex, 0, movedCard);
   } else {
     destList.cards.splice(destinationIndex, 0, movedCard);
   }
 
-  // Update lists state immediately for smooth UI
   const updatedLists = [...lists];
   updatedLists[sourceListIndex] = sourceList;
   updatedLists[destListIndex] = destList;
   setLists(updatedLists);
 
-  // If moving between columns, record the movement and trigger chatbot response
   if (sourceList.id !== destList.id) {
     try {
       const now = new Date().toISOString();
-      // Update local state first
       movedCard.column_movements = [
         ...(movedCard.column_movements || []),
         {
@@ -181,7 +176,6 @@ export async function moveCard(
                 const data = await response.json();
                 console.log("Chatbot response:", data);
 
-                // Store the response in localStorage for the chatbot to pick up
                 if (data.output || data.reply) {
                   const chatbotMessage = {
                     sender: "bot",
@@ -190,17 +184,6 @@ export async function moveCard(
                     type: "card_movement",
                   };
 
-                  // Store in localStorage
-                  const existingMessages = JSON.parse(
-                    localStorage.getItem("chatbotMessages") || "[]"
-                  );
-                  existingMessages.push(chatbotMessage);
-                  localStorage.setItem(
-                    "chatbotMessages",
-                    JSON.stringify(existingMessages)
-                  );
-
-                  // Dispatch a custom event to notify the chatbot component
                   window.dispatchEvent(
                     new CustomEvent("chatbot-message", {
                       detail: chatbotMessage,
