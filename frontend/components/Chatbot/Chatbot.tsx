@@ -112,7 +112,7 @@ export default function Chatbot() {
       console.log(input);
 
       const apiUrl =
-        process.env.BACKEND_PUBLIC_API_URL ||
+        process.env.NEXT_PUBLIC_BACKEND_API_URL ||
         "https://s5vl905j-5001.asse.devtunnels.ms/";
       const res = await fetch(`${apiUrl}/api/chatbot/message`, {
         method: "POST",

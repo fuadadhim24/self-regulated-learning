@@ -376,7 +376,7 @@ export default function UserDetails({ username, onClose }: UserDetailsProps) {
         for (const card of list.cards) {
           try {
             const response = await fetch(
-              `${process.env.BACKEND_PUBLIC_API_URL}/api/study-sessions/card/${card.id}`,
+              `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/study-sessions/card/${card.id}`,
               {
                 headers: {
                   Authorization: `Bearer ${token}`,

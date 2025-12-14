@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 import { authorizedFetch, getAccessToken, setAccessToken } from "./auth";
 

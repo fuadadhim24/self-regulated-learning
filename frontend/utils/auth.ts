@@ -1,5 +1,5 @@
 const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.NEXT_PUBLIC_BACKEND_API_URL ||
   "https://s5vl905j-5001.asse.devtunnels.ms/"; // adjust as needed
 
 let accessToken: string | null = null;

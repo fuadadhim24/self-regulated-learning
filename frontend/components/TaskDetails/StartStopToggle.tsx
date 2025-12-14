@@ -59,7 +59,7 @@ export default function StartStopToggle({
       if (!token) return;
 
       const response = await fetch(
-        `${process.env.BACKEND_PUBLIC_API_URL}/api/study-sessions/card/${cardId}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/study-sessions/card/${cardId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -103,7 +103,7 @@ export default function StartStopToggle({
       if (!token) return;
 
       const response = await fetch(
-        `${process.env.BACKEND_PUBLIC_API_URL}/api/study-sessions/card/${cardId}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/study-sessions/card/${cardId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -131,7 +131,7 @@ export default function StartStopToggle({
       if (!isToggleOn) {
         // Start new session
         const response = await fetch(
-          `${process.env.BACKEND_PUBLIC_API_URL}/api/study-sessions/start`,
+          `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/study-sessions/start`,
           {
             method: "POST",
             headers: {
@@ -155,7 +155,7 @@ export default function StartStopToggle({
         // End current session
         if (currentSessionId) {
           const response = await fetch(
-            `${process.env.BACKEND_PUBLIC_API_URL}/api/study-sessions/end`,
+            `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/study-sessions/end`,
             {
               method: "POST",
               headers: {

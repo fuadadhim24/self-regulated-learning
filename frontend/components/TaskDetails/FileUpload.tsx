@@ -54,10 +54,10 @@ export default function FileUpload({
 
       console.log(
         "Making request to:",
-        `${process.env.BACKEND_PUBLIC_API_URL}/api/attachments/card/${cardId}`
+        `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/attachments/card/${cardId}`
       );
       const response = await fetch(
-        `${process.env.BACKEND_PUBLIC_API_URL}/api/attachments/card/${cardId}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/attachments/card/${cardId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -129,7 +129,7 @@ export default function FileUpload({
       formData.append("card_id", cardId);
 
       const response = await fetch(
-        `${process.env.BACKEND_PUBLIC_API_URL}/api/attachments/upload`,
+        `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/attachments/upload`,
         {
           method: "POST",
           headers: {
@@ -171,7 +171,7 @@ export default function FileUpload({
       }
 
       const response = await fetch(
-        `${process.env.BACKEND_PUBLIC_API_URL}/api/attachments/${attachmentId}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/attachments/${attachmentId}`,
         {
           method: "DELETE",
           headers: {
@@ -203,7 +203,7 @@ export default function FileUpload({
       }
 
       const response = await fetch(
-        `${process.env.BACKEND_PUBLIC_API_URL}/api/attachments/download/${attachment._id}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/attachments/download/${attachment._id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
