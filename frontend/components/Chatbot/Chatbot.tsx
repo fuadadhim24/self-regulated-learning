@@ -76,7 +76,7 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
         lines.push(`${status}:`);
         tasks.forEach((task) => {
           lines.push(
-            `- *${task.title}* – ${task.course} (Prioritas: ${task.priority})`
+            `- *${task.title}* – ${task.course} (Priority: ${task.priority})`
           );
         });
         lines.push("");
@@ -160,7 +160,7 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
           ...prev,
           {
             sender: "bot",
-            text: `Hello ${fullName}! Bagaimana saya dapat membantu anda hari ini? 😊`,
+            text: `Hello ${fullName}! How can I help you today? 😊`,
           },
         ]);
       } catch (error) {
@@ -331,7 +331,7 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
               ...prev,
               {
                 sender: "bot",
-                text: `Hello ${fullName}! Bagaimana saya dapat membantu anda hari ini? 😊`,
+                text: `Hello ${fullName}! How can I help you today? 😊`,
               },
             ]);
           } catch (error) {
@@ -353,21 +353,19 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
       const message = event.detail;
       console.log("Received chatbot message:", message);
 
-      const messageId = `${message.type}-${message.timestamp}-${
-        typeof message.text === "string"
-          ? message.text.substring(0, 50)
-          : JSON.stringify(message.text).substring(0, 50)
-      }`;
-
       setMessages((prev) => {
-        const isDuplicate = prev.some((msg) => {
-          const existingMessageId = `${msg.type}-${msg.timestamp}-${
-            typeof msg.text === "string"
-              ? msg.text.toString().substring(0, 50)
-              : JSON.stringify(msg.text).substring(0, 50)
-          }`;
-          return existingMessageId === messageId;
-        });
+        // Check if we already have a message with the same timestamp and type
+        const isDuplicate = prev.some(
+          (msg) =>
+            msg.timestamp &&
+            message.timestamp &&
+            msg.type === message.type &&
+            msg.sender === message.sender &&
+            Math.abs(
+              new Date(msg.timestamp).getTime() -
+                new Date(message.timestamp).getTime()
+            ) < 1000
+        );
 
         if (isDuplicate) {
           console.log("Duplicate message detected, skipping:", message);
@@ -469,7 +467,7 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
               }}
               className="text-xs font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
             >
-              Lihat Pesan
+              View Message
             </button>
           </div>
         </div>
@@ -516,7 +514,11 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
             <div className="flex justify-between items-center">
               <span className="font-medium">Learning Assistant</span>
               <button
-                onClick={() => setIsOpen(false)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsOpen(false);
+                }}
                 className="hover:text-blue-100"
                 aria-label="Close chat"
               >
@@ -527,7 +529,7 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
             <div className="flex items-center justify-between mt-2 text-xs">
               <div className="flex items-center">
                 <Brain size={14} className="mr-1" />
-                <span>Analisis Mendalam</span>
+                <span>Deep Analysis</span>
               </div>
               <div className="relative inline-block w-10 h-5">
                 <input
@@ -574,7 +576,7 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
                   {msg.sender === "bot" && msg.type === "card_movement" && (
                     <div className="text-xs text-blue-500 dark:text-blue-400 mb-1 flex items-center">
                       <Sparkles size={12} className="mr-1" />
-                      <span>Tip Pembelajaran</span>
+                      <span>Learning Tip</span>
                     </div>
                   )}
                   <span
@@ -611,7 +613,7 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
                   <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce delay-150"></div>
                 </div>
                 <span className="text-xs text-slate-500 dark:text-slate-400">
-                  Mengetik... {deepContext && "(estimasi 25-120 detik)"}
+                  Typing... {deepContext && "(estimated 25-120 seconds)"}
                 </span>
               </div>
             )}
@@ -626,8 +628,8 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
               <span>
                 Mode:{" "}
                 {deepContext
-                  ? "Analisis Mendalam (dengan pola masa lalu)"
-                  : "Cepat (tanpa riwayat)"}
+                  ? "Deep Analysis (with past patterns)"
+                  : "Fast (without history)"}
               </span>
             </div>
             <div className="flex">
