@@ -28,10 +28,12 @@ export default function BoardContent({
   lists,
   setLists,
   boardId,
+  onCardMove,
 }: {
   lists: ListType[];
   setLists: React.Dispatch<React.SetStateAction<ListType[]>>;
   boardId: string | null;
+  onCardMove?: () => void;
 }) {
   const [selectedCard, setSelectedCard] = useState<{
     listId: string;
@@ -69,7 +71,8 @@ export default function BoardContent({
       source.index,
       destination.index,
       source.droppableId,
-      destination.droppableId
+      destination.droppableId,
+      onCardMove
     );
   };
 
@@ -81,6 +84,18 @@ export default function BoardContent({
       if (card) {
         setSelectedCard({ listId: source.droppableId, card });
       }
+
+      // Move the card after adding notes
+      moveCard(
+        lists,
+        setLists,
+        boardId,
+        source.index,
+        destination.index,
+        source.droppableId,
+        destination.droppableId,
+        onCardMove
+      );
     }
     setShowNotesAlert(false);
     setPendingMove(null);

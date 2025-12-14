@@ -1,15 +1,36 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { Send, X, MessageSquare } from "lucide-react";
+import {
+  useState,
+  useRef,
+  useEffect,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
+import { Send, X, MessageSquare, Bell, Sparkles } from "lucide-react";
 import { getCurrentUser } from "@/utils/api";
 
-export default function Chatbot() {
+interface ChatbotProps {
+  forceOpen?: boolean;
+}
+
+export interface ChatbotRef {
+  openChat: () => void;
+}
+
+export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
+  { forceOpen = false },
+  ref
+) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<
-    { sender: string; text: React.ReactNode }[]
+    { sender: string; text: React.ReactNode; timestamp?: Date; type?: string }[]
   >([]);
   const [input, setInput] = useState("");
+  const [hasNewMessage, setHasNewMessage] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notificationVisible, setNotificationVisible] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   type Task = {
@@ -74,27 +95,44 @@ export default function Chatbot() {
   const toggleChat = async () => {
     setIsOpen(!isOpen);
     if (!isOpen) {
-      try {
-        const user = await getCurrentUser();
-        const fullName =
-          [user.first_name, user.last_name].filter(Boolean).join(" ") ||
-          "there";
-        setMessages((prev) => [
-          ...prev,
-          {
-            sender: "bot",
-            text: `Hello ${fullName}! Bagaimana saya dapat membantu anda hari ini? 😊`,
-          },
-        ]);
-      } catch (error) {
-        console.error("Error fetching user:", error);
-        setMessages((prev) => [
-          ...prev,
-          { sender: "bot", text: "Hello! How can I assist you today?" },
-        ]);
-      }
+      openChatInternal();
     }
   };
+
+  const openChatInternal = async () => {
+    setHasNewMessage(false);
+    setUnreadCount(0);
+    setNotificationVisible(false);
+    setMessages([]); // Clear messages when opening chat
+
+    // Welcome message
+    try {
+      const user = await getCurrentUser();
+      const fullName =
+        [user.first_name, user.last_name].filter(Boolean).join(" ") || "there";
+      setMessages((prev) => [
+        ...prev,
+        {
+          sender: "bot",
+          text: `Hello ${fullName}! Bagaimana saya dapat membantu anda hari ini? 😊`,
+        },
+      ]);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      setMessages((prev) => [
+        ...prev,
+        { sender: "bot", text: "Hello! How can I assist you today?" },
+      ]);
+    }
+  };
+
+  // Expose openChat function to parent component
+  useImperativeHandle(ref, () => ({
+    openChat: () => {
+      setIsOpen(true);
+      openChatInternal();
+    },
+  }));
 
   const handleSendMessage = async () => {
     if (!input.trim()) return;
@@ -111,29 +149,70 @@ export default function Chatbot() {
         user.username;
       console.log(input);
 
-      const apiUrl =
-        process.env.NEXT_PUBLIC_BACKEND_API_URL ||
-        "https://s5vl905j-5001.asse.devtunnels.ms/";
-      const res = await fetch(`${apiUrl}/api/chatbot/message`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: input, userId, userName }),
-      });
-      console.log("Response status:", input, userId, userName, res.status);
+      const n8nWebhookUrl =
+        process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL ||
+        "http://localhost:5678/webhook/d71e87c6-e1a3-4205-9dcc-81c8ce50f3bb";
 
-      if (!res.ok) throw new Error("Failed to get response");
+      // Add timeout to fetch request
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
-      const data = await res.json();
-      const rawText = data.reply || "I didn't understand that.";
-      const formattedText = formatMessageText(rawText);
+      try {
+        const res = await fetch(n8nWebhookUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            message: input,
+            userId,
+            userName,
+            chatId: "68a451b666cd00b1c3e9d958", // ID chat yang tetap
+            type: "message",
+          }),
+          signal: controller.signal,
+        });
 
-      const botMessage = { sender: "bot", text: formattedText };
-      setMessages((prev) => [...prev, botMessage]);
+        clearTimeout(timeoutId);
+        console.log("Response status:", input, userId, userName, res.status);
+
+        if (!res.ok) throw new Error("Failed to get response");
+
+        const data = await res.json();
+        console.log("Response data:", data); // Tambahkan log untuk debugging
+        const rawText =
+          data.output || data.reply || "I didn't understand that.";
+        const formattedText = formatMessageText(rawText);
+
+        const botMessage = {
+          sender: "bot",
+          text: formattedText,
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, botMessage]);
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        if (fetchError instanceof Error && fetchError.name === "AbortError") {
+          console.error("Request timeout:", fetchError);
+          setMessages((prev) => [
+            ...prev,
+            {
+              sender: "bot",
+              text: "Sorry, the request took too long. Please try again.",
+            },
+          ]);
+        } else {
+          throw fetchError; // Re-throw to be caught by the outer catch
+        }
+      }
     } catch (error) {
       console.error("Chat error:", error);
       setMessages((prev) => [
         ...prev,
-        { sender: "bot", text: "Sorry, I can't respond right now." },
+        {
+          sender: "bot",
+          text: "Sorry, I can't respond right now. Please check if the n8n server is running.",
+        },
       ]);
     }
   };
@@ -148,8 +227,154 @@ export default function Chatbot() {
     }
   }, [messages]);
 
+  // Handle forceOpen prop
+  useEffect(() => {
+    if (forceOpen && !isOpen) {
+      setIsOpen(true);
+      // Initialize chat with welcome message
+      setHasNewMessage(false);
+      setUnreadCount(0);
+      setNotificationVisible(false);
+      setMessages([]); // Clear messages when opening chat
+
+      // Welcome message
+      const initializeChat = async () => {
+        try {
+          const user = await getCurrentUser();
+          const fullName =
+            [user.first_name, user.last_name].filter(Boolean).join(" ") ||
+            "there";
+          setMessages((prev) => [
+            ...prev,
+            {
+              sender: "bot",
+              text: `Hello ${fullName}! Bagaimana saya dapat membantu anda hari ini? 😊`,
+            },
+          ]);
+        } catch (error) {
+          console.error("Error fetching user:", error);
+          setMessages((prev) => [
+            ...prev,
+            { sender: "bot", text: "Hello! How can I assist you today?" },
+          ]);
+        }
+      };
+
+      initializeChat();
+    }
+  }, [forceOpen, isOpen]);
+
+  // Listen for chatbot messages from card movements
+  useEffect(() => {
+    const handleChatbotMessage = (event: CustomEvent) => {
+      const message = event.detail;
+      console.log("Received chatbot message:", message);
+
+      // Add the message to the chat
+      setMessages((prev) => [
+        ...prev,
+        {
+          sender: message.sender,
+          text: formatMessageText(message.text),
+          timestamp: new Date(message.timestamp),
+          type: message.type,
+        },
+      ]);
+
+      // Show notification if chat is not open
+      if (!isOpen) {
+        setHasNewMessage(true);
+        setUnreadCount((prev) => prev + 1);
+        setNotificationMessage(
+          typeof message.text === "string"
+            ? message.text
+            : "Card movement detected"
+        );
+        setNotificationVisible(true);
+
+        // Auto-hide notification after 5 seconds
+        setTimeout(() => {
+          setNotificationVisible(false);
+        }, 5000);
+      }
+    };
+
+    // Check for stored messages in localStorage
+    const storedMessages = JSON.parse(
+      localStorage.getItem("chatbotMessages") || "[]"
+    );
+    if (storedMessages.length > 0) {
+      storedMessages.forEach((message: any) => {
+        setMessages((prev) => [
+          ...prev,
+          {
+            sender: message.sender,
+            text: formatMessageText(message.text),
+            timestamp: new Date(message.timestamp),
+            type: message.type,
+          },
+        ]);
+      });
+
+      // Clear stored messages
+      localStorage.removeItem("chatbotMessages");
+    }
+
+    // Add event listener
+    window.addEventListener(
+      "chatbot-message",
+      handleChatbotMessage as EventListener
+    );
+
+    // Cleanup
+    return () => {
+      window.removeEventListener(
+        "chatbot-message",
+        handleChatbotMessage as EventListener
+      );
+    };
+  }, [isOpen]);
+
   return (
     <div className="fixed bottom-6 right-6 z-[1000]">
+      {/* Notifikasi Chatbot */}
+      {notificationVisible && (
+        <div className="absolute bottom-16 right-0 bg-white dark:bg-slate-800 border border-blue-300 dark:border-blue-700 rounded-lg shadow-lg p-4 mb-2 w-72 animate-fadeIn">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <div className="bg-blue-100 dark:bg-blue-900 p-2 rounded-full">
+                <Sparkles className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              </div>
+            </div>
+            <div className="ml-3 flex-1">
+              <p className="text-sm font-medium text-slate-900 dark:text-white">
+                Learning Assistant
+              </p>
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-300 line-clamp-2">
+                {notificationMessage}
+              </p>
+            </div>
+            <button
+              onClick={() => setNotificationVisible(false)}
+              className="ml-2 flex-shrink-0 text-slate-400 hover:text-slate-500 dark:hover:text-slate-300"
+            >
+              <X size={16} />
+            </button>
+          </div>
+          <div className="mt-3 flex">
+            <button
+              onClick={() => {
+                setNotificationVisible(false);
+                setIsOpen(true);
+              }}
+              className="text-xs font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+            >
+              Lihat Pesan
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Tombol Chat */}
       <button
         onClick={toggleChat}
@@ -160,7 +385,18 @@ export default function Chatbot() {
         }`}
         aria-label="Open chat"
       >
-        <MessageSquare size={24} />
+        {hasNewMessage ? (
+          <div className="relative">
+            <Bell size={24} />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
+          </div>
+        ) : (
+          <MessageSquare size={24} />
+        )}
       </button>
 
       {/* Jendela Chat */}
@@ -203,15 +439,35 @@ export default function Chatbot() {
                     msg.sender === "user" ? "text-right" : "text-left"
                   }`}
                 >
+                  {msg.sender === "bot" && msg.type === "card_movement" && (
+                    <div className="text-xs text-blue-500 dark:text-blue-400 mb-1 flex items-center">
+                      <Sparkles size={12} className="mr-1" />
+                      <span>Tip Pembelajaran</span>
+                    </div>
+                  )}
                   <span
                     className={`inline-block px-4 py-2 rounded-lg ${
                       msg.sender === "user"
                         ? "bg-blue-500 text-white"
+                        : msg.type === "card_movement"
+                        ? "bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800"
                         : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
                     }`}
                   >
                     {msg.text}
                   </span>
+                  {msg.timestamp && (
+                    <div
+                      className={`text-xs mt-1 text-slate-500 dark:text-slate-400 ${
+                        msg.sender === "user" ? "text-right" : "text-left"
+                      }`}
+                    >
+                      {msg.timestamp.toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </div>
+                  )}
                 </div>
               ))
             )}
@@ -243,4 +499,4 @@ export default function Chatbot() {
       </div>
     </div>
   );
-}
+});

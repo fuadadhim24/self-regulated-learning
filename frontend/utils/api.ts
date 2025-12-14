@@ -273,3 +273,64 @@ export async function createCardMovement(
     }),
   });
 }
+
+// Chatbot Card Movement Functions
+export async function triggerChatbotCardMovement(
+  boardId: string,
+  cardId: string,
+  fromColumn: string,
+  toColumn: string
+) {
+  const n8nWebhookUrl =
+    process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL ||
+    "http://localhost:5678/webhook/d71e87c6-e1a3-4205-9dcc-81c8ce50f3bb";
+
+  try {
+    return fetch(n8nWebhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        board_id: boardId,
+        card_id: cardId,
+        from_column: fromColumn,
+        to_column: toColumn,
+        type: "card_movement",
+      }),
+    });
+  } catch (error) {
+    console.error("Error triggering chatbot card movement:", error);
+    // Return empty response as fallback
+    return new Response(JSON.stringify({}), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+}
+
+// getChatbotHistory function removed since chatbot history is not stored in DB
+
+export async function getChatbotStats() {
+  const n8nWebhookUrl =
+    process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL ||
+    "http://localhost:5678/webhook/d71e87c6-e1a3-4205-9dcc-81c8ce50f3bb";
+
+  try {
+    // Use POST instead of GET for n8n webhook
+    const response = await fetch(n8nWebhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "stats",
+      }),
+    });
+
+    return response;
+  } catch (error) {
+    console.error("Error fetching chatbot stats:", error);
+    // Return empty object as fallback
+    return new Response(JSON.stringify({}), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+}
