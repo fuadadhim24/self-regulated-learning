@@ -22,9 +22,9 @@ app = Flask(__name__)
 
 # Configure CORS
 CORS(app, resources={
-    r"/*": {  # Allow all routes, not just /api/*
-        "origins": ["https://self-regulated-learning.vercel.app", "http://localhost:3000", "http://localhost:1213", "https://gamatutor.id", "https://self-regulated-learning-rose.vercel.app", "https://self-regulated-learning-production.up.railway.app","https://self-regulated-learning-mu.vercel.app"],
-        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  r"/*": {  # Allow all routes, not just /api/*
+      "origins": ["https://self-regulated-learning.vercel.app", "http://localhost:3001", "http://localhost:3000", "http://localhost:1213", "https://gamatutor.id", "https://self-regulated-learning-rose.vercel.app", "https://self-regulated-learning-production.up.railway.app","https://self-regulated-learning-mu.vercel.app","https://s5vl905j-3000.asse.devtunnels.ms"],
+      "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization", "Access-Control-Allow-Origin", "Access-Control-Allow-Headers", "Access-Control-Allow-Methods"],
         "expose_headers": ["Content-Type", "Authorization"],
         "supports_credentials": True,
@@ -82,12 +82,14 @@ def handle_all_before_requests():
         origin = request.headers.get("Origin")
 
         allowed_origins = [
+            "http://localhost:3001",
             "http://localhost:3000",
             "https://self-regulated-learning.vercel.app",
             "https://self-regulated-learning-rose.vercel.app",
             "https://gamatutor.id",
             "https://self-regulated-learning-production.up.railway.app",
-            "https://self-regulated-learning-mu.vercel.app"
+            "https://self-regulated-learning-mu.vercel.app",
+            "https://s5vl905j-3000.asse.devtunnels.ms",
         ]
 
         if origin in allowed_origins:
@@ -103,4 +105,5 @@ def handle_all_before_requests():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    # Run on a non‑standard port to avoid conflict with other services (e.g., AirTunes)
+    app.run(debug=True, host="0.0.0.0", port=5001)

@@ -59,8 +59,14 @@ def register():
 
 def login():
     try:
-        username = request.json.get("username")
-        password = request.json.get("password")
+        # Log incoming request for debugging
+        print("[DEBUG] Received login request headers:", dict(request.headers))
+        # Ensure JSON parsing even if content type is not set correctly
+        data = request.get_json(force=True, silent=True) or {}
+        print("[DEBUG] Received login request payload:", data)
+        username = data.get("username")
+        password = data.get("password")
+        print(f"[DEBUG] Login attempt - username: {username}, password: {password}")
 
         user = User.find_user_by_username(username)
         if not user:
