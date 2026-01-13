@@ -107,4 +107,4 @@ def handle_all_before_requests():
 
 if __name__ == "__main__":
     # Run on a non‑standard port to avoid conflict with other services (e.g., AirTunes)
-    app.run(debug=True, host="0.0.0.0", port=5001)
+    app.run(debug=True, host="0.0.0.0", port=5000)

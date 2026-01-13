@@ -24,6 +24,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+export const CARD_LIMITS: Record<string, number> = {
+  "Planning (To Do)": 7,
+  "Monitoring (In Progress)": 2,
+  "Controlling (Review)": 3,
+  "Reflection (Done)": 10,
+};
+
 export default function BoardContent({
   lists,
   setLists,
@@ -40,6 +47,11 @@ export default function BoardContent({
     card: Card;
   } | null>(null);
   const [showNotesAlert, setShowNotesAlert] = useState(false);
+  const [showLimitAlert, setShowLimitAlert] = useState(false);
+  const [limitAlertInfo, setLimitAlertInfo] = useState<{
+    columnName: string;
+    limit: number;
+  } | null>(null);
   const [pendingMove, setPendingMove] = useState<{
     source: any;
     destination: any;
@@ -49,10 +61,28 @@ export default function BoardContent({
     const { source, destination } = result;
     if (!destination) return;
 
-    // Check if moving to Reflection column
     const destinationList = lists.find(
       (list) => list.id === destination.droppableId
     );
+
+    if (source.droppableId !== destination.droppableId && destinationList) {
+      const destinationTitle = destinationList.title;
+      const cardLimit = CARD_LIMITS[destinationTitle];
+
+      const activeCardsCount = destinationList.cards.filter(
+        (card) => !card.archived && !card.deleted
+      ).length;
+
+      if (cardLimit !== undefined && activeCardsCount >= cardLimit) {
+        setLimitAlertInfo({
+          columnName: destinationTitle,
+          limit: cardLimit,
+        });
+        setShowLimitAlert(true);
+        return;
+      }
+    }
+
     if (destinationList?.title === "Reflection (Done)") {
       const sourceList = lists.find((list) => list.id === source.droppableId);
       const card = sourceList?.cards[source.index];
@@ -85,7 +115,6 @@ export default function BoardContent({
         setSelectedCard({ listId: source.droppableId, card });
       }
 
-      // Move the card after adding notes
       moveCard(
         lists,
         setLists,
@@ -217,6 +246,32 @@ export default function BoardContent({
             </AlertDialogCancel>
             <AlertDialogAction onClick={handleNotesAlertConfirm}>
               Add Notes Now
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Card Limit Exceeded Alert */}
+      <AlertDialog open={showLimitAlert} onOpenChange={setShowLimitAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Card Limit Reached</AlertDialogTitle>
+            <AlertDialogDescription>
+              The <strong>{limitAlertInfo?.columnName}</strong> column has reached its maximum capacity of{" "}
+              <strong>{limitAlertInfo?.limit} cards</strong>.
+              <br /><br />
+              Please complete or archive some tasks in this column before adding new ones.
+              This limit helps you focus on manageable workload and promotes better self-regulated learning.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction
+              onClick={() => {
+                setShowLimitAlert(false);
+                setLimitAlertInfo(null);
+              }}
+            >
+              Understood
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

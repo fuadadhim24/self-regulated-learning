@@ -12,6 +12,7 @@ import { getCurrentUser } from "@/utils/api";
 
 interface ChatbotProps {
   forceOpen?: boolean;
+  onClose?: () => void;
 }
 
 export interface ChatbotRef {
@@ -19,10 +20,11 @@ export interface ChatbotRef {
 }
 
 export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
-  { forceOpen = false },
+  { forceOpen = false, onClose },
   ref
 ) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isForceOpened, setIsForceOpened] = useState(false);
   const [messages, setMessages] = useState<
     {
       sender: string;
@@ -139,6 +141,9 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
   };
 
   const toggleChat = async () => {
+    if (isForceOpened && isOpen) {
+      setIsForceOpened(false);
+    }
     setIsOpen(!isOpen);
     if (!isOpen) {
       openChatInternal();
@@ -176,6 +181,7 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
   useImperativeHandle(ref, () => ({
     openChat: () => {
       setIsOpen(true);
+      setIsForceOpened(true);
       if (messages.length === 0) {
         openChatInternal();
       }
@@ -314,8 +320,9 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
   }, [messages]);
 
   useEffect(() => {
-    if (forceOpen && !isOpen) {
+    if (forceOpen && !isOpen && !isForceOpened) {
       setIsOpen(true);
+      setIsForceOpened(true);
       setHasNewMessage(false);
       setUnreadCount(0);
       setNotificationVisible(false);
@@ -346,7 +353,7 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
         initializeChat();
       }
     }
-  }, [forceOpen, isOpen, messages.length]);
+  }, [forceOpen, isOpen, isForceOpened, messages.length]);
 
   useEffect(() => {
     const handleChatbotMessage = (event: CustomEvent) => {
@@ -354,7 +361,6 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
       console.log("Received chatbot message:", message);
 
       setMessages((prev) => {
-        // Check if we already have a message with the same timestamp and type
         const isDuplicate = prev.some(
           (msg) =>
             msg.timestamp &&
@@ -363,7 +369,7 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
             msg.sender === message.sender &&
             Math.abs(
               new Date(msg.timestamp).getTime() -
-                new Date(message.timestamp).getTime()
+              new Date(message.timestamp).getTime()
             ) < 1000
         );
 
@@ -390,7 +396,7 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
             : JSON.stringify(message.text);
 
         setTimeout(() => {
-          typeMessage(messageIndex, messageText, () => {});
+          typeMessage(messageIndex, messageText, () => { });
         }, 100);
 
         return newMessages;
@@ -475,11 +481,10 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
 
       <button
         onClick={toggleChat}
-        className={`absolute bottom-0 right-0 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-all duration-200 hover:scale-105 ${
-          isOpen
+        className={`absolute bottom-0 right-0 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-all duration-200 hover:scale-105 ${isOpen
             ? "opacity-0 scale-95 pointer-events-none"
             : "opacity-100 scale-100"
-        }`}
+          }`}
         aria-label="Open chat"
       >
         {hasNewMessage ? (
@@ -497,11 +502,10 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
       </button>
 
       <div
-        className={`bg-white dark:bg-slate-800 rounded-lg shadow-xl transition-all duration-300 overflow-hidden ${
-          isOpen
+        className={`bg-white dark:bg-slate-800 rounded-lg shadow-xl transition-all duration-300 overflow-hidden ${isOpen
             ? "opacity-100 scale-100"
             : "opacity-0 scale-95 pointer-events-none"
-        }`}
+          }`}
         style={{
           width: "320px",
           maxHeight: "500px",
@@ -518,6 +522,10 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
                   e.preventDefault();
                   e.stopPropagation();
                   setIsOpen(false);
+                  setIsForceOpened(false);
+                  if (onClose) {
+                    onClose();
+                  }
                 }}
                 className="hover:text-blue-100"
                 aria-label="Close chat"
@@ -541,16 +549,14 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
                 />
                 <label
                   htmlFor="deep-context-toggle"
-                  className={`absolute cursor-pointer top-0 left-0 right-0 bottom-0 transition-colors duration-200 rounded-full ${
-                    deepContext ? "bg-blue-400" : "bg-gray-400"
-                  }`}
+                  className={`absolute cursor-pointer top-0 left-0 right-0 bottom-0 transition-colors duration-200 rounded-full ${deepContext ? "bg-blue-400" : "bg-gray-400"
+                    }`}
                 >
                   <span
-                    className={`absolute h-4 w-4 bg-white rounded-full transition-transform duration-200 ${
-                      deepContext
+                    className={`absolute h-4 w-4 bg-white rounded-full transition-transform duration-200 ${deepContext
                         ? "transform translate-x-5"
                         : "transform translate-x-0.5"
-                    } top-0.5`}
+                      } top-0.5`}
                   ></span>
                 </label>
               </div>
@@ -569,9 +575,8 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
               messages.map((msg, idx) => (
                 <div
                   key={idx}
-                  className={`mb-3 ${
-                    msg.sender === "user" ? "text-right" : "text-left"
-                  }`}
+                  className={`mb-3 ${msg.sender === "user" ? "text-right" : "text-left"
+                    }`}
                 >
                   {msg.sender === "bot" && msg.type === "card_movement" && (
                     <div className="text-xs text-blue-500 dark:text-blue-400 mb-1 flex items-center">
@@ -580,21 +585,19 @@ export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
                     </div>
                   )}
                   <span
-                    className={`inline-block px-4 py-2 rounded-lg ${
-                      msg.sender === "user"
+                    className={`inline-block px-4 py-2 rounded-lg ${msg.sender === "user"
                         ? "bg-blue-500 text-white"
                         : msg.type === "card_movement"
-                        ? "bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800"
-                        : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
-                    }`}
+                          ? "bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800"
+                          : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
+                      }`}
                   >
                     {msg.text}
                   </span>
                   {msg.timestamp && (
                     <div
-                      className={`text-xs mt-1 text-slate-500 dark:text-slate-400 ${
-                        msg.sender === "user" ? "text-right" : "text-left"
-                      }`}
+                      className={`text-xs mt-1 text-slate-500 dark:text-slate-400 ${msg.sender === "user" ? "text-right" : "text-left"
+                        }`}
                     >
                       {msg.timestamp.toLocaleTimeString([], {
                         hour: "2-digit",

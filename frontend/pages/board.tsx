@@ -10,15 +10,16 @@ export default function BoardPage() {
   const [openChatbot, setOpenChatbot] = useState(false);
   const chatbotRef = useRef<{ openChat: () => void }>(null);
 
-  // Handle hydration issues with client components
+  const handleCloseChatbot = () => {
+    setOpenChatbot(false);
+  };
+
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Function to open chatbot from parent component
   const handleOpenChatbot = () => {
     setOpenChatbot(true);
-    // Call the openChat method on the Chatbot component if available
     if (chatbotRef.current) {
       chatbotRef.current.openChat();
     }
@@ -37,7 +38,11 @@ export default function BoardPage() {
       <footer className="py-4 px-6 text-center text-sm text-indigo-600 dark:text-indigo-400 border-t border-indigo-200 dark:border-indigo-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
         <p>© {new Date().getFullYear()} SRL Learning Board</p>
       </footer>
-      <Chatbot ref={chatbotRef} forceOpen={openChatbot} />
+      <Chatbot
+        ref={chatbotRef}
+        forceOpen={openChatbot}
+        onClose={handleCloseChatbot}
+      />
     </div>
   );
 }
