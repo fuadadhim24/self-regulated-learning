@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 import { authorizedFetch, getAccessToken, setAccessToken } from "./auth";
 
@@ -272,4 +272,111 @@ export async function createCardMovement(
       to_column: toColumn,
     }),
   });
+}
+
+export async function triggerChatbotCardMovement(
+  userId: string,
+  cardId: string,
+  fromColumn: string,
+  toColumn: string,
+  title?: string,
+  subtitle?: string,
+  difficulty?: string,
+  priority?: string,
+  learningStrategy?: string,
+  preTestGrade?: number,
+  postTestGrade?: number,
+  rating?: number,
+  mode: "notification" | "asking" = "notification",
+  deep: boolean = false
+) {
+  const n8nWebhookUrl =
+    process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL ||
+    "http://localhost:5678/webhook/d71e87c6-e1a3-4205-9dcc-81c8ce50f3bb";
+
+  try {
+    let payload: any;
+
+    if (mode === "notification") {
+      payload = {
+        userId,
+        cardId,
+        fromColumn,
+        toColumn,
+        type: "card_movement",
+        mode: "notification",
+        deep: deep, // Add deep context flag
+        cardData: {
+          title: title || "",
+          subtitle: subtitle || "",
+          difficulty: difficulty || "medium",
+          priority: priority || "medium",
+          learningStrategy: learningStrategy || "",
+          preTestGrade: preTestGrade || null,
+          postTestGrade: postTestGrade || null,
+          rating: rating || null,
+        },
+      };
+    } else {
+      payload = {
+        userId,
+        cardId,
+        fromColumn,
+        toColumn,
+        type: "card_movement",
+        mode: "asking",
+        deep: deep, // Add deep context flag
+        cardData: {
+          title,
+          subtitle,
+          difficulty,
+          priority,
+          learningStrategy: learningStrategy,
+          preTestGrade: preTestGrade,
+          postTestGrade: postTestGrade,
+          rating,
+        },
+      };
+    }
+
+    return fetch(n8nWebhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  } catch (error) {
+    console.error("Error triggering chatbot card movement:", error);
+    return new Response(JSON.stringify({}), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+}
+
+// getChatbotHistory function removed since chatbot history is not stored in DB
+
+export async function getChatbotStats() {
+  const n8nWebhookUrl =
+    process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL ||
+    "http://localhost:5678/webhook/d71e87c6-e1a3-4205-9dcc-81c8ce50f3bb";
+
+  try {
+    // Use POST instead of GET for n8n webhook
+    const response = await fetch(n8nWebhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "stats",
+      }),
+    });
+
+    return response;
+  } catch (error) {
+    console.error("Error fetching chatbot stats:", error);
+    // Return empty object as fallback
+    return new Response(JSON.stringify({}), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
 }

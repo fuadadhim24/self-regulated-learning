@@ -1,15 +1,46 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { Send, X, MessageSquare } from "lucide-react";
+import {
+  useState,
+  useRef,
+  useEffect,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
+import { Send, X, MessageSquare, Bell, Sparkles, Brain } from "lucide-react";
 import { getCurrentUser } from "@/utils/api";
 
-export default function Chatbot() {
+interface ChatbotProps {
+  forceOpen?: boolean;
+  onClose?: () => void;
+}
+
+export interface ChatbotRef {
+  openChat: () => void;
+}
+
+export default forwardRef<ChatbotRef, ChatbotProps>(function Chatbot(
+  { forceOpen = false, onClose },
+  ref
+) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isForceOpened, setIsForceOpened] = useState(false);
   const [messages, setMessages] = useState<
-    { sender: string; text: React.ReactNode }[]
+    {
+      sender: string;
+      text: React.ReactNode;
+      timestamp?: Date;
+      type?: string;
+      isTyping?: boolean;
+    }[]
   >([]);
   const [input, setInput] = useState("");
+  const [hasNewMessage, setHasNewMessage] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notificationVisible, setNotificationVisible] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState("");
+  const [deepContext, setDeepContext] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   type Task = {
@@ -47,10 +78,10 @@ export default function Chatbot() {
         lines.push(`${status}:`);
         tasks.forEach((task) => {
           lines.push(
-            `- *${task.title}* – ${task.course} (Prioritas: ${task.priority})`
+            `- *${task.title}* – ${task.course} (Priority: ${task.priority})`
           );
         });
-        lines.push(""); // newline antar section
+        lines.push("");
       });
 
       text = lines.join("\n");
@@ -71,9 +102,60 @@ export default function Chatbot() {
     });
   }
 
+  const typeMessage = (
+    messageIndex: number,
+    fullText: string,
+    callback: () => void
+  ) => {
+    let currentIndex = 0;
+    const typingSpeed = 20;
+
+    const interval = setInterval(() => {
+      if (currentIndex <= fullText.length) {
+        const partialText = fullText.substring(0, currentIndex);
+
+        setMessages((prev) => {
+          if (messageIndex >= prev.length) {
+            clearInterval(interval);
+            callback();
+            return prev;
+          }
+
+          const newMessages = [...prev];
+          if (newMessages[messageIndex]) {
+            newMessages[messageIndex] = {
+              ...newMessages[messageIndex],
+              text: formatMessageText(partialText),
+              isTyping: currentIndex < fullText.length,
+            };
+          }
+          return newMessages;
+        });
+
+        currentIndex++;
+      } else {
+        clearInterval(interval);
+        callback();
+      }
+    }, typingSpeed);
+  };
+
   const toggleChat = async () => {
+    if (isForceOpened && isOpen) {
+      setIsForceOpened(false);
+    }
     setIsOpen(!isOpen);
     if (!isOpen) {
+      openChatInternal();
+    }
+  };
+
+  const openChatInternal = async () => {
+    setHasNewMessage(false);
+    setUnreadCount(0);
+    setNotificationVisible(false);
+
+    if (messages.length === 0) {
       try {
         const user = await getCurrentUser();
         const fullName =
@@ -83,7 +165,7 @@ export default function Chatbot() {
           ...prev,
           {
             sender: "bot",
-            text: `Hello ${fullName}! Bagaimana saya dapat membantu anda hari ini? 😊`,
+            text: `Hello ${fullName}! How can I help you today? 😊`,
           },
         ]);
       } catch (error) {
@@ -96,12 +178,23 @@ export default function Chatbot() {
     }
   };
 
+  useImperativeHandle(ref, () => ({
+    openChat: () => {
+      setIsOpen(true);
+      setIsForceOpened(true);
+      if (messages.length === 0) {
+        openChatInternal();
+      }
+    },
+  }));
+
   const handleSendMessage = async () => {
     if (!input.trim()) return;
 
     const userMessage = { sender: "user", text: input };
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
+    setIsLoading(true);
 
     try {
       const user = await getCurrentUser();
@@ -111,30 +204,108 @@ export default function Chatbot() {
         user.username;
       console.log(input);
 
-      const apiUrl =
-        process.env.NEXT_PUBLIC_API_URL ||
-        "https://s5vl905j-5001.asse.devtunnels.ms/";
-      const res = await fetch(`${apiUrl}/api/chatbot/message`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: input, userId, userName }),
-      });
-      console.log("Response status:", input, userId, userName, res.status);
+      const n8nWebhookUrl =
+        process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL ||
+        "http://localhost:5678/webhook/d71e87c6-e1a3-4205-9dcc-81c8ce50f3bb";
 
-      if (!res.ok) throw new Error("Failed to get response");
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 120000);
 
-      const data = await res.json();
-      const rawText = data.reply || "I didn't understand that.";
-      const formattedText = formatMessageText(rawText);
+      try {
+        const res = await fetch(n8nWebhookUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            message: input,
+            userId,
+            userName,
+            type: "message",
+            mode: "asking",
+            deep: deepContext,
+          }),
+          signal: controller.signal,
+        });
 
-      const botMessage = { sender: "bot", text: formattedText };
-      setMessages((prev) => [...prev, botMessage]);
+        clearTimeout(timeoutId);
+        console.log("Response status:", input, userId, userName, res.status);
+
+        if (!res.ok) throw new Error("Failed to get response");
+
+        const data = await res.json();
+        console.log("Response data:", data);
+        const rawText =
+          data.output || data.reply || "I didn't understand that.";
+
+        setMessages((prev) => {
+          const newMessages = [
+            ...prev,
+            {
+              sender: "bot",
+              text: "",
+              timestamp: new Date(),
+              isTyping: true,
+            },
+          ];
+
+          const messageIndex = newMessages.length - 1;
+          typeMessage(messageIndex, rawText, () => {
+            setIsLoading(false);
+          });
+
+          return newMessages;
+        });
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        if (fetchError instanceof Error && fetchError.name === "AbortError") {
+          console.error("Request timeout:", fetchError);
+          const errorMessage =
+            "Sorry, the request took too long. Please try again.";
+          setMessages((prev) => {
+            const newMessages = [
+              ...prev,
+              {
+                sender: "bot",
+                text: "",
+                timestamp: new Date(),
+                isTyping: true,
+              },
+            ];
+
+            const messageIndex = newMessages.length - 1;
+            typeMessage(messageIndex, errorMessage, () => {
+              setIsLoading(false);
+            });
+
+            return newMessages;
+          });
+        } else {
+          throw fetchError;
+        }
+      }
     } catch (error) {
       console.error("Chat error:", error);
-      setMessages((prev) => [
-        ...prev,
-        { sender: "bot", text: "Sorry, I can't respond right now." },
-      ]);
+      const errorMessage =
+        "Sorry, I can't respond right now. Please check if the n8n server is running.";
+      setMessages((prev) => {
+        const newMessages = [
+          ...prev,
+          {
+            sender: "bot",
+            text: "",
+            timestamp: new Date(),
+            isTyping: true,
+          },
+        ];
+
+        const messageIndex = newMessages.length - 1;
+        typeMessage(messageIndex, errorMessage, () => {
+          setIsLoading(false);
+        });
+
+        return newMessages;
+      });
     }
   };
 
@@ -148,28 +319,193 @@ export default function Chatbot() {
     }
   }, [messages]);
 
+  useEffect(() => {
+    if (forceOpen && !isOpen && !isForceOpened) {
+      setIsOpen(true);
+      setIsForceOpened(true);
+      setHasNewMessage(false);
+      setUnreadCount(0);
+      setNotificationVisible(false);
+
+      if (messages.length === 0) {
+        const initializeChat = async () => {
+          try {
+            const user = await getCurrentUser();
+            const fullName =
+              [user.first_name, user.last_name].filter(Boolean).join(" ") ||
+              "there";
+            setMessages((prev) => [
+              ...prev,
+              {
+                sender: "bot",
+                text: `Hello ${fullName}! How can I help you today? 😊`,
+              },
+            ]);
+          } catch (error) {
+            console.error("Error fetching user:", error);
+            setMessages((prev) => [
+              ...prev,
+              { sender: "bot", text: "Hello! How can I assist you today?" },
+            ]);
+          }
+        };
+
+        initializeChat();
+      }
+    }
+  }, [forceOpen, isOpen, isForceOpened, messages.length]);
+
+  useEffect(() => {
+    const handleChatbotMessage = (event: CustomEvent) => {
+      const message = event.detail;
+      console.log("Received chatbot message:", message);
+
+      setMessages((prev) => {
+        const isDuplicate = prev.some(
+          (msg) =>
+            msg.timestamp &&
+            message.timestamp &&
+            msg.type === message.type &&
+            msg.sender === message.sender &&
+            Math.abs(
+              new Date(msg.timestamp).getTime() -
+              new Date(message.timestamp).getTime()
+            ) < 1000
+        );
+
+        if (isDuplicate) {
+          console.log("Duplicate message detected, skipping:", message);
+          return prev;
+        }
+
+        const newMessages = [
+          ...prev,
+          {
+            sender: message.sender,
+            text: "",
+            timestamp: new Date(message.timestamp),
+            type: message.type,
+            isTyping: true,
+          },
+        ];
+
+        const messageIndex = newMessages.length - 1;
+        const messageText =
+          typeof message.text === "string"
+            ? message.text
+            : JSON.stringify(message.text);
+
+        setTimeout(() => {
+          typeMessage(messageIndex, messageText, () => { });
+        }, 100);
+
+        return newMessages;
+      });
+
+      if (!isOpen) {
+        setHasNewMessage(true);
+        setUnreadCount((prev) => prev + 1);
+
+        let notificationText = "Card movement detected";
+        if (
+          message.type === "card_movement" &&
+          typeof message.text === "string"
+        ) {
+          if (message.text.length > 100) {
+            notificationText = message.text.substring(0, 100) + "...";
+          } else {
+            notificationText = message.text;
+          }
+        }
+
+        setNotificationMessage(notificationText);
+        setNotificationVisible(true);
+
+        setTimeout(() => {
+          setNotificationVisible(false);
+        }, 5000);
+      }
+    };
+
+    window.addEventListener(
+      "chatbot-message",
+      handleChatbotMessage as EventListener
+    );
+
+    return () => {
+      window.removeEventListener(
+        "chatbot-message",
+        handleChatbotMessage as EventListener
+      );
+    };
+  }, [isOpen, formatMessageText]);
+
   return (
     <div className="fixed bottom-6 right-6 z-[1000]">
-      {/* Tombol Chat */}
+      {notificationVisible && (
+        <div className="absolute bottom-16 right-0 bg-white dark:bg-slate-800 border border-blue-300 dark:border-blue-700 rounded-lg shadow-lg p-4 mb-2 w-72 animate-fadeIn">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <div className="bg-blue-100 dark:bg-blue-900 p-2 rounded-full">
+                <Sparkles className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              </div>
+            </div>
+            <div className="ml-3 flex-1">
+              <p className="text-sm font-medium text-slate-900 dark:text-white">
+                Learning Assistant
+              </p>
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-300 line-clamp-2">
+                {notificationMessage}
+              </p>
+            </div>
+            <button
+              onClick={() => setNotificationVisible(false)}
+              className="ml-2 flex-shrink-0 text-slate-400 hover:text-slate-500 dark:hover:text-slate-300"
+            >
+              <X size={16} />
+            </button>
+          </div>
+          <div className="mt-3 flex">
+            <button
+              onClick={() => {
+                setNotificationVisible(false);
+                setIsOpen(true);
+              }}
+              className="text-xs font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+            >
+              View Message
+            </button>
+          </div>
+        </div>
+      )}
+
       <button
         onClick={toggleChat}
-        className={`absolute bottom-0 right-0 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-all duration-200 hover:scale-105 ${
-          isOpen
+        className={`absolute bottom-0 right-0 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-all duration-200 hover:scale-105 ${isOpen
             ? "opacity-0 scale-95 pointer-events-none"
             : "opacity-100 scale-100"
-        }`}
+          }`}
         aria-label="Open chat"
       >
-        <MessageSquare size={24} />
+        {hasNewMessage ? (
+          <div className="relative">
+            <Bell size={24} />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
+          </div>
+        ) : (
+          <MessageSquare size={24} />
+        )}
       </button>
 
-      {/* Jendela Chat */}
       <div
-        className={`bg-white dark:bg-slate-800 rounded-lg shadow-xl transition-all duration-300 overflow-hidden ${
-          isOpen
+        className={`bg-white dark:bg-slate-800 rounded-lg shadow-xl transition-all duration-300 overflow-hidden ${isOpen
             ? "opacity-100 scale-100"
             : "opacity-0 scale-95 pointer-events-none"
-        }`}
+          }`}
         style={{
           width: "320px",
           maxHeight: "500px",
@@ -177,17 +513,57 @@ export default function Chatbot() {
           visibility: isOpen ? "visible" : "hidden",
         }}
       >
-        {/* Header */}
         {isOpen && (
-          <div className="bg-blue-600 text-white px-4 py-3 flex justify-between items-center">
-            <span className="font-medium">Learning Assistant</span>
-            <button onClick={toggleChat} className="hover:text-blue-100">
-              <X size={20} />
-            </button>
+          <div className="bg-blue-600 text-white px-4 py-3 flex flex-col">
+            <div className="flex justify-between items-center">
+              <span className="font-medium">Learning Assistant</span>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsOpen(false);
+                  setIsForceOpened(false);
+                  if (onClose) {
+                    onClose();
+                  }
+                }}
+                className="hover:text-blue-100"
+                aria-label="Close chat"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between mt-2 text-xs">
+              <div className="flex items-center">
+                <Brain size={14} className="mr-1" />
+                <span>Deep Analysis</span>
+              </div>
+              <div className="relative inline-block w-10 h-5">
+                <input
+                  type="checkbox"
+                  className="sr-only"
+                  id="deep-context-toggle"
+                  checked={deepContext}
+                  onChange={() => setDeepContext(!deepContext)}
+                />
+                <label
+                  htmlFor="deep-context-toggle"
+                  className={`absolute cursor-pointer top-0 left-0 right-0 bottom-0 transition-colors duration-200 rounded-full ${deepContext ? "bg-blue-400" : "bg-gray-400"
+                    }`}
+                >
+                  <span
+                    className={`absolute h-4 w-4 bg-white rounded-full transition-transform duration-200 ${deepContext
+                        ? "transform translate-x-5"
+                        : "transform translate-x-0.5"
+                      } top-0.5`}
+                  ></span>
+                </label>
+              </div>
+            </div>
           </div>
         )}
 
-        {/* Pesan */}
         {isOpen && (
           <div className="h-80 overflow-y-auto p-4 bg-slate-50 dark:bg-slate-900">
             {messages.length === 0 ? (
@@ -199,29 +575,66 @@ export default function Chatbot() {
               messages.map((msg, idx) => (
                 <div
                   key={idx}
-                  className={`mb-3 ${
-                    msg.sender === "user" ? "text-right" : "text-left"
-                  }`}
-                >
-                  <span
-                    className={`inline-block px-4 py-2 rounded-lg ${
-                      msg.sender === "user"
-                        ? "bg-blue-500 text-white"
-                        : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
+                  className={`mb-3 ${msg.sender === "user" ? "text-right" : "text-left"
                     }`}
+                >
+                  {msg.sender === "bot" && msg.type === "card_movement" && (
+                    <div className="text-xs text-blue-500 dark:text-blue-400 mb-1 flex items-center">
+                      <Sparkles size={12} className="mr-1" />
+                      <span>Learning Tip</span>
+                    </div>
+                  )}
+                  <span
+                    className={`inline-block px-4 py-2 rounded-lg ${msg.sender === "user"
+                        ? "bg-blue-500 text-white"
+                        : msg.type === "card_movement"
+                          ? "bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800"
+                          : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
+                      }`}
                   >
                     {msg.text}
                   </span>
+                  {msg.timestamp && (
+                    <div
+                      className={`text-xs mt-1 text-slate-500 dark:text-slate-400 ${msg.sender === "user" ? "text-right" : "text-left"
+                        }`}
+                    >
+                      {msg.timestamp.toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </div>
+                  )}
                 </div>
               ))
+            )}
+            {isLoading && (
+              <div className="flex items-center my-2">
+                <div className="flex space-x-1 mr-2">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce delay-75"></div>
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce delay-150"></div>
+                </div>
+                <span className="text-xs text-slate-500 dark:text-slate-400">
+                  Typing... {deepContext && "(estimated 25-120 seconds)"}
+                </span>
+              </div>
             )}
             <div ref={messagesEndRef} />
           </div>
         )}
 
-        {/* Input */}
         {isOpen && (
           <div className="border-t border-slate-200 dark:border-slate-700 p-3 bg-white dark:bg-slate-800">
+            <div className="mb-2 text-xs text-slate-500 dark:text-slate-400 flex items-center">
+              <Brain size={12} className="mr-1" />
+              <span>
+                Mode:{" "}
+                {deepContext
+                  ? "Deep Analysis (with past patterns)"
+                  : "Fast (without history)"}
+              </span>
+            </div>
             <div className="flex">
               <input
                 type="text"
@@ -243,4 +656,4 @@ export default function Chatbot() {
       </div>
     </div>
   );
-}
+});

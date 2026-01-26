@@ -9,7 +9,7 @@ from routes.course_routes import course_bp
 from routes.learningstrat_routes import learningstrat_bp
 from routes.attachments import attachments_bp
 from routes.study_sessions import study_sessions_bp
-from routes.chatbot_routes import chatbot_bp
+# from routes.chatbot_routes import chatbot_bp  # Tidak digunakan lagi karena chatbot pindah ke n8n
 import os
 from utils.db import init_db
 from config import Config
@@ -66,7 +66,7 @@ app.register_blueprint(course_bp)
 app.register_blueprint(learningstrat_bp)
 app.register_blueprint(attachments_bp)
 app.register_blueprint(study_sessions_bp)
-app.register_blueprint(chatbot_bp)
+# app.register_blueprint(chatbot_bp)  # Tidak digunakan lagi karena chatbot pindah ke n8n
 
 @app.before_request
 def handle_all_before_requests():
@@ -82,6 +82,7 @@ def handle_all_before_requests():
         origin = request.headers.get("Origin")
 
         allowed_origins = [
+            "http://localhost:3002",
             "http://localhost:3001",
             "http://localhost:3000",
             "https://self-regulated-learning.vercel.app",
@@ -107,4 +108,4 @@ def handle_all_before_requests():
 
 if __name__ == "__main__":
     # Run on a non‑standard port to avoid conflict with other services (e.g., AirTunes)
-    app.run(debug=True, host="0.0.0.0", port=5001)
+    app.run(debug=True, host="0.0.0.0", port=5000)

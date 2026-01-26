@@ -7,6 +7,7 @@ import Card from "./Card"
 import { getCourses } from "../utils/api"
 import { Plus, X, ChevronDown, AlertCircle } from "lucide-react"
 import type { Card as CardType } from "@/types"
+import { CARD_LIMITS } from "./Board/BoardContent"
 
 interface ListProps {
     id: string
@@ -108,10 +109,30 @@ const List = ({ id, title, cards, onAddCard, onCardClick }: ListProps) => {
                 onClick={() => setIsCollapsed(!isCollapsed)}
             >
                 <div className="flex items-center">
-                    <h2 className="text-base font-semibold text-gray-800">{title}</h2>
-                    <div className="ml-2 bg-gray-200 text-gray-700 rounded-full px-2 py-0.5 text-xs font-medium">
-                        {cards.length}
-                    </div>
+                    <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200">{title}</h2>
+                    {(() => {
+                        const limit = CARD_LIMITS[title];
+                        const count = cards.length;
+                        const isAtLimit = limit !== undefined && count >= limit;
+                        const isNearLimit = limit !== undefined && count === limit - 1;
+
+                        let bgColor = "bg-gray-200 dark:bg-gray-700";
+                        let textColor = "text-gray-700 dark:text-gray-300";
+
+                        if (isAtLimit) {
+                            bgColor = "bg-red-100 dark:bg-red-900/50";
+                            textColor = "text-red-700 dark:text-red-400";
+                        } else if (isNearLimit) {
+                            bgColor = "bg-amber-100 dark:bg-amber-900/50";
+                            textColor = "text-amber-700 dark:text-amber-400";
+                        }
+
+                        return (
+                            <div className={`ml-2 ${bgColor} ${textColor} rounded-full px-2 py-0.5 text-xs font-medium`}>
+                                {limit !== undefined ? `${count}/${limit}` : count}
+                            </div>
+                        );
+                    })()}
                 </div>
                 <button className="text-gray-500 hover:text-gray-700">
                     <ChevronDown className={`h-5 w-5 transition-transform ${isCollapsed ? "rotate-180" : ""}`} />
@@ -232,17 +253,33 @@ const List = ({ id, title, cards, onAddCard, onCardClick }: ListProps) => {
                 )}
 
                 {/* Add Card Button */}
-                {!isAddingCard && !isCollapsed && (
-                    <div className="p-3 border-t border-gray-200">
-                        <button
-                            onClick={() => setIsAddingCard(true)}
-                            className="w-full flex items-center justify-center gap-1 py-2 px-3 bg-white border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 hover:text-blue-600 hover:border-blue-300 transition-colors text-sm font-medium"
-                        >
-                            <Plus className="h-4 w-4" />
-                            Add Card
-                        </button>
-                    </div>
-                )}
+                {!isAddingCard && !isCollapsed && (() => {
+                    const limit = CARD_LIMITS[title];
+                    const isAtLimit = limit !== undefined && cards.length >= limit;
+
+                    if (isAtLimit) {
+                        return (
+                            <div className="p-3 border-t border-gray-200 dark:border-gray-700">
+                                <div className="flex items-center justify-center gap-2 py-2 px-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md text-red-600 dark:text-red-400 text-sm">
+                                    <AlertCircle className="h-4 w-4" />
+                                    <span>Limit reached ({limit} cards)</span>
+                                </div>
+                            </div>
+                        );
+                    }
+
+                    return (
+                        <div className="p-3 border-t border-gray-200 dark:border-gray-700">
+                            <button
+                                onClick={() => setIsAddingCard(true)}
+                                className="w-full flex items-center justify-center gap-1 py-2 px-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-300 dark:hover:border-blue-500 transition-colors text-sm font-medium"
+                            >
+                                <Plus className="h-4 w-4" />
+                                Add Card
+                            </button>
+                        </div>
+                    );
+                })()}
             </div>
         </div>
     )
