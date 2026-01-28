@@ -168,6 +168,10 @@ export default function BoardContent({
                 );
                 setLists(updatedLists);
               }}
+              onShowLimitAlert={(columnName, limit) => {
+                setLimitAlertInfo({ columnName, limit });
+                setShowLimitAlert(true);
+              }}
             />
           ))}
         </div>
