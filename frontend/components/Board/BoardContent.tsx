@@ -79,7 +79,7 @@ export default function BoardContent({
           limit: cardLimit,
         });
         setShowLimitAlert(true);
-        return;
+        // return; // Removed to allow soft limit behavior
       }
     }
 
